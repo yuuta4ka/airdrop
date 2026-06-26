@@ -1,0 +1,571 @@
+{
+  "products": [
+    {
+      "id": 1,
+      "slug": "iphone-17-pro-max",
+      "name": "iPhone 17 Pro Max",
+      "category": "iphone",
+      "brand": "Apple",
+      "badge": "Новинка",
+      "image": "https://store.storeimages.cdn-apple.com/1/as-images.apple.com/is/iphone-16-pro-finish-select-202409-6-3inch-naturaltitanium?wid=400&hei=400&fmt=jpeg&qlt=90&.v=1725345122000",
+      "description": "Флагман Apple нового поколения с максимальными возможностями камеры и производительности.",
+      "simTypes": [
+        "eSIM + SIM",
+        "eSIM only"
+      ],
+      "simModifiers": [
+        {
+          "type": "eSIM only",
+          "priceAdd": 0
+        },
+        {
+          "type": "eSIM + SIM",
+          "priceAdd": 8000
+        }
+      ],
+      "colors": [
+        {
+          "id": "blue",
+          "name": "Синий",
+          "hex": "#2a4a7a",
+          "priceAdd": 0,
+          "image": ""
+        },
+        {
+          "id": "white",
+          "name": "Белый",
+          "hex": "#f0f0f0",
+          "priceAdd": 2000,
+          "image": ""
+        },
+        {
+          "id": "orange",
+          "name": "Оранжевый",
+          "hex": "#e88a40",
+          "priceAdd": 3000,
+          "image": ""
+        }
+      ],
+      "storage": [
+        {
+          "label": "256 ГБ",
+          "price": 149990
+        },
+        {
+          "label": "512 ГБ",
+          "price": 169990
+        },
+        {
+          "label": "1 ТБ",
+          "price": 189990
+        }
+      ],
+      "variants": [],
+      "sizes": null,
+      "stock": [
+        {
+          "colorId": "blue",
+          "simType": "eSIM only",
+          "qty": 2,
+          "note": "В наличии"
+        },
+        {
+          "colorId": "white",
+          "simType": "eSIM only",
+          "qty": 2,
+          "note": "В наличии"
+        }
+      ]
+    },
+    {
+      "id": 2,
+      "slug": "iphone-17-pro",
+      "name": "iPhone 17 Pro",
+      "category": "iphone",
+      "brand": "Apple",
+      "badge": "Новинка",
+      "image": "https://store.storeimages.cdn-apple.com/1/as-images.apple.com/is/iphone-16-pro-finish-select-202409-6-3inch-naturaltitanium?wid=400&hei=400&fmt=jpeg&qlt=90&.v=1725345122000",
+      "description": "Профессиональный iPhone с продвинутой камерой и мощным чипом.",
+      "simTypes": [
+        "eSIM + SIM",
+        "eSIM only"
+      ],
+      "simModifiers": [
+        {
+          "type": "eSIM only",
+          "priceAdd": 0
+        },
+        {
+          "type": "eSIM + SIM",
+          "priceAdd": 8000
+        }
+      ],
+      "colors": [
+        {
+          "id": "blue",
+          "name": "Синий",
+          "hex": "#2a4a7a",
+          "priceAdd": 0,
+          "image": ""
+        },
+        {
+          "id": "white",
+          "name": "Белый",
+          "hex": "#f0f0f0",
+          "priceAdd": 2000,
+          "image": ""
+        },
+        {
+          "id": "orange",
+          "name": "Оранжевый",
+          "hex": "#e88a40",
+          "priceAdd": 3000,
+          "image": ""
+        }
+      ],
+      "storage": [
+        {
+          "label": "256 ГБ",
+          "price": 129990
+        },
+        {
+          "label": "512 ГБ",
+          "price": 149990
+        },
+        {
+          "label": "1 ТБ",
+          "price": 169990
+        }
+      ],
+      "variants": [],
+      "sizes": null,
+      "stock": []
+    },
+    {
+      "id": 3,
+      "slug": "iphone-17",
+      "name": "iPhone 17",
+      "category": "iphone",
+      "brand": "Apple",
+      "badge": "В наличии",
+      "image": "https://store.storeimages.cdn-apple.com/1/as-images.apple.com/is/iphone-16-finish-select-202409-6-1inch-black?wid=400&hei=400&fmt=jpeg&qlt=90&.v=1725344562000",
+      "description": "Новый iPhone 17 — отличный баланс цены и возможностей.",
+      "simTypes": [
+        "eSIM + SIM",
+        "eSIM only"
+      ],
+      "simModifiers": [
+        {
+          "type": "eSIM only",
+          "priceAdd": 0
+        },
+        {
+          "type": "eSIM + SIM",
+          "priceAdd": 5000
+        }
+      ],
+      "colors": [
+        {
+          "id": "black",
+          "name": "Чёрный",
+          "hex": "#1a1a1a",
+          "priceAdd": 0,
+          "image": ""
+        },
+        {
+          "id": "white",
+          "name": "Белый",
+          "hex": "#f5f5f5",
+          "priceAdd": 0,
+          "image": ""
+        },
+        {
+          "id": "blue",
+          "name": "Голубой",
+          "hex": "#7ab0d8",
+          "priceAdd": 1000,
+          "image": ""
+        },
+        {
+          "id": "green",
+          "name": "Зелёный",
+          "hex": "#8ac88a",
+          "priceAdd": 1000,
+          "image": ""
+        },
+        {
+          "id": "pink",
+          "name": "Розовый",
+          "hex": "#f0a8c0",
+          "priceAdd": 1000,
+          "image": ""
+        },
+        {
+          "id": "lavender",
+          "name": "Лавандовый",
+          "hex": "#b8a8d8",
+          "priceAdd": 1000,
+          "image": ""
+        }
+      ],
+      "storage": [
+        {
+          "label": "128 ГБ",
+          "price": 89990
+        },
+        {
+          "label": "256 ГБ",
+          "price": 99990
+        },
+        {
+          "label": "512 ГБ",
+          "price": 119990
+        }
+      ],
+      "variants": [],
+      "sizes": null,
+      "stock": [
+        {
+          "colorId": "white",
+          "simType": "eSIM only",
+          "qty": 1,
+          "note": "В наличии"
+        },
+        {
+          "colorId": "black",
+          "simType": "eSIM only",
+          "qty": 1,
+          "note": "В наличии"
+        },
+        {
+          "colorId": "blue",
+          "simType": "eSIM only",
+          "qty": 1,
+          "note": "В наличии"
+        },
+        {
+          "colorId": "green",
+          "simType": "eSIM only",
+          "qty": 1,
+          "note": "В наличии"
+        },
+        {
+          "colorId": "pink",
+          "simType": "eSIM only",
+          "qty": 1,
+          "note": "В наличии"
+        },
+        {
+          "colorId": "lavender",
+          "simType": "eSIM only",
+          "qty": 1,
+          "note": "В наличии"
+        }
+      ]
+    },
+    {
+      "id": 4,
+      "slug": "iphone-16-pro-max",
+      "name": "iPhone 16 Pro Max",
+      "category": "iphone",
+      "brand": "Apple",
+      "badge": null,
+      "image": "https://store.storeimages.cdn-apple.com/1/as-images.apple.com/is/iphone-16-pro-finish-select-202409-6-3inch-naturaltitanium?wid=400&hei=400&fmt=jpeg&qlt=90&.v=1725345122000",
+      "description": "Флагманский iPhone с чипом A18 Pro и титановым корпусом.",
+      "simTypes": null,
+      "colors": [
+        {
+          "id": "black",
+          "name": "Чёрный титан",
+          "hex": "#2d2d2d",
+          "image": ""
+        },
+        {
+          "id": "natural",
+          "name": "Натуральный титан",
+          "hex": "#c4b89a",
+          "image": ""
+        },
+        {
+          "id": "white",
+          "name": "Белый титан",
+          "hex": "#e8e8e8",
+          "image": ""
+        },
+        {
+          "id": "desert",
+          "name": "Пустынный титан",
+          "hex": "#c4a574",
+          "image": ""
+        }
+      ],
+      "storage": [
+        {
+          "label": "256 ГБ",
+          "price": 139990
+        },
+        {
+          "label": "512 ГБ",
+          "price": 159990
+        },
+        {
+          "label": "1 ТБ",
+          "price": 179990
+        }
+      ],
+      "sizes": null,
+      "stock": []
+    },
+    {
+      "id": 5,
+      "slug": "iphone-16",
+      "name": "iPhone 16",
+      "category": "iphone",
+      "brand": "Apple",
+      "badge": null,
+      "image": "https://store.storeimages.cdn-apple.com/1/as-images.apple.com/is/iphone-16-finish-select-202409-6-1inch-black?wid=400&hei=400&fmt=jpeg&qlt=90&.v=1725344562000",
+      "description": "iPhone 16 с чипом A18 и USB-C.",
+      "simTypes": null,
+      "colors": [
+        {
+          "id": "black",
+          "name": "Чёрный",
+          "hex": "#1a1a1a",
+          "image": ""
+        },
+        {
+          "id": "white",
+          "name": "Белый",
+          "hex": "#f5f5f5",
+          "image": ""
+        },
+        {
+          "id": "pink",
+          "name": "Розовый",
+          "hex": "#f5b8c8",
+          "image": ""
+        },
+        {
+          "id": "teal",
+          "name": "Бирюзовый",
+          "hex": "#4a9e9e",
+          "image": ""
+        }
+      ],
+      "storage": [
+        {
+          "label": "128 ГБ",
+          "price": 89990
+        },
+        {
+          "label": "256 ГБ",
+          "price": 99990
+        }
+      ],
+      "sizes": null,
+      "stock": []
+    },
+    {
+      "id": 6,
+      "slug": "ipad-pro-13",
+      "name": "iPad Pro 13\" M4",
+      "category": "ipad",
+      "brand": "Apple",
+      "badge": "Новинка",
+      "image": "https://store.storeimages.cdn-apple.com/1/as-images.apple.com/is/ipad-pro-13-select-wifi-spacegray-202405?wid=400&hei=400&fmt=jpeg&qlt=90&.v=1713319990000",
+      "description": "iPad Pro с дисплеем Ultra Retina XDR и чипом M4.",
+      "simTypes": null,
+      "colors": [
+        {
+          "id": "black",
+          "name": "Космический чёрный",
+          "hex": "#2d2d2d",
+          "image": ""
+        },
+        {
+          "id": "silver",
+          "name": "Серебристый",
+          "hex": "#d8d8d8",
+          "image": ""
+        }
+      ],
+      "storage": [
+        {
+          "label": "256 ГБ",
+          "price": 129990
+        },
+        {
+          "label": "512 ГБ",
+          "price": 149990
+        },
+        {
+          "label": "1 ТБ",
+          "price": 169990
+        }
+      ],
+      "sizes": null,
+      "stock": []
+    },
+    {
+      "id": 7,
+      "slug": "ipad-air-11",
+      "name": "iPad Air 11\" M2",
+      "category": "ipad",
+      "brand": "Apple",
+      "badge": null,
+      "image": "https://store.storeimages.cdn-apple.com/1/as-images.apple.com/is/ipad-air-select-wifi-blue-202405?wid=400&hei=400&fmt=jpeg&qlt=90&.v=1713309448000",
+      "description": "Лёгкий iPad Air с чипом M2.",
+      "simTypes": null,
+      "colors": [
+        {
+          "id": "blue",
+          "name": "Голубой",
+          "hex": "#6a9ec8",
+          "image": ""
+        },
+        {
+          "id": "purple",
+          "name": "Фиолетовый",
+          "hex": "#9a8ac8",
+          "image": ""
+        },
+        {
+          "id": "starlight",
+          "name": "Сияющая звезда",
+          "hex": "#e8e0d0",
+          "image": ""
+        }
+      ],
+      "storage": [
+        {
+          "label": "128 ГБ",
+          "price": 69990
+        },
+        {
+          "label": "256 ГБ",
+          "price": 79990
+        }
+      ],
+      "sizes": null,
+      "stock": []
+    },
+    {
+      "id": 8,
+      "slug": "macbook-air-15",
+      "name": "MacBook Air 15\" M3",
+      "category": "macbook",
+      "brand": "Apple",
+      "badge": null,
+      "image": "https://store.storeimages.cdn-apple.com/1/as-images.apple.com/is/mba15-midnight-select-202306?wid=400&hei=400&fmt=jpeg&qlt=90&.v=1684519210000",
+      "description": "Большой MacBook Air с чипом M3.",
+      "simTypes": null,
+      "colors": [
+        {
+          "id": "midnight",
+          "name": "Полночь",
+          "hex": "#2a2a3a",
+          "image": ""
+        },
+        {
+          "id": "starlight",
+          "name": "Сияющая звезда",
+          "hex": "#e8e0d0",
+          "image": ""
+        },
+        {
+          "id": "silver",
+          "name": "Серебристый",
+          "hex": "#d0d0d0",
+          "image": ""
+        }
+      ],
+      "storage": [
+        {
+          "label": "256 ГБ",
+          "price": 149990
+        },
+        {
+          "label": "512 ГБ",
+          "price": 169990
+        }
+      ],
+      "sizes": null,
+      "stock": []
+    },
+    {
+      "id": 9,
+      "slug": "apple-watch-series-10",
+      "name": "Apple Watch Series 10",
+      "category": "apple-watch",
+      "brand": "Apple",
+      "badge": null,
+      "image": "https://store.storeimages.cdn-apple.com/1/as-images.apple.com/is/watch-s10-702702?wid=400&hei=400&fmt=png-alpha&qlt=90&.v=1725308071000",
+      "description": "Тонкие Apple Watch с расширенными функциями здоровья.",
+      "simTypes": null,
+      "colors": [
+        {
+          "id": "jet-black",
+          "name": "Глянцевый чёрный",
+          "hex": "#1a1a1a",
+          "image": ""
+        },
+        {
+          "id": "silver",
+          "name": "Серебристый",
+          "hex": "#d0d0d0",
+          "image": ""
+        },
+        {
+          "id": "rose-gold",
+          "name": "Розовое золото",
+          "hex": "#d8b8a8",
+          "image": ""
+        }
+      ],
+      "storage": [
+        {
+          "label": "32 ГБ",
+          "price": 0
+        }
+      ],
+      "sizes": [
+        {
+          "label": "42 мм",
+          "price": 39990
+        },
+        {
+          "label": "46 мм",
+          "price": 44990
+        }
+      ],
+      "stock": []
+    },
+    {
+      "id": 10,
+      "slug": "airpods-pro-2",
+      "name": "AirPods Pro 2",
+      "category": "airpods",
+      "brand": "Apple",
+      "badge": "Хит",
+      "image": "https://store.storeimages.cdn-apple.com/1/as-images.apple.com/is/MQD83?wid=400&hei=400&fmt=jpeg&qlt=90&.v=1660803972361",
+      "description": "AirPods Pro с активным шумоподавлением.",
+      "simTypes": null,
+      "colors": [
+        {
+          "id": "white",
+          "name": "Белый",
+          "hex": "#f5f5f5",
+          "image": ""
+        }
+      ],
+      "storage": [
+        {
+          "label": "Стандарт",
+          "price": 24990
+        }
+      ],
+      "sizes": null,
+      "stock": []
+    }
+  ]
+}

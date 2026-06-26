@@ -1,0 +1,71 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <meta name="robots" content="noindex, nofollow" />
+  <title>Админ-панель — АирДроп</title>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet" />
+  <link rel="stylesheet" href="css/admin.css" />
+</head>
+<body>
+  <div id="login-screen" class="login-screen">
+    <form class="login-card" id="login-form">
+      <h1>АирДроп Admin</h1>
+      <p>Введите пароль для входа</p>
+      <input type="password" id="login-password" placeholder="Пароль" required autofocus />
+      <button type="submit" class="btn btn--primary" id="login-submit">Войти</button>
+      <p class="login-error" id="login-error" hidden></p>
+    </form>
+  </div>
+
+  <div id="admin-app" class="admin-app" hidden>
+    <aside class="admin-sidebar">
+      <div class="admin-sidebar__brand">АирДроп</div>
+
+      <div class="admin-nav-group">
+        <div class="admin-nav-group__title">Сайт</div>
+        <button class="admin-nav__btn admin-nav__btn--active" data-tab="general">Основное</button>
+        <button class="admin-nav__btn" data-tab="contacts">Контакты</button>
+        <button class="admin-nav__btn" data-tab="content">Тексты</button>
+        <button class="admin-nav__btn" data-tab="links">Ссылки</button>
+        <button class="admin-nav__btn" data-tab="navigation">Меню</button>
+      </div>
+
+      <div class="admin-nav-group">
+        <div class="admin-nav-group__title">Каталог</div>
+        <button class="admin-nav__btn" data-tab="categories">Категории</button>
+        <button class="admin-nav__btn" data-tab="products">Товары</button>
+      </div>
+
+      <div class="admin-nav-group">
+        <div class="admin-nav-group__title">Оформление</div>
+        <button class="admin-nav__btn" data-tab="theme">Темы и цвета</button>
+      </div>
+
+      <div class="admin-nav-group">
+        <div class="admin-nav-group__title">Прочее</div>
+        <button class="admin-nav__btn" data-tab="installment">Рассрочка</button>
+        <button class="admin-nav__btn" data-tab="reviews">Отзывы</button>
+        <button class="admin-nav__btn" data-tab="config">Конфиги</button>
+      </div>
+
+      <div class="admin-sidebar__footer">
+        <a href="index.html" target="_blank" class="btn btn--ghost">Открыть сайт</a>
+        <button class="btn btn--ghost" type="button" id="btn-logout">Выйти</button>
+      </div>
+    </aside>
+
+    <main class="admin-main">
+      <header class="admin-topbar">
+        <h2 id="tab-title">Основное</h2>
+        <button class="btn btn--primary" type="button" id="btn-save">Сохранить изменения</button>
+      </header>
+      <div class="admin-status" id="admin-status"></div>
+      <div id="admin-content" class="admin-content" tabindex="-1"></div>
+    </main>
+  </div>
+
+  <script type="module" src="js/admin.js"></script>
+</body>
+</html>

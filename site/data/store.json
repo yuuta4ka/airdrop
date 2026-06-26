@@ -1,0 +1,193 @@
+{
+  "adminPassword": "123",
+  "settings": {
+    "name": "АирДроп",
+    "tagline": "техника Apple в наличии и под заказ",
+    "reviewBrand": "iStorik",
+    "logo": "assets/logo-text.png",
+    "phone": "+79527421135",
+    "phoneDisplay": "8 (952) 742-11-35",
+    "phoneContactName": "Илья",
+    "legalName": "ИП Илья Вольнов Дмитриевич",
+    "hours": {
+      "weekdays": "Пн–Пт: 11:00–19:00",
+      "weekends": "Сб–Вс: 11:00–16:00"
+    },
+    "description": "Продажа новых и б/у iPhone с проверкой и гарантией. Также под заказ: iPad, MacBook, Apple Watch, AirPods — любые модели, цвета и объёмы памяти.",
+    "heroTitle": "АирДроп — техника Apple",
+    "heroSubtitle": "в наличии и под заказ",
+    "heroText": "Продажа новых iPhone, iPad, MacBook, Apple Watch и AirPods. Любые модели, цвета и объёмы памяти — под заказ за 3–5 дней.",
+    "orderDays": "3–5 дней",
+    "whyUs": [
+      "Актуальные цены на технику Apple",
+      "Новые устройства — под заказ за 3–5 дней",
+      "Trade-In — выгодно обновляйте свой iPhone",
+      "Помогаем с переносом данных, настройкой и установкой банковских приложений",
+      "Рассрочка и персональный подход без ожиданий и очередей"
+    ],
+    "aboutText": "АирДроп — магазин оригинальной техники Apple в Карпинске и Краснотурьинске. Мы продаём новые и б/у iPhone с проверкой и гарантией, помогаем с настройкой и Trade-In.",
+    "addresses": [
+      {
+        "city": "Карпинск",
+        "street": "ул. Куйбышева, 42",
+        "note": "вход со двора",
+        "yandexMaps": "https://yandex.ru/maps/-/CTUMmG6D"
+      },
+      {
+        "city": "Краснотурьинск",
+        "street": "ул. Ленина, 76",
+        "note": "",
+        "yandexMaps": "https://yandex.ru/maps/-/CTUMiLpS"
+      }
+    ],
+    "links": {
+      "vk": "https://vk.com/airdrop196",
+      "vkMarket": "https://vk.com/market-213684685?screen=group",
+      "vkReviews": "https://vk.com/reviews-213684685",
+      "telegram": "https://t.me/airdrop_196",
+      "avitoKarpinsk": "https://www.avito.ru/brands/i119827073/all?src=sharing&sellerId=0246f7226d938dbd1c952be394392765",
+      "avitoKrasnoturinsk": "https://www.avito.ru/brands/e485e6e3eb5290f6587db8cb6432317e/all/bytovaya_elektronika?gdlkerfdnwq=101&page_from=from_item_card&iid=8145412717&sellerId=864a6972e2ef6c09510de500518246a7"
+    },
+    "reviews": {
+      "negative": {
+        "yandexForm": "https://forms.yandex.ru/u/YOUR_FORM_ID/",
+        "telegram": "https://t.me/airdrop_196",
+        "vk": "https://vk.com/airdrop196"
+      },
+      "positive": {
+        "avitoKarpinsk": "https://www.avito.ru/brands/i119827073/all?src=sharing&sellerId=0246f7226d938dbd1c952be394392765",
+        "avitoKrasnoturinsk": "https://www.avito.ru/brands/e485e6e3eb5290f6587db8cb6432317e/all/bytovaya_elektronika?gdlkerfdnwq=101&page_from=from_item_card&iid=8145412717&sellerId=864a6972e2ef6c09510de500518246a7",
+        "vk": "https://vk.com/reviews-213684685",
+        "yandexKarpinsk": "https://yandex.ru/maps/-/CTUMmG6D",
+        "yandexKrasnoturinsk": "https://yandex.ru/maps/-/CTUMiLpS",
+        "bonus": "скидку 500 ₽ на следующую покупку"
+      }
+    },
+    "installment": {
+      "banks": "Рассрочка от 6 банков — одобряет тот, кто даст лучшие условия",
+      "terms": [
+        {
+          "months": 3,
+          "commission": "7%"
+        },
+        {
+          "months": 6,
+          "commission": "12%"
+        },
+        {
+          "months": 10,
+          "commission": "18,5%"
+        },
+        {
+          "months": 12,
+          "commission": "22%"
+        }
+      ],
+      "dolyami": {
+        "name": "Долями",
+        "description": "Оплата равными долями 4 раза каждые 2 недели. Первая оплата при оформлении.",
+        "commission": "6,7%",
+        "image": "assets/dolyami.jpg"
+      }
+    }
+  },
+  "navigation": [
+    {
+      "id": "home",
+      "label": "Главная",
+      "href": "index.html"
+    },
+    {
+      "id": "catalog",
+      "label": "Каталог",
+      "href": "catalog.html"
+    },
+    {
+      "id": "installment",
+      "label": "Рассрочка",
+      "href": "installment.html"
+    },
+    {
+      "id": "reviews",
+      "label": "Отзывы",
+      "href": "review.html"
+    },
+    {
+      "id": "contacts",
+      "label": "Контакты",
+      "href": "contacts.html"
+    },
+    {
+      "id": "about",
+      "label": "О нас",
+      "href": "about.html"
+    }
+  ],
+  "categories": [
+    {
+      "id": "all",
+      "label": "Все"
+    },
+    {
+      "id": "iphone",
+      "label": "iPhone"
+    },
+    {
+      "id": "ipad",
+      "label": "iPad"
+    },
+    {
+      "id": "macbook",
+      "label": "MacBook"
+    },
+    {
+      "id": "apple-watch",
+      "label": "Apple Watch"
+    },
+    {
+      "id": "airpods",
+      "label": "AirPods"
+    }
+  ],
+  "theme": {
+    "active": "light-gray",
+    "presets": {
+      "dark-green": {
+        "name": "Тёмно-зелёная",
+        "bg": "#0a0f0d",
+        "bgCard": "#141a17",
+        "bgElevated": "#1c2420",
+        "border": "rgba(140,170,150,0.14)",
+        "text": "#eef2ef",
+        "textMuted": "#8a9a90",
+        "accent": "#4a7c59",
+        "accentHover": "#5d9469",
+        "accentGlow": "rgba(74,124,89,0.4)",
+        "success": "#5cb87a",
+        "danger": "#c45c5c",
+        "gradientFrom": "#3d5a47",
+        "gradientMid": "#4a7c59",
+        "gradientTo": "#6b8f72",
+        "headerBg": "rgba(10,15,13,0.42)"
+      },
+      "light-gray": {
+        "name": "Бело-серая",
+        "bg": "#f0f2f5",
+        "bgCard": "#ffffff",
+        "bgElevated": "#e8eaed",
+        "border": "rgba(0,0,0,0.08)",
+        "text": "#1a1f1c",
+        "textMuted": "#5c6560",
+        "accent": "#3d6b4f",
+        "accentHover": "#4a7c59",
+        "accentGlow": "rgba(61,107,79,0.25)",
+        "success": "#2d8a4e",
+        "danger": "#c45c5c",
+        "gradientFrom": "#4a7c59",
+        "gradientMid": "#5d9469",
+        "gradientTo": "#7aab82",
+        "headerBg": "rgba(255,255,255,0.55)"
+      }
+    }
+  }
+}

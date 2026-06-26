@@ -1,0 +1,36 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <meta name="robots" content="noindex, nofollow" />
+  <title>Обратная связь — АирДроп</title>
+  <link rel="stylesheet" href="css/style.css" />
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet" />
+</head>
+<body class="review-page">
+  <header class="header" id="site-header"></header>
+  <main class="review-main">
+    <div class="review-card review-card--wide">
+      <div class="review-card__icon review-card__icon--sad">💬</div>
+      <div class="review-stars-display" id="stars-display"></div>
+      <h1 class="review-card__title">Нам очень жаль, что мы вас расстроили</h1>
+      <p class="review-card__text">
+        Напишите, что пошло не так, и владелец магазина лично решит проблему.
+        Ваш отзыв останется только внутри компании.
+      </p>
+      <div class="review-actions">
+        <a class="review-action-btn review-action-btn--primary" id="link-form" href="#" target="_blank" rel="noopener">📝 Написать в форму</a>
+        <a class="review-action-btn review-action-btn--telegram" id="link-telegram" href="#" target="_blank" rel="noopener">✈️ Telegram</a>
+        <a class="review-action-btn review-action-btn--vk" id="link-vk" href="#" target="_blank" rel="noopener">💬 ВКонтакте</a>
+      </div>
+      <a href="catalog.html" class="review-back">← Вернуться в магазин</a>
+    </div>
+  </main>
+  <script type="module">
+    import { renderHeader } from './js/layout.js'
+    import './js/review-negative.js'
+    await renderHeader('reviews')
+  </script>
+</body>
+</html>

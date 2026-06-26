@@ -1,0 +1,66 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Товар — АирДроп</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet" />
+  <link rel="stylesheet" href="css/style.css" />
+</head>
+<body data-show-catalog-toggle="true" data-cart="link">
+  <header class="header" id="site-header"></header>
+
+  <main class="product-page">
+    <div class="container">
+      <nav class="breadcrumb">
+        <a href="catalog.html">Каталог</a>
+        <span>/</span>
+        <span id="breadcrumb-name"></span>
+      </nav>
+
+      <div class="product-detail">
+        <div class="product-detail__gallery">
+          <div class="product-detail__image" id="product-image">
+            <span class="product-card__badge" id="product-badge" style="display:none"></span>
+            <img src="" alt="" class="product-detail__photo" id="product-photo" />
+          </div>
+        </div>
+
+        <div class="product-detail__info">
+          <div class="product-card__brand" id="product-brand"></div>
+          <h1 class="product-detail__title" id="product-title"></h1>
+          <p class="product-detail__desc" id="product-description"></p>
+          <div class="product-detail__price" id="product-price"></div>
+          <div id="stock-info"></div>
+
+          <div class="option-group" id="group-sim" style="display:none">
+            <h3 class="option-group__title">Версия SIM</h3>
+            <div class="option-group__list" id="option-sim"></div>
+          </div>
+
+          <div class="option-group">
+            <h3 class="option-group__title">Цвет</h3>
+            <div class="option-group__list option-group__list--colors" id="option-colors"></div>
+          </div>
+
+          <div class="option-group" id="group-storage">
+            <h3 class="option-group__title">Память</h3>
+            <div class="option-group__list" id="option-storage"></div>
+          </div>
+
+          <div class="option-group" id="group-sizes" style="display:none">
+            <h3 class="option-group__title">Размер</h3>
+            <div class="option-group__list" id="option-sizes"></div>
+          </div>
+
+          <button class="product-detail__add" id="add-to-cart">Добавить в корзину</button>
+        </div>
+      </div>
+    </div>
+  </main>
+
+  <script type="module" src="js/product.js"></script>
+</body>
+</html>

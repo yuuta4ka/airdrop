@@ -1,0 +1,61 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Рассрочка — АирДроп</title>
+  <link rel="stylesheet" href="css/style.css" />
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet" />
+</head>
+<body>
+  <header class="header" id="site-header"></header>
+  <main class="page-main">
+    <div class="container page-content">
+      <h1 class="page-title">Рассрочка и оплата частями</h1>
+      <p class="page-lead" id="installment-lead"></p>
+
+      <section class="info-card">
+        <h2>Рассрочка от банков</h2>
+        <p id="installment-banks"></p>
+        <table class="info-table" id="installment-table">
+          <thead><tr><th>Срок</th><th>Комиссия банка</th></tr></thead>
+          <tbody></tbody>
+        </table>
+      </section>
+
+      <section class="info-card">
+        <h2 id="dolyami-title"></h2>
+        <p id="dolyami-desc"></p>
+        <p class="info-highlight" id="dolyami-commission"></p>
+        <img src="" alt="Как работает Долями" class="dolyami-img" id="dolyami-img" />
+      </section>
+
+      <p class="page-note" id="installment-note"></p>
+    </div>
+  </main>
+  <footer class="footer" id="site-footer"></footer>
+  <script type="module">
+    import { loadStore } from './js/store.js'
+    import { renderHeader, renderFooter } from './js/layout.js'
+
+    const store = await loadStore()
+    const { installment, phone, phoneDisplay, links } = store.settings
+
+    document.getElementById('installment-lead').textContent =
+      'Рассрочка от 6 банков — одобряет тот, кто предложит лучшие условия. Также доступна оплата «Долями».'
+    document.getElementById('installment-banks').textContent = installment.banks
+    document.querySelector('#installment-table tbody').innerHTML = installment.terms.map((t) =>
+      `<tr><td>${t.months} мес.</td><td>${t.commission}</td></tr>`
+    ).join('')
+    document.getElementById('dolyami-title').textContent = `Оплата «${installment.dolyami.name}»`
+    document.getElementById('dolyami-desc').textContent = installment.dolyami.description
+    document.getElementById('dolyami-commission').textContent = `Комиссия банка: ${installment.dolyami.commission}`
+    document.getElementById('dolyami-img').src = installment.dolyami.image
+    document.getElementById('installment-note').innerHTML =
+      `Уточняйте у менеджера: <a href="tel:${phone}">${phoneDisplay}</a> или <a href="${links.telegram}" target="_blank" rel="noopener">Telegram</a>.`
+
+    await renderHeader('installment')
+    await renderFooter()
+  </script>
+</body>
+</html>

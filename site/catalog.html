@@ -1,0 +1,85 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Каталог — АирДроп</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet" />
+  <link rel="stylesheet" href="css/style.css" />
+</head>
+<body data-show-catalog-toggle="true" data-cart="true">
+  <header class="header" id="site-header"></header>
+
+  <main>
+    <div class="catalog-top" id="catalog-top">
+      <section class="hero hero--compact">
+        <div class="container hero__content">
+          <h1 class="hero__title" id="hero-title"></h1>
+          <p class="hero__subtitle" id="hero-text"></p>
+        </div>
+      </section>
+
+      <section class="categories categories--top" id="categories-section">
+        <div class="container">
+          <div class="categories__list" id="categories"></div>
+        </div>
+      </section>
+    </div>
+
+    <section class="used-panel" id="used-panel" style="display:none">
+      <div class="container">
+        <div class="used-card">
+          <h2>Б/У телефоны и наличие</h2>
+          <p>Актуальные б/у iPhone и устройства в наличии — в нашем магазине ВКонтакте. Там же можно уточнить цены и забронировать.</p>
+          <div class="used-card__actions">
+            <a href="https://vk.com/market-213684685?screen=group" id="used-vk-link" class="btn btn--primary" target="_blank" rel="noopener">Открыть магазин ВКонтакте →</a>
+            <button class="btn btn--secondary" type="button" onclick="document.querySelector('[data-mode=new]')?.click()">← Вернуться к новым</button>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <div id="new-catalog">
+      <section class="products" id="catalog">
+        <div class="container">
+          <div class="products__header">
+            <h2 class="products__title">Новые устройства</h2>
+            <span class="products__count" id="products-count">0 товаров</span>
+          </div>
+          <div class="products__grid" id="products-grid"></div>
+        </div>
+      </section>
+
+      <section class="features" id="about">
+        <div class="container">
+          <h2 class="section-title">Почему АирДроп</h2>
+          <ul class="why-us" id="why-us-list"></ul>
+        </div>
+      </section>
+    </div>
+  </main>
+
+  <footer class="footer" id="site-footer"></footer>
+
+  <div class="cart-overlay" id="cart-overlay"></div>
+  <aside class="cart" id="cart-panel">
+    <div class="cart__header">
+      <h2 class="cart__title" id="cart-title">Корзина</h2>
+      <button class="cart__close" id="cart-close" aria-label="Закрыть">✕</button>
+    </div>
+    <div class="cart__items" id="cart-items"></div>
+    <div class="cart__footer">
+      <div class="cart__total">
+        <span class="cart__total-label">Итого</span>
+        <span class="cart__total-value" id="cart-total">0 ₽</span>
+      </div>
+      <button class="cart__checkout" id="cart-checkout" disabled>Оформить в Telegram</button>
+    </div>
+  </aside>
+
+  <div class="toast" id="toast"></div>
+  <script type="module" src="js/catalog.js"></script>
+</body>
+</html>
