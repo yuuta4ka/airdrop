@@ -2,7 +2,8 @@ const CART_KEY = 'airdrop_cart'
 
 export function loadCart() {
   try {
-    return JSON.parse(localStorage.getItem(CART_KEY)) || []
+    const data = JSON.parse(localStorage.getItem(CART_KEY))
+    return Array.isArray(data) ? data : []
   } catch {
     return []
   }

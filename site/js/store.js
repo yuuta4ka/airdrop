@@ -1,18 +1,54 @@
 let storeCache = null
 let productsCache = null
 
+function showOfflineBanner() {
+  if (document.getElementById('site-offline-banner')) return
+  const banner = document.createElement('div')
+  banner.id = 'site-offline-banner'
+  banner.style.cssText = 'position:fixed;inset:0;z-index:9999;display:flex;align-items:center;justify-content:center;background:#0a0f0d;color:#eef2ef;padding:24px;text-align:center;font-family:Inter,sans-serif;'
+  banner.innerHTML = `
+    <div>
+      <h1 style="margin-bottom:12px;font-size:1.4rem">Сайт нужно открыть через сервер</h1>
+      <p style="color:#8a9a90;margin-bottom:16px;line-height:1.6">
+        Запустите в терминале:<br><code style="background:#1c2420;padding:4px 8px;border-radius:6px">bash dev.sh</code><br>
+        Затем откройте <a href="http://localhost:8080" style="color:#5d9469">http://localhost:8080</a>
+      </p>
+    </div>
+  `
+  document.body.appendChild(banner)
+}
+
+function mergeStoreData() {
+  const products = Array.isArray(productsCache?.products)
+    ? productsCache.products
+    : Array.isArray(storeCache?.products)
+      ? storeCache.products
+      : []
+  const merged = { ...storeCache, products }
+  return merged
+}
+
 export async function loadStore() {
   if (storeCache && productsCache) {
-    return { ...storeCache, products: productsCache.products }
+    return mergeStoreData()
   }
-  const [sRes, pRes] = await Promise.all([
-    fetch('/api/store'),
-    fetch('/api/products'),
-  ])
-  if (!sRes.ok || !pRes.ok) throw new Error('Не удалось загрузить данные')
+  let sRes, pRes
+  try {
+    ;[sRes, pRes] = await Promise.all([
+      fetch('/api/store'),
+      fetch('/api/products'),
+    ])
+  } catch {
+    showOfflineBanner()
+    throw new Error('Сервер не запущен')
+  }
+  if (!sRes.ok || !pRes.ok) {
+    showOfflineBanner()
+    throw new Error('Не удалось загрузить данные')
+  }
   storeCache = await sRes.json()
   productsCache = await pRes.json()
-  return { ...storeCache, products: productsCache.products }
+  return mergeStoreData()
 }
 
 export async function loadProductsOnly() {

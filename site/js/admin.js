@@ -17,6 +17,7 @@ const TITLES = {
   products: 'Товары',
   theme: 'Темы и цвета',
   installment: 'Рассрочка',
+  orders: 'Заказы',
   reviews: 'Отзывы',
   config: 'Конфиги',
 }
@@ -44,7 +45,11 @@ function status(msg, type = 'info') {
 }
 
 async function loadData() {
-  const [sRes, pRes] = await Promise.all([fetch('/api/store'), fetch('/api/products')])
+  const headers = getToken() ? { Authorization: `Bearer ${getToken()}` } : {}
+  const [sRes, pRes] = await Promise.all([
+    fetch('/api/store', { headers }),
+    fetch('/api/products'),
+  ])
   if (!sRes.ok || !pRes.ok) throw new Error('Сервер недоступен')
   storeData = await sRes.json()
   productsData = await pRes.json()
@@ -79,15 +84,25 @@ function scrollAdminToTop() {
       content.scrollTop = 0
       content.focus({ preventScroll: true })
     }
-    const activeBtn = document.querySelector('.admin-nav__btn--active')
-    activeBtn?.scrollIntoView({ inline: 'center', block: 'nearest', behavior: 'smooth' })
     window.scrollTo(0, 0)
   })
+}
+
+function showLogin() {
+  $('login-screen').hidden = false
+  $('admin-app').hidden = true
+  document.documentElement.classList.remove('admin-locked')
+  document.body.classList.remove('admin-locked')
+  clearToken()
+  loginError('')
+  $('login-password')?.focus()
 }
 
 function showApp() {
   $('login-screen').hidden = true
   $('admin-app').hidden = false
+  document.documentElement.classList.add('admin-locked')
+  document.body.classList.add('admin-locked')
   renderTab()
   scrollAdminToTop()
 }
@@ -136,25 +151,43 @@ $('login-form').addEventListener('submit', async (e) => {
   e.preventDefault()
   loginError('')
   const btn = $('login-submit')
+  const password = val('login-password')
+  if (!password) return
+
   btn.disabled = true
   btn.textContent = 'Вход...'
   try {
+    const res = await fetch('/api/admin/login', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ password }),
+    })
+    if (res.status === 404) {
+      loginError('Сервер нужно перезапустить: bash dev.sh')
+      return
+    }
+    if (!res.ok) {
+      const data = await res.json().catch(() => ({}))
+      loginError(data.error || 'Неверный пароль')
+      return
+    }
+    setToken(password)
     await loadData()
-    if (val('login-password') === storeData.adminPassword) {
-      setToken(val('login-password'))
-      showApp()
-    } else loginError('Неверный пароль')
+    showApp()
   } catch {
-    loginError('Запустите сервер: bash start.sh')
+    loginError('Сервер недоступен. Запустите: bash dev.sh')
   } finally {
     btn.disabled = false
     btn.textContent = 'Войти'
   }
 })
 
-if (getToken()) loadData().then(showApp).catch(() => { clearToken(); loginError('Войдите снова') })
+showLogin()
 
-$('btn-logout')?.addEventListener('click', () => { clearToken(); location.reload() })
+$('btn-logout')?.addEventListener('click', () => {
+  showLogin()
+  $('login-password').value = ''
+})
 
 $('btn-save')?.addEventListener('click', async () => {
   try {
@@ -190,6 +223,7 @@ function renderTab() {
   else if (activeTab === 'products') renderProducts(c)
   else if (activeTab === 'theme') renderTheme(c)
   else if (activeTab === 'installment') renderInstallment(c)
+  else if (activeTab === 'orders') renderOrders(c)
   else if (activeTab === 'reviews') renderReviews(c)
   else if (activeTab === 'config') renderConfig(c)
   scrollAdminToTop()
@@ -438,6 +472,7 @@ function renderProducts(c) {
       badge: null, image: '', description: '', simTypes: null, simModifiers: [],
       colors: [{ id: 'black', name: 'Чёрный', hex: '#1a1a1a', priceAdd: 0, image: '' }],
       storage: [{ label: '128 ГБ', price: 0 }], sizes: null, stock: [], variants: [],
+      showCatalogSpec: false,
     })
     editingProductIdx = productsData.products.length - 1
     renderProducts(c)
@@ -456,6 +491,7 @@ function renderProductEditor(c) {
       ${field('Бейдж', 'p-badge', p.badge || '', 'text', 'Новинка, Хит, В наличии — или пусто')}
       ${field('Фото (URL или путь)', 'p-image', p.image)}
     </div>
+    <label class="field field--check"><input type="checkbox" id="p-showCatalogSpec" ${p.showCatalogSpec ? 'checked' : ''} /> Показывать «В наличии / Под заказ» на карточке в каталоге</label>
     <label class="btn btn--secondary admin-upload-btn">Загрузить фото<input type="file" id="p-upload" accept="image/*" hidden /></label>
     ${field('Описание', 'p-desc', p.description, 'textarea')}`)}
 
@@ -614,6 +650,52 @@ function renderInstallment(c) {
   $('add-term').onclick = () => { inst.terms.push({ months: 6, commission: '12%' }); renderTerms() }
 }
 
+async function renderOrders(c) {
+  c.innerHTML = '<p class="admin-hint">Загрузка заказов…</p>'
+  try {
+    const res = await fetch('/api/orders', {
+      headers: { Authorization: `Bearer ${getToken()}` },
+    })
+    if (!res.ok) throw new Error('Не удалось загрузить заказы')
+    const data = await res.json()
+    const orders = data.orders || []
+
+    if (!orders.length) {
+      c.innerHTML = section('Заказы', '<p class="admin-hint">Заказов пока нет. Они появятся после оформления на сайте.</p>')
+      return
+    }
+
+    c.innerHTML = section('Заказы', `
+      <p class="admin-hint">${orders.length} заказов · новые сверху. Уведомления в Telegram отправляются автоматически при оформлении на сайте.</p>
+      <div id="orders-list"></div>
+    `)
+
+    $('orders-list').innerHTML = orders.map((o) => {
+      const date = new Date(o.createdAt).toLocaleString('ru-RU')
+      const items = o.items.map((i) => `${i.name} × ${i.qty}`).join(', ')
+      const tgStatus = o.notified
+        ? `✓ Telegram${o.notifiedChats?.length ? ` (${o.notifiedChats.length})` : ''}`
+        : o.notifyError
+          ? `Telegram: ${o.notifyError}`
+          : 'Telegram: ожидание отправки…'
+      return `
+        <div class="admin-order-row">
+          <div class="admin-order-row__head">
+            <strong>${o.id}</strong>
+            <span>${date}</span>
+          </div>
+          <div>${o.name} · ${o.phoneDisplay}</div>
+          <div class="admin-hint">${items}</div>
+          <div class="admin-hint">${tgStatus}</div>
+          <div class="admin-order-row__total">${Number(o.total).toLocaleString('ru-RU')} ₽</div>
+        </div>
+      `
+    }).join('')
+  } catch (err) {
+    c.innerHTML = section('Заказы', `<p class="admin-hint">${err.message}</p>`)
+  }
+}
+
 function renderReviews(c) {
   const r = storeData.settings.reviews
   c.innerHTML = section('Негативные отзывы (1–3 ★)', `
@@ -745,6 +827,7 @@ function collectProduct() {
   const p = productsData.products[editingProductIdx]
   p.name = val('p-name'); p.brand = val('p-brand'); p.category = val('p-category')
   p.badge = val('p-badge') || null; p.image = val('p-image'); p.description = val('p-desc')
+  p.showCatalogSpec = !!$('p-showCatalogSpec')?.checked
 
   p.colors = p.colors.map((col, i) => ({
     id: col.id || `c${i}`,

@@ -12,8 +12,23 @@
 
 * { box-sizing: border-box; margin: 0; padding: 0; }
 
+[hidden] {
+  display: none !important;
+}
+
 html {
   scroll-behavior: smooth;
+}
+
+html.admin-locked {
+  height: 100%;
+  overflow: hidden;
+}
+
+body.admin-locked {
+  height: 100%;
+  overflow: hidden;
+  overscroll-behavior: none;
 }
 
 body {
@@ -21,7 +36,7 @@ body {
   background: var(--admin-bg);
   color: var(--admin-text);
   min-height: 100vh;
-  overflow: hidden;
+  min-height: 100dvh;
 }
 
 body::before {
@@ -37,12 +52,17 @@ body::before {
 }
 
 .login-screen {
+  position: fixed;
+  inset: 0;
+  z-index: 1000;
   min-height: 100vh;
+  min-height: 100dvh;
   display: flex;
   align-items: center;
   justify-content: center;
   padding: 24px;
   overflow: auto;
+  background: var(--admin-bg);
 }
 
 .login-card {
@@ -71,10 +91,11 @@ body::before {
 }
 
 .admin-app {
+  position: fixed;
+  inset: 0;
   display: grid;
-  grid-template-columns: 240px 1fr;
-  height: 100vh;
-  height: 100dvh;
+  grid-template-columns: 240px minmax(0, 1fr);
+  grid-template-rows: minmax(0, 1fr);
   overflow: hidden;
 }
 
@@ -89,6 +110,7 @@ body::before {
   overflow-y: auto;
   overflow-x: hidden;
   scrollbar-width: thin;
+  min-height: 0;
 }
 
 .admin-sidebar__brand {
@@ -146,10 +168,11 @@ body::before {
 }
 
 .admin-main {
-  display: flex;
-  flex-direction: column;
-  overflow: hidden;
+  display: grid;
+  grid-template-rows: auto auto minmax(0, 1fr);
   min-height: 0;
+  min-width: 0;
+  overflow: hidden;
 }
 
 .admin-topbar {
@@ -182,9 +205,11 @@ body::before {
 .admin-content {
   padding: 20px 24px 48px;
   overflow-y: auto;
-  flex: 1;
+  overflow-x: hidden;
   min-height: 0;
-  scroll-behavior: smooth;
+  overscroll-behavior: contain;
+  -webkit-overflow-scrolling: touch;
+  touch-action: pan-y;
 }
 
 .admin-content:focus {
@@ -338,6 +363,34 @@ body::before {
 .admin-product-row div { flex: 1; display: flex; flex-direction: column; gap: 2px; }
 .admin-product-row span { font-size: 0.78rem; color: var(--admin-muted); }
 
+.admin-order-row {
+  padding: 14px 16px;
+  background: rgba(255, 255, 255, 0.05);
+  border: 1px solid var(--admin-border);
+  border-radius: 12px;
+  margin-bottom: 10px;
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+
+.admin-order-row__head {
+  display: flex;
+  justify-content: space-between;
+  gap: 12px;
+  flex-wrap: wrap;
+}
+
+.admin-order-row__head span {
+  color: var(--admin-muted);
+  font-size: 0.82rem;
+}
+
+.admin-order-row__total {
+  font-weight: 700;
+  margin-top: 4px;
+}
+
 .admin-upload-btn { margin: 12px 0; cursor: pointer; display: inline-flex; }
 
 .admin-card--fixed { opacity: 0.85; cursor: default; }
@@ -458,13 +511,9 @@ body::before {
 
 /* Mobile: horizontal tab strip instead of hidden sidebar */
 @media (max-width: 900px) {
-  body { overflow: auto; }
-
   .admin-app {
     grid-template-columns: 1fr;
-    grid-template-rows: auto 1fr;
-    height: auto;
-    min-height: 100dvh;
+    grid-template-rows: auto minmax(0, 1fr);
   }
 
   .admin-sidebar {
@@ -504,13 +553,14 @@ body::before {
   }
 
   .admin-main {
-    overflow: visible;
-    min-height: 60vh;
+    overflow: hidden;
+    min-height: 0;
   }
 
   .admin-content {
-    overflow: visible;
-    min-height: 50vh;
+    overflow-y: auto;
+    -webkit-overflow-scrolling: touch;
+    min-height: 0;
   }
 
   .admin-grid--4 { grid-template-columns: 1fr; }

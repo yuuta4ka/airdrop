@@ -26,4 +26,20 @@ fi
 echo "Node.js: $(node --version)"
 echo "Запуск сервера..."
 echo ""
+
+PORT="${PORT:-8080}"
+if lsof -ti:"$PORT" >/dev/null 2>&1; then
+  echo "Порт $PORT занят — останавливаем предыдущий процесс..."
+  lsof -ti:"$PORT" | xargs kill -9 2>/dev/null || true
+  sleep 1
+fi
+
+if [ -f .env ]; then
+  set -a
+  # shellcheck disable=SC1091
+  source .env
+  set +a
+fi
+
+export PORT
 node server.mjs

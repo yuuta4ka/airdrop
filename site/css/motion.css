@@ -361,7 +361,4 @@ body[data-theme="light-gray"] .ambient__grid {
   -webkit-backdrop-filter: blur(12px) saturate(140%) !important;
 }
 
-/* Toast — only animate when visible */
-.toast.toast--visible {
-  animation: fade-up 0.4s var(--spring) both;
-}
+/* Toast uses CSS transitions in style.css (keeps translateX(-50%) for centering) */

@@ -2,8 +2,8 @@ import {
   loadStore, getProductById, calcPrice, formatPrice, makeCartKey,
   getProductImage, getStockForVariant,
 } from './store.js'
-import { loadCart, saveCart, getCartCount } from './cart.js'
-import { renderHeader } from './layout.js'
+import { renderHeader, renderFooter } from './layout.js'
+import { initCartUI, addItem, openCart, showToast } from './cart-ui.js'
 
 let store, product
 let selectedColor = 0
@@ -29,7 +29,10 @@ async function init() {
   }
 
   document.body.dataset.showCatalogToggle = 'true'
+  document.body.dataset.cart = 'true'
   await renderHeader('catalog')
+  await renderFooter()
+  initCartUI(store)
 
   els.breadcrumb = document.getElementById('breadcrumb-name')
   els.title = document.getElementById('product-title')
@@ -48,10 +51,8 @@ async function init() {
   els.sizesGroup = document.getElementById('group-sizes')
   els.simGroup = document.getElementById('group-sim')
   els.addBtn = document.getElementById('add-to-cart')
-  els.cartBadge = document.getElementById('cart-badge')
 
   document.getElementById('add-to-cart')?.addEventListener('click', addToCart)
-  updateCartBadge()
   renderOptions()
 }
 
@@ -94,7 +95,6 @@ function updateStockInfo() {
 }
 
 function updateUI() {
-  const color = product.colors[selectedColor]
   const img = getProductImage(product, selectedColor)
   els.photo.src = img
   els.photo.alt = product.name
@@ -195,15 +195,7 @@ function renderOptions() {
   updateUI()
 }
 
-function updateCartBadge() {
-  const count = getCartCount(loadCart())
-  if (!els.cartBadge) return
-  els.cartBadge.textContent = count
-  els.cartBadge.style.display = count > 0 ? 'flex' : 'none'
-}
-
 function addToCart() {
-  const cart = loadCart()
   const color = product.colors[selectedColor]
   const sim = getSelectedSimType()
   const storageLabel = product.sizes?.length > 1
@@ -215,12 +207,9 @@ function addToCart() {
   const variantLabel = getVariantLabel()
   const image = getProductImage(product, selectedColor)
 
-  const existing = cart.find((item) => item.key === key)
-  if (existing) existing.qty += 1
-  else cart.push({ key, productId: product.id, name: product.name, image, variantLabel, price, qty: 1 })
-
-  saveCart(cart)
-  location.href = 'catalog.html?added=1'
+  addItem({ key, productId: product.id, name: product.name, image, variantLabel, price, qty: 1 })
+  showToast('Товар добавлен в корзину')
+  openCart()
 }
 
 init()

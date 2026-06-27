@@ -32,6 +32,10 @@ export function applyTheme(themeConfig) {
   )
 
   document.body.dataset.theme = themeConfig.active
+  document.documentElement.dataset.theme = themeConfig.active
+  try {
+    localStorage.setItem('airdrop_theme_active', themeConfig.active)
+  } catch { /* private mode */ }
 }
 
 export function getThemeVarKeys() {

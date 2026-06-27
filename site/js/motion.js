@@ -1,5 +1,4 @@
 const REVEAL_SELECTOR = [
-  '.product-card',
   '.why-us li',
   '.info-card',
   '.used-card',
@@ -42,15 +41,14 @@ function injectAmbient() {
 function setupReveal() {
   const reduceMotion = window.matchMedia('(prefers-reduced-motion: reduce)').matches
 
-  const applyReveal = (root = document) => {
-    const items = root.querySelectorAll(REVEAL_SELECTOR)
-    items.forEach((el, i) => {
+  const applyReveal = () => {
+    document.querySelectorAll(REVEAL_SELECTOR).forEach((el, i) => {
       if (el.classList.contains('reveal')) return
       el.classList.add('reveal')
-      if (!reduceMotion) {
-        el.style.setProperty('--reveal-delay', `${Math.min(i * 60, 400)}ms`)
-      } else {
+      if (reduceMotion) {
         el.classList.add('is-visible')
+      } else {
+        el.style.setProperty('--reveal-delay', `${Math.min(i * 60, 400)}ms`)
       }
     })
   }
@@ -68,7 +66,7 @@ function setupReveal() {
         }
       })
     },
-    { threshold: 0.12, rootMargin: '0px 0px -40px 0px' }
+    { threshold: 0.08, rootMargin: '0px 0px -20px 0px' }
   )
 
   const watch = () => {
@@ -76,14 +74,9 @@ function setupReveal() {
   }
 
   watch()
-
+  window.addEventListener('catalog-rendered', applyReveal)
   window.addEventListener('catalog-rendered', watch)
   window.addEventListener('products-rendered', watch)
-
-  new MutationObserver(() => {
-    applyReveal()
-    watch()
-  }).observe(document.body, { childList: true, subtree: true })
 }
 
 function setupHeroParallax() {
@@ -107,11 +100,17 @@ function observeCartBadge() {
   const badge = document.getElementById('cart-badge')
   if (!badge) return
 
+  let lastCount = badge.textContent
+  let animating = false
+
   new MutationObserver(() => {
-    if (badge.style.display !== 'none' && badge.textContent !== '0') {
-      badge.classList.remove('cart-btn__badge--pop')
-      void badge.offsetWidth
-      badge.classList.add('cart-btn__badge--pop')
-    }
-  }).observe(badge, { attributes: true, childList: true, characterData: true, subtree: true })
+    if (animating || badge.textContent === lastCount) return
+    lastCount = badge.textContent
+    if (badge.style.display === 'none' || badge.textContent === '0') return
+    animating = true
+    badge.classList.remove('cart-btn__badge--pop')
+    void badge.offsetWidth
+    badge.classList.add('cart-btn__badge--pop')
+    animating = false
+  }).observe(badge, { childList: true, characterData: true, subtree: true })
 }

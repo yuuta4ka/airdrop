@@ -460,6 +460,12 @@ body[data-theme="light-gray"] .catalog-top::before {
 }
 
 /* ─── Product cards ─── */
+/* Product cards — Safari-safe: no mask on grid cards (mask-composite breaks rendering) */
+.products__grid .product-card::before,
+.products__grid .product-card::after {
+  display: none;
+}
+
 .product-card {
   background: var(--glass-bg);
   backdrop-filter: blur(var(--glass-blur)) saturate(var(--glass-saturate));

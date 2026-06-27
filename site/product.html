@@ -2,6 +2,7 @@
 <html lang="ru">
 <head>
   <meta charset="UTF-8" />
+  <script src="js/theme-init.js"></script>
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>Товар — АирДроп</title>
   <link rel="preconnect" href="https://fonts.googleapis.com" />
@@ -9,7 +10,7 @@
   <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet" />
   <link rel="stylesheet" href="css/style.css" />
 </head>
-<body data-show-catalog-toggle="true" data-cart="link">
+<body data-show-catalog-toggle="true" data-cart="true">
   <header class="header" id="site-header"></header>
 
   <main class="product-page">
@@ -61,6 +62,25 @@
     </div>
   </main>
 
+  <footer class="footer" id="site-footer"></footer>
+
+  <div class="cart-overlay" id="cart-overlay"></div>
+  <aside class="cart" id="cart-panel">
+    <div class="cart__header">
+      <h2 class="cart__title" id="cart-title">Корзина</h2>
+      <button class="cart__close" id="cart-close" aria-label="Закрыть">✕</button>
+    </div>
+    <div class="cart__items" id="cart-items"></div>
+    <div class="cart__footer">
+      <div class="cart__total">
+        <span class="cart__total-label">Итого</span>
+        <span class="cart__total-value" id="cart-total">0 ₽</span>
+      </div>
+      <button class="cart__checkout" id="cart-checkout" disabled>Оформить заказ</button>
+    </div>
+  </aside>
+
+  <div class="toast" id="toast"></div>
   <script type="module" src="js/product.js"></script>
 </body>
 </html>

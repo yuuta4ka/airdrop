@@ -2,10 +2,37 @@ import { loadStore, getCatalogMode, setCatalogMode } from './store.js'
 import { applyTheme } from './theme.js'
 import { initMotion } from './motion.js'
 
+const NAV_ICONS = {
+  home: '🏠',
+  catalog: '📦',
+  about: 'ℹ️',
+  installment: '💳',
+  contacts: '📞',
+  reviews: '⭐',
+}
+
 export async function initSite() {
   const store = await loadStore()
   applyTheme(store.theme)
   initMotion()
+}
+
+function cartButtonHtml() {
+  return `
+    <button class="cart-btn" id="cart-btn" aria-label="Корзина">
+      <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M6 2L3 6v14a2 2 0 002 2h14a2 2 0 002-2V6l-3-4z"/><line x1="3" y1="6" x2="21" y2="6"/><path d="M16 10a4 4 0 01-8 0"/></svg>
+      <span class="cart-btn__badge" id="cart-badge" style="display:none">0</span>
+    </button>
+  `
+}
+
+function catalogToggleHtml(mode) {
+  return `
+    <div class="catalog-toggle" id="catalog-toggle">
+      <button class="catalog-toggle__btn${mode === 'new' ? ' catalog-toggle__btn--active' : ''}" data-mode="new">Новые</button>
+      <button class="catalog-toggle__btn${mode === 'used' ? ' catalog-toggle__btn--active' : ''}" data-mode="used">Б/У</button>
+    </div>
+  `
 }
 
 export async function renderHeader(activeId = '') {
@@ -15,7 +42,6 @@ export async function renderHeader(activeId = '') {
   const mode = getCatalogMode()
   const showToggle = document.body.dataset.showCatalogToggle === 'true'
   const showCart = document.body.dataset.cart === 'true'
-  const cartLink = document.body.dataset.cart === 'link'
 
   const header = document.getElementById('site-header')
   if (!header) return
@@ -33,24 +59,12 @@ export async function renderHeader(activeId = '') {
         `).join('')}
       </nav>
       <div class="header__actions">
-        ${showToggle ? `
-          <div class="catalog-toggle" id="catalog-toggle">
-            <button class="catalog-toggle__btn${mode === 'new' ? ' catalog-toggle__btn--active' : ''}" data-mode="new">Новые</button>
-            <button class="catalog-toggle__btn${mode === 'used' ? ' catalog-toggle__btn--active' : ''}" data-mode="used">Б/У</button>
-          </div>
-        ` : ''}
-        ${showCart ? `
-          <button class="cart-btn" id="cart-btn" aria-label="Корзина">
-            <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M6 2L3 6v14a2 2 0 002 2h14a2 2 0 002-2V6l-3-4z"/><line x1="3" y1="6" x2="21" y2="6"/><path d="M16 10a4 4 0 01-8 0"/></svg>
-            <span class="cart-btn__badge" id="cart-badge" style="display:none">0</span>
-          </button>
-        ` : ''}
-        ${cartLink ? `
-          <a href="catalog.html" class="cart-btn" aria-label="Корзина">
-            <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M6 2L3 6v14a2 2 0 002 2h14a2 2 0 002-2V6l-3-4z"/><line x1="3" y1="6" x2="21" y2="6"/><path d="M16 10a4 4 0 01-8 0"/></svg>
-            <span class="cart-btn__badge" id="cart-badge" style="display:none">0</span>
-          </a>
-        ` : ''}
+        <div class="header__actions-slot header__actions-slot--toggle">
+          ${showToggle ? catalogToggleHtml(mode) : ''}
+        </div>
+        <div class="header__actions-slot header__actions-slot--cart">
+          ${showCart ? cartButtonHtml() : ''}
+        </div>
       </div>
     </div>
   `
@@ -69,7 +83,31 @@ export async function renderHeader(activeId = '') {
     })
   })
 
+  await renderMobileNav(activeId)
   initMotion()
+}
+
+export async function renderMobileNav(activeId = '') {
+  const store = await loadStore()
+  const { navigation } = store
+
+  let nav = document.getElementById('mobile-nav')
+  if (!nav) {
+    nav = document.createElement('nav')
+    nav.id = 'mobile-nav'
+    nav.className = 'mobile-nav'
+    nav.setAttribute('aria-label', 'Мобильное меню')
+    document.body.appendChild(nav)
+  }
+
+  nav.innerHTML = navigation.map((item) => `
+    <a href="${item.href}" class="mobile-nav__link${activeId === item.id ? ' mobile-nav__link--active' : ''}">
+      <span class="mobile-nav__icon">${NAV_ICONS[item.id] || '•'}</span>
+      <span class="mobile-nav__label">${item.label}</span>
+    </a>
+  `).join('')
+
+  document.body.classList.add('has-mobile-nav')
 }
 
 export async function renderFooter() {
