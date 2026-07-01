@@ -5,9 +5,9 @@ document.querySelectorAll('.star-btn').forEach((btn) => {
   btn.addEventListener('click', () => {
     const rating = Number(btn.dataset.rating)
     if (rating <= 3) {
-      window.location.href = `review-negative.html?stars=${rating}`
+      window.location.href = `/review-negative?stars=${rating}`
     } else {
-      window.location.href = `review-positive.html?stars=${rating}`
+      window.location.href = `/review-positive?stars=${rating}`
     }
   })
 })

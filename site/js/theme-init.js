@@ -51,4 +51,17 @@
     unlockScroll()
   }
   window.addEventListener('pageshow', unlockScroll)
+
+  if (!document.querySelector('link[rel="icon"]')) {
+    var icon = document.createElement('link')
+    icon.rel = 'icon'
+    icon.type = 'image/png'
+    icon.href = '/assets/logo.png'
+    document.head.appendChild(icon)
+
+    var apple = document.createElement('link')
+    apple.rel = 'apple-touch-icon'
+    apple.href = '/assets/logo.png'
+    document.head.appendChild(apple)
+  }
 })()

@@ -23,7 +23,7 @@
         <button class="star-btn" data-rating="5" aria-label="5 звёзд">★</button>
       </div>
       <p class="stars__hint">1 — плохо · 5 — отлично</p>
-      <a href="catalog.html" class="review-back">← Вернуться в магазин</a>
+      <a href="/catalog" class="review-back">← Вернуться в магазин</a>
     </div>
   </main>
   <script type="module">
@@ -39,7 +39,7 @@
       btn.addEventListener('mouseenter', () => highlight(Number(btn.dataset.rating)))
       btn.addEventListener('click', () => {
         const r = Number(btn.dataset.rating)
-        location.href = r <= 3 ? `review-negative.html?stars=${r}` : `review-positive.html?stars=${r}`
+        location.href = r <= 3 ? `/review-negative?stars=${r}` : `/review-positive?stars=${r}`
       })
     })
     document.getElementById('stars').addEventListener('mouseleave', () => {

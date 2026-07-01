@@ -5,6 +5,7 @@
     "tagline": "техника Apple в наличии и под заказ",
     "reviewBrand": "iStorik",
     "logo": "assets/logo-text.png",
+    "logoIcon": "assets/logo.png",
     "phone": "+79527421135",
     "phoneDisplay": "8 (952) 742-11-35",
     "phoneContactName": "Илья",
@@ -31,13 +32,26 @@
         "city": "Карпинск",
         "street": "ул. Куйбышева, 42",
         "note": "вход со двора",
-        "yandexMaps": "https://yandex.ru/maps/-/CTUMmG6D"
+        "yandexMaps": "https://yandex.ru/maps/-/CTUMmG6D",
+        "photos": [
+          "assets/stores/karpinsk/Vhod.webp",
+          "assets/stores/karpinsk/interier1.jpg",
+          "assets/stores/karpinsk/interier2.jpg",
+          "assets/stores/karpinsk/interier3.jpg"
+        ]
       },
       {
         "city": "Краснотурьинск",
         "street": "ул. Ленина, 76",
         "note": "",
-        "yandexMaps": "https://yandex.ru/maps/-/CTUMiLpS"
+        "yandexMaps": "https://yandex.ru/maps/-/CTUMiLpS",
+        "photos": [
+          "assets/stores/krasnoturinsk/Vhod.jpg",
+          "assets/stores/krasnoturinsk/interier1.jpg",
+          "assets/stores/krasnoturinsk/interier2.jpg",
+          "assets/stores/krasnoturinsk/interier3.jpg",
+          "assets/stores/krasnoturinsk/interier4.jpg"
+        ]
       }
     ],
     "links": {
@@ -95,32 +109,32 @@
     {
       "id": "home",
       "label": "Главная",
-      "href": "index.html"
+      "href": "/"
     },
     {
       "id": "catalog",
       "label": "Каталог",
-      "href": "catalog.html"
+      "href": "/catalog"
     },
     {
       "id": "installment",
       "label": "Рассрочка",
-      "href": "installment.html"
+      "href": "/installment"
     },
     {
       "id": "reviews",
       "label": "Отзывы",
-      "href": "review.html"
+      "href": "/review"
     },
     {
       "id": "contacts",
       "label": "Контакты",
-      "href": "contacts.html"
+      "href": "/contacts"
     },
     {
       "id": "about",
       "label": "О нас",
-      "href": "about.html"
+      "href": "/about"
     }
   ],
   "categories": [
@@ -147,6 +161,18 @@
     {
       "id": "airpods",
       "label": "AirPods"
+    },
+    {
+      "id": "samsung",
+      "label": "Samsung"
+    },
+    {
+      "id": "xiaomi",
+      "label": "Xiaomi"
+    },
+    {
+      "id": "galaxy-watch",
+      "label": "Galaxy Watch"
     }
   ],
   "theme": {

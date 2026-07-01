@@ -21,10 +21,17 @@
           <h1 class="hero__title" id="home-hero-title">АирДроп — техника Apple<br /><span>в наличии и под заказ</span></h1>
           <p class="hero__subtitle" id="home-hero-text"></p>
           <div class="hero__actions">
-            <a href="catalog.html" class="btn btn--primary">Каталог новых устройств</a>
-            <a href="https://vk.com/market-213684685?screen=group" class="btn btn--secondary" target="_blank" rel="noopener">Б/У и наличие во ВКонтакте</a>
+            <a href="/catalog" class="btn btn--primary" id="hero-catalog-btn">Каталог новых устройств</a>
+            <a href="#" class="btn btn--secondary" id="hero-vk-btn" target="_blank" rel="noopener">Б/У и наличие во ВКонтакте</a>
           </div>
         </div>
+      </div>
+    </section>
+
+    <section class="stores-section" id="home-stores">
+      <div class="container">
+        <h2 class="section-title">Наши магазины</h2>
+        <div class="stores-grid" id="stores-grid"></div>
       </div>
     </section>
 
@@ -39,12 +46,26 @@
   <footer class="footer" id="site-footer"></footer>
 
   <script type="module">
-    import { loadStore } from './js/store.js'
+    import { loadStore, setCatalogMode } from './js/store.js'
     import { renderHeader, renderFooter } from './js/layout.js'
+    import { renderStoresSectionHtml, initStorePhotoGalleries } from './js/stores-ui.js'
 
     const store = await loadStore()
-    document.getElementById('home-hero-text').textContent = store.settings.heroText || store.settings.description
-    document.getElementById('home-why-us').innerHTML = store.settings.whyUs.map((i) => `<li>${i}</li>`).join('')
+    const s = store.settings
+    document.getElementById('home-hero-text').textContent = s.heroText || s.description
+    document.getElementById('home-why-us').innerHTML = s.whyUs.map((i) => `<li>${i}</li>`).join('')
+    document.querySelector('.hero__badge').innerHTML =
+      `<span class="hero__badge-dot"></span>${s.addresses.map((a) => a.city).join(' и ')}`
+    document.getElementById('hero-vk-btn').href = s.links.vkMarket
+    const storesHtml = renderStoresSectionHtml(s.addresses, s.hours)
+    const storesSection = document.getElementById('home-stores')
+    if (storesHtml) {
+      document.getElementById('stores-grid').innerHTML = storesHtml
+      initStorePhotoGalleries()
+    } else {
+      storesSection.style.display = 'none'
+    }
+    document.getElementById('hero-catalog-btn')?.addEventListener('click', () => setCatalogMode('new'))
     await renderHeader('home')
     await renderFooter()
   </script>

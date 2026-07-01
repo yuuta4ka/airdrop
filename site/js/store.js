@@ -139,15 +139,52 @@ export function makeCartKey(productId, colorId, storageLabel, sizeLabel, simType
   return `${productId}|${colorId}|${storageLabel}|${sizeLabel || ''}|${simType || ''}`
 }
 
-export function getProductImage(product, colorIdx = 0) {
-  const color = product.colors?.[colorIdx]
-  if (color?.image) return color.image
-  return product.image || 'assets/logo.png'
+export function getAllProductImages(product) {
+  const merged = []
+  const add = (img) => {
+    if (img && !merged.includes(img)) merged.push(img)
+  }
+
+  if (product.images?.length) {
+    product.images.forEach(add)
+  } else if (product.image) {
+    add(product.image)
+  }
+
+  product.colors?.forEach((color) => {
+    add(color.image)
+    color.images?.forEach(add)
+  })
+
+  return merged.length ? merged : ['assets/logo.png']
 }
 
-export function getStockForVariant(product, colorId, simType) {
+export function getProductImages(product, colorIdx = 0) {
+  const all = getAllProductImages(product)
+  const color = product.colors?.[colorIdx]
+  if (!color?.image) return all
+
+  const prioritized = [color.image, ...all.filter((img) => img !== color.image)]
+  return prioritized
+}
+
+export function getProductImage(product, colorIdx = 0) {
+  return getProductImages(product, colorIdx)[0]
+}
+
+export function getStockForVariant(product, colorId, simType, storageLabel) {
   if (!product.stock?.length) return null
-  return product.stock.find((s) => s.colorId === colorId && (!simType || s.simType === simType)) || null
+  return product.stock.find((s) => {
+    if (s.colorId !== colorId || s.qty <= 0) return false
+    if (simType && s.simType && s.simType !== simType) return false
+    if (storageLabel && s.storageLabel && s.storageLabel !== storageLabel) return false
+    return true
+  }) || null
+}
+
+export function getInStockItems(product) {
+  if (!product.stock?.length) return []
+  return product.stock.filter((s) => s.qty > 0)
 }
 
 export function hasAnyStock(product) {
@@ -162,4 +199,9 @@ export function getCatalogMode() {
 
 export function setCatalogMode(mode) {
   sessionStorage.setItem(CATALOG_MODE_KEY, mode)
+}
+
+export function isCatalogPage() {
+  const path = window.location.pathname.replace(/\.html$/, '')
+  return path === '/catalog' || path.endsWith('/catalog')
 }

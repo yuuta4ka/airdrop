@@ -1,3 +1,24 @@
 {
-  "orders": []
+  "orders": [
+    {
+      "id": "AD-MR1XA3J7",
+      "createdAt": "2026-07-01T10:18:17.827Z",
+      "name": "Павел",
+      "phone": "71123123123",
+      "phoneDisplay": "+7 (112) 312-31-23",
+      "items": [
+        {
+          "key": "18|gold|256 ГБ||",
+          "name": "Xiaomi 15",
+          "variantLabel": "Золотой · 256 ГБ",
+          "qty": 1,
+          "price": 60990
+        }
+      ],
+      "total": 60990,
+      "notified": false,
+      "notifiedChats": [],
+      "notifyError": "The operation was aborted due to timeout; The operation was aborted due to timeout"
+    }
+  ]
 }

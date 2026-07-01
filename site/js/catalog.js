@@ -57,10 +57,10 @@ async function init() {
     const params = new URLSearchParams(window.location.search)
     if (params.get('added')) {
       showToast('Товар добавлен в корзину')
-      history.replaceState({}, '', 'catalog.html')
+      history.replaceState({}, '', '/catalog')
     }
     if (params.get('openCart')) {
-      history.replaceState({}, '', 'catalog.html')
+      history.replaceState({}, '', '/catalog')
       setTimeout(() => document.getElementById('cart-btn')?.click(), 300)
     }
   } catch (err) {
@@ -72,6 +72,8 @@ async function init() {
 function renderCatalogMode() {
   const mode = getCatalogMode()
   const isUsed = mode === 'used'
+
+  document.body.classList.toggle('catalog--used', isUsed)
 
   if (els.usedPanel) els.usedPanel.style.display = isUsed ? 'block' : 'none'
   if (els.newCatalog) els.newCatalog.style.display = isUsed ? 'none' : 'block'
@@ -123,7 +125,7 @@ function renderProducts() {
     const specOverlay = p.showCatalogSpec ? `<span class="product-card__spec product-card__spec--overlay">${specText}</span>` : ''
 
     return `
-    <a href="product.html#${p.id}" class="product-card product-card--link is-visible">
+    <a href="/product#${p.id}" class="product-card product-card--link is-visible">
       <div class="product-card__image">
         ${badge}
         ${specOverlay}

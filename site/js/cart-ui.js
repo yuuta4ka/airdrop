@@ -235,31 +235,29 @@ export function updateCartUI() {
 
   els.cartItems.innerHTML = cart.map((item) => `
     <div class="cart-item">
-      <img src="${item.image || 'assets/logo.png'}" alt="" class="cart-item__photo" />
-      <div class="cart-item__info">
+      <div class="cart-item__media">
+        <img src="${item.image || 'assets/logo.png'}" alt="" class="cart-item__photo" />
+      </div>
+      <div class="cart-item__body">
         <div class="cart-item__name">${item.name}</div>
         <div class="cart-item__variant">${item.variantLabel}</div>
         <div class="cart-item__price">${formatPrice(item.price)}</div>
-        <div class="cart-item__controls">
-          <button class="cart-item__qty-btn" data-key="${item.key}" data-action="minus">−</button>
-          <span class="cart-item__qty">${item.qty}</span>
-          <button class="cart-item__qty-btn" data-key="${item.key}" data-action="plus">+</button>
-        </div>
       </div>
+      <button type="button" class="cart-item__remove" data-key="${item.key}" aria-label="Удалить из корзины">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+          <path d="M4 7h16"/><path d="M10 11v6"/><path d="M14 11v6"/><path d="M6 7l1 12a1 1 0 0 0 1 .9h8a1 1 0 0 0 1-.9L18 7"/><path d="M9 7V5a1 1 0 0 1 1-1h4a1 1 0 0 1 1 1v2"/>
+        </svg>
+      </button>
     </div>
   `).join('')
 
-  els.cartItems.querySelectorAll('.cart-item__qty-btn').forEach((btn) => {
-    btn.addEventListener('click', () => {
-      const item = cart.find((i) => i.key === btn.dataset.key)
-      if (!item) return
-      updateQty(btn.dataset.key, btn.dataset.action === 'plus' ? item.qty + 1 : item.qty - 1)
-    })
+  els.cartItems.querySelectorAll('.cart-item__remove').forEach((btn) => {
+    btn.addEventListener('click', () => removeItem(btn.dataset.key))
   })
 }
 
-function updateQty(key, qty) {
-  cart = qty <= 0 ? cart.filter((i) => i.key !== key) : cart.map((i) => i.key === key ? { ...i, qty } : i)
+function removeItem(key) {
+  cart = cart.filter((i) => i.key !== key)
   saveCart(cart)
   updateCartUI()
 }

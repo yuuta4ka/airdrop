@@ -305,7 +305,7 @@ function renderNavigation(c) {
     <div class="admin-card admin-card--drag" draggable="true" data-nav="${i}">
       <span class="drag-handle">⠿</span>
       <input type="text" id="nav-label-${i}" value="${escAttr(item.label)}" placeholder="Название" />
-      <input type="text" id="nav-href-${i}" value="${escAttr(item.href)}" placeholder="Ссылка (catalog.html)" />
+      <input type="text" id="nav-href-${i}" value="${escAttr(item.href)}" placeholder="Ссылка (/catalog)" />
       <button type="button" class="btn btn--danger btn--sm" data-del-nav="${i}">✕</button>
     </div>
   `).join('')
@@ -471,7 +471,7 @@ function renderProducts(c) {
       id, slug: `product-${id}`, name: 'Новый товар', category: defaultCat, brand: 'Apple',
       badge: null, image: '', description: '', simTypes: null, simModifiers: [],
       colors: [{ id: 'black', name: 'Чёрный', hex: '#1a1a1a', priceAdd: 0, image: '' }],
-      storage: [{ label: '128 ГБ', price: 0 }], sizes: null, stock: [], variants: [],
+      storage: [{ label: '128 ГБ', price: 0 }], sizes: null, stock: [], images: [], variants: [],
       showCatalogSpec: false,
     })
     editingProductIdx = productsData.products.length - 1
@@ -481,6 +481,8 @@ function renderProducts(c) {
 
 function renderProductEditor(c) {
   const p = productsData.products[editingProductIdx]
+  if (!p.images) p.images = p.image ? [p.image] : []
+
   c.innerHTML = `
     <button type="button" class="btn btn--ghost" id="back-products">← К списку товаров</button>
     <h3 class="admin-editor-title">${p.name}</h3>
@@ -492,8 +494,17 @@ function renderProductEditor(c) {
       ${field('Фото (URL или путь)', 'p-image', p.image)}
     </div>
     <label class="field field--check"><input type="checkbox" id="p-showCatalogSpec" ${p.showCatalogSpec ? 'checked' : ''} /> Показывать «В наличии / Под заказ» на карточке в каталоге</label>
-    <label class="btn btn--secondary admin-upload-btn">Загрузить фото<input type="file" id="p-upload" accept="image/*" hidden /></label>
+    <label class="btn btn--secondary admin-upload-btn">Загрузить главное фото<input type="file" id="p-upload" accept="image/*" hidden /></label>
     ${field('Описание', 'p-desc', p.description, 'textarea')}`)}
+
+    ${section('Галерея', `
+      <div id="gallery-list" class="admin-gallery-list"></div>
+      <div class="admin-row admin-row--actions">
+        <label class="btn btn--secondary admin-upload-btn">Добавить фото<input type="file" id="p-gallery-upload" accept="image/*" multiple hidden /></label>
+        <button type="button" class="btn btn--ghost" id="add-gallery-url">+ URL</button>
+      </div>
+      <p class="admin-hint">На странице товара фото можно листать и открыть на весь экран. Первое фото — в каталоге.</p>
+    `)}
 
     ${section('Цвета', `<div id="color-list"></div><button type="button" class="btn btn--secondary" id="add-color">+ Цвет</button>
     <p class="admin-hint">Надбавка к цене — сколько добавить к базовой цене за этот цвет (₽)</p>`)}
@@ -512,10 +523,78 @@ function renderProductEditor(c) {
     ${section('Размер (для часов)', `<div id="size-list"></div><button type="button" class="btn btn--secondary" id="add-size">+ Размер</button>
     <p class="admin-hint">Оставьте пустым для телефонов и iPad</p>`)}
 
-    ${section('Наличие', `<div id="stock-list"></div><button type="button" class="btn btn--secondary" id="add-stock">+ Позиция в наличии</button>`)}
+    ${section('Наличие', `<div id="stock-list"></div><button type="button" class="btn btn--secondary" id="add-stock">+ Позиция в наличии</button>
+    <p class="admin-hint">Укажите цвет, версию SIM и объём памяти из настроек товара выше</p>`)}
   `
 
   $('back-products').onclick = () => { collectProduct(); editingProductIdx = null; renderProducts(c) }
+
+  const uploadImage = async (file) => {
+    const reader = new FileReader()
+    return new Promise((resolve, reject) => {
+      reader.onload = async () => {
+        try {
+          const res = await fetch('/api/upload', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${getToken()}` },
+            body: JSON.stringify({ filename: file.name, data: reader.result }),
+          })
+          const data = await res.json()
+          if (!res.ok) throw new Error(data.error)
+          resolve(data.path)
+        } catch (err) { reject(err) }
+      }
+      reader.readAsDataURL(file)
+    })
+  }
+
+  const renderGallery = () => {
+    $('gallery-list').innerHTML = p.images.map((src, i) => `
+      <div class="admin-gallery-item">
+        <img src="${escAttr(src)}" alt="" class="admin-gallery-item__preview" />
+        <input type="text" id="gal-url-${i}" value="${escAttr(src)}" placeholder="assets/products/..." />
+        <div class="admin-gallery-item__actions">
+          <button type="button" class="btn btn--ghost btn--sm" data-gal-up="${i}" ${i === 0 ? 'disabled' : ''}>↑</button>
+          <button type="button" class="btn btn--ghost btn--sm" data-gal-down="${i}" ${i === p.images.length - 1 ? 'disabled' : ''}>↓</button>
+          <button type="button" class="btn btn--danger btn--sm" data-del-gal="${i}">✕</button>
+        </div>
+      </div>
+    `).join('') || '<p class="admin-hint">Пока нет фото в галерее</p>'
+
+    $('gallery-list').querySelectorAll('[data-del-gal]').forEach((b) => {
+      b.onclick = () => { p.images.splice(Number(b.dataset.delGal), 1); renderGallery() }
+    })
+    $('gallery-list').querySelectorAll('[data-gal-up]').forEach((b) => {
+      b.onclick = () => {
+        const i = Number(b.dataset.galUp)
+        ;[p.images[i - 1], p.images[i]] = [p.images[i], p.images[i - 1]]
+        renderGallery()
+      }
+    })
+    $('gallery-list').querySelectorAll('[data-gal-down]').forEach((b) => {
+      b.onclick = () => {
+        const i = Number(b.dataset.galDown)
+        ;[p.images[i + 1], p.images[i]] = [p.images[i], p.images[i + 1]]
+        renderGallery()
+      }
+    })
+  }
+  renderGallery()
+
+  $('add-gallery-url').onclick = () => { p.images.push(''); renderGallery() }
+  $('p-gallery-upload').onchange = async (e) => {
+    const files = [...e.target.files]
+    if (!files.length) return
+    try {
+      for (const file of files) {
+        const path = await uploadImage(file)
+        p.images.push(path)
+      }
+      renderGallery()
+      status('Фото добавлены в галерею', 'success')
+    } catch (err) { status(err.message, 'error') }
+    e.target.value = ''
+  }
 
   const renderColors = () => {
     $('color-list').innerHTML = p.colors.map((col, i) => `
@@ -526,10 +605,40 @@ function renderProductEditor(c) {
           <label class="field"><span>Надбавка ₽</span><input type="number" id="col-add-${i}" value="${col.priceAdd || 0}" /></label>
           <button type="button" class="btn btn--danger btn--sm" data-del-col="${i}">Удалить</button>
         </div>
+        <div class="admin-row admin-row--color-photo">
+          <label class="field field--grow"><span>Фото цвета (URL)</span><input type="text" id="col-image-${i}" value="${escAttr(col.image || '')}" placeholder="assets/products/..." /></label>
+          <label class="btn btn--secondary admin-upload-btn btn--sm">Загрузить<input type="file" id="col-upload-${i}" accept="image/*" hidden /></label>
+        </div>
+        ${col.image ? `<img src="${escAttr(col.image)}" alt="" class="admin-color-preview" />` : ''}
       </div>
     `).join('')
     $('color-list').querySelectorAll('[data-del-col]').forEach((b) => {
       b.onclick = () => { p.colors.splice(Number(b.dataset.delCol), 1); renderColors() }
+    })
+    p.colors.forEach((_, i) => {
+      const upload = $(`col-upload-${i}`)
+      if (!upload) return
+      upload.onchange = async (e) => {
+        const file = e.target.files[0]
+        if (!file) return
+        const reader = new FileReader()
+        reader.onload = async () => {
+          try {
+            const res = await fetch('/api/upload', {
+              method: 'POST',
+              headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${getToken()}` },
+              body: JSON.stringify({ filename: file.name, data: reader.result }),
+            })
+            const data = await res.json()
+            if (!res.ok) throw new Error(data.error)
+            p.colors[i].image = data.path
+            $(`col-image-${i}`).value = data.path
+            renderColors()
+            status('Фото цвета загружено', 'success')
+          } catch (err) { status(err.message, 'error') }
+        }
+        reader.readAsDataURL(file)
+      }
     })
   }
   renderColors()
@@ -585,44 +694,55 @@ function renderProductEditor(c) {
   $('add-size').onclick = () => { if (!p.sizes) p.sizes = []; p.sizes.push({ label: '', price: 0 }); renderSizes() }
 
   if (!p.stock) p.stock = []
-  const colorOptions = () => p.colors.map((c) => `<option value="${c.id}">${c.name}</option>`).join('')
+  const colorOptions = (selected) => p.colors.map((c) => `<option value="${c.id}"${selected === c.id ? ' selected' : ''}>${escAttr(c.name)}</option>`).join('')
+  const simOptions = (selected) => {
+    const types = p.simTypes?.length ? p.simTypes : ['']
+    return types.map((t) => `<option value="${escAttr(t)}"${selected === t ? ' selected' : ''}>${escAttr(t || 'Любая / не указана')}</option>`).join('')
+  }
+  const storageOptions = (selected) => {
+    const items = p.sizes?.length > 1 ? p.sizes.map((s) => s.label) : p.storage.map((s) => s.label)
+    const labels = ['', ...items]
+    return labels.map((label) => `<option value="${escAttr(label)}"${selected === label ? ' selected' : ''}>${escAttr(label || 'Любая / не указана')}</option>`).join('')
+  }
   const renderStock = () => {
     $('stock-list').innerHTML = p.stock.map((s, i) => `
       <div class="admin-card admin-card--compact">
-        <div class="admin-grid admin-grid--4">
-          <label class="field"><span>Цвет</span><select id="stk-color-${i}">${colorOptions()}</select></label>
-          <label class="field"><span>SIM</span><input type="text" id="stk-sim-${i}" value="${escAttr(s.simType || '')}" placeholder="eSIM only" /></label>
+        <div class="admin-grid admin-grid--5">
+          <label class="field"><span>Цвет</span><select id="stk-color-${i}">${colorOptions(s.colorId)}</select></label>
+          <label class="field"><span>Версия SIM</span><select id="stk-sim-${i}">${simOptions(s.simType || '')}</select></label>
+          <label class="field"><span>Память</span><select id="stk-storage-${i}">${storageOptions(s.storageLabel || '')}</select></label>
           <label class="field"><span>Кол-во</span><input type="number" id="stk-qty-${i}" value="${s.qty}" min="0" /></label>
           <button type="button" class="btn btn--danger btn--sm" data-del-stk="${i}">Удалить</button>
         </div>
       </div>
-    `).join('')
-    p.stock.forEach((s, i) => { const sel = $(`stk-color-${i}`); if (sel) sel.value = s.colorId })
+    `).join('') || '<p class="admin-hint">Нет позиций в наличии</p>'
     $('stock-list').querySelectorAll('[data-del-stk]').forEach((b) => {
       b.onclick = () => { p.stock.splice(Number(b.dataset.delStk), 1); renderStock() }
     })
   }
   renderStock()
-  $('add-stock').onclick = () => { p.stock.push({ colorId: p.colors[0]?.id || '', simType: '', qty: 1, note: 'В наличии' }); renderStock() }
+  $('add-stock').onclick = () => {
+    p.stock.push({
+      colorId: p.colors[0]?.id || '',
+      simType: p.simTypes?.[0] || '',
+      storageLabel: p.storage[0]?.label || '',
+      qty: 1,
+      note: 'В наличии',
+    })
+    renderStock()
+  }
 
   $('p-upload').onchange = async (e) => {
     const file = e.target.files[0]
     if (!file) return
-    const reader = new FileReader()
-    reader.onload = async () => {
-      try {
-        const res = await fetch('/api/upload', {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${getToken()}` },
-          body: JSON.stringify({ filename: file.name, data: reader.result }),
-        })
-        const data = await res.json()
-        if (!res.ok) throw new Error(data.error)
-        $('p-image').value = data.path
-        status('Фото загружено', 'success')
-      } catch (err) { status(err.message, 'error') }
-    }
-    reader.readAsDataURL(file)
+    try {
+      const path = await uploadImage(file)
+      $('p-image').value = path
+      if (!p.images.length) p.images.push(path)
+      else p.images[0] = path
+      renderGallery()
+      status('Фото загружено', 'success')
+    } catch (err) { status(err.message, 'error') }
   }
 }
 
@@ -826,15 +946,21 @@ function collectTheme() {
 function collectProduct() {
   const p = productsData.products[editingProductIdx]
   p.name = val('p-name'); p.brand = val('p-brand'); p.category = val('p-category')
-  p.badge = val('p-badge') || null; p.image = val('p-image'); p.description = val('p-desc')
+  p.badge = val('p-badge') || null
+  p.image = val('p-image')
+  p.description = val('p-desc')
   p.showCatalogSpec = !!$('p-showCatalogSpec')?.checked
+
+  p.images = (p.images || []).map((_, i) => val(`gal-url-${i}`)).filter(Boolean)
+  if (p.images.length) p.image = p.images[0]
+  else if (p.image) p.images = [p.image]
 
   p.colors = p.colors.map((col, i) => ({
     id: col.id || `c${i}`,
     name: val(`col-name-${i}`),
     hex: $(`col-hex-${i}`)?.value || '#000',
     priceAdd: num(`col-add-${i}`),
-    image: col.image || '',
+    image: val(`col-image-${i}`) || '',
   }))
 
   p.storage = p.storage.map((_, i) => ({ label: val(`stor-label-${i}`), price: num(`stor-price-${i}`) }))
@@ -854,7 +980,8 @@ function collectProduct() {
   if (p.stock?.length) {
     p.stock = p.stock.map((_, i) => ({
       colorId: $(`stk-color-${i}`)?.value || '',
-      simType: val(`stk-sim-${i}`),
+      simType: $(`stk-sim-${i}`)?.value || '',
+      storageLabel: $(`stk-storage-${i}`)?.value || '',
       qty: num(`stk-qty-${i}`),
       note: 'В наличии',
     }))

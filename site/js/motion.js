@@ -6,6 +6,7 @@ const REVEAL_SELECTOR = [
   '.page-main .page-content',
   '.product-detail__gallery',
   '.product-detail__info',
+  '.stores-section',
   '.features .section-title',
 ].join(',')
 
@@ -19,6 +20,38 @@ export function initMotion() {
   setupReveal()
   setupHeroParallax()
   observeCartBadge()
+}
+
+const HEADER_COMPACT_THRESHOLD = 56
+
+export function initHeaderScroll() {
+  const header = document.getElementById('site-header')
+  if (!header) return
+
+  const mobileQuery = window.matchMedia('(max-width: 768px)')
+  let ticking = false
+
+  const update = () => {
+    ticking = false
+    if (!mobileQuery.matches) {
+      header.classList.remove('header--compact')
+      return
+    }
+    header.classList.toggle('header--compact', window.scrollY > HEADER_COMPACT_THRESHOLD)
+  }
+
+  if (!header.dataset.scrollBound) {
+    header.dataset.scrollBound = '1'
+    window.addEventListener('scroll', () => {
+      if (!ticking) {
+        ticking = true
+        requestAnimationFrame(update)
+      }
+    }, { passive: true })
+    mobileQuery.addEventListener('change', update)
+  }
+
+  update()
 }
 
 function injectAmbient() {

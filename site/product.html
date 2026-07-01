@@ -16,16 +16,20 @@
   <main class="product-page">
     <div class="container">
       <nav class="breadcrumb">
-        <a href="catalog.html">Каталог</a>
+        <a href="/catalog">Каталог</a>
         <span>/</span>
         <span id="breadcrumb-name"></span>
       </nav>
 
       <div class="product-detail">
         <div class="product-detail__gallery">
-          <div class="product-detail__image" id="product-image">
-            <span class="product-card__badge" id="product-badge" style="display:none"></span>
-            <img src="" alt="" class="product-detail__photo" id="product-photo" />
+          <div class="product-gallery" id="product-gallery">
+            <div class="product-detail__image product-gallery__stage" id="product-gallery-stage">
+              <span class="product-card__badge" id="product-badge" style="display:none"></span>
+              <button type="button" class="product-gallery__nav product-gallery__nav--prev" id="gallery-prev" aria-label="Предыдущее фото" hidden>‹</button>
+              <img src="" alt="" class="product-detail__photo" id="product-photo" />
+              <button type="button" class="product-gallery__nav product-gallery__nav--next" id="gallery-next" aria-label="Следующее фото" hidden>›</button>
+            </div>
           </div>
         </div>
 
@@ -33,17 +37,22 @@
           <div class="product-card__brand" id="product-brand"></div>
           <h1 class="product-detail__title" id="product-title"></h1>
           <p class="product-detail__desc" id="product-description"></p>
-          <div class="product-detail__price" id="product-price"></div>
-          <div id="stock-info"></div>
+
+          <div class="product-detail__buy-row">
+            <div class="product-detail__price-block">
+              <div class="product-detail__price" id="product-price"></div>
+              <div id="stock-info"></div>
+            </div>
+            <button type="button" class="product-detail__buy" id="add-to-cart">Купить</button>
+          </div>
+
+          <div class="option-group option-group--swatches" id="group-colors">
+            <div class="option-group__list option-group__list--swatches" id="option-colors"></div>
+          </div>
 
           <div class="option-group" id="group-sim" style="display:none">
             <h3 class="option-group__title">Версия SIM</h3>
             <div class="option-group__list" id="option-sim"></div>
-          </div>
-
-          <div class="option-group">
-            <h3 class="option-group__title">Цвет</h3>
-            <div class="option-group__list option-group__list--colors" id="option-colors"></div>
           </div>
 
           <div class="option-group" id="group-storage">
@@ -56,7 +65,12 @@
             <div class="option-group__list" id="option-sizes"></div>
           </div>
 
-          <button class="product-detail__add" id="add-to-cart">Добавить в корзину</button>
+          <div class="option-group" id="group-warranty">
+            <h3 class="option-group__title">Гарантия</h3>
+            <div class="option-group__list" id="option-warranty"></div>
+          </div>
+
+          <div id="product-installment-calc"></div>
         </div>
       </div>
     </div>
@@ -80,6 +94,7 @@
     </div>
   </aside>
 
+  <div class="color-cursor-tip" id="color-cursor-tip" hidden></div>
   <div class="toast" id="toast"></div>
   <script type="module" src="js/product.js"></script>
 </body>

@@ -20,6 +20,7 @@
   <script type="module">
     import { loadStore } from './js/store.js'
     import { renderHeader, renderFooter } from './js/layout.js'
+    import { renderStorePhotosHtml, initStorePhotoGalleries } from './js/stores-ui.js'
 
     const store = await loadStore()
     const s = store.settings
@@ -29,8 +30,9 @@
         <p><a href="tel:${s.phone}" class="contact-big">${s.phoneDisplay}</a></p>
       </div>
       ${s.addresses.map((a) => `
-        <div class="info-card">
+        <div class="info-card info-card--store">
           <h2>${a.city}</h2>
+          ${a.photos?.length ? renderStorePhotosHtml(a.photos, { variant: 'inline' }) : ''}
           <p><a href="${a.yandexMaps}" target="_blank" rel="noopener" class="contact-address-link">${a.street}${a.note ? ` (${a.note})` : ''}</a></p>
           <p class="contact-hours">${s.hours.weekdays}<br>${s.hours.weekends}</p>
           <a href="${a.yandexMaps}" class="btn btn--secondary" target="_blank" rel="noopener">Яндекс.Карты →</a>
@@ -44,6 +46,7 @@
         <p><a href="${s.links.avitoKrasnoturinsk}" target="_blank" rel="noopener">Avito — Краснотурьинск</a></p>
       </div>
     `
+    initStorePhotoGalleries()
     await renderHeader('contacts')
     await renderFooter()
   </script>

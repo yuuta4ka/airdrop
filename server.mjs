@@ -159,9 +159,15 @@ const server = http.createServer(async (req, res) => {
   const url = new URL(req.url, `http://localhost:${PORT}`)
   const p = url.pathname
 
-  if (p === '/admin') {
-    res.writeHead(302, { Location: '/admin.html' })
+  if (p.endsWith('.html') && p !== '/admin.html') {
+    let clean = p.slice(0, -5) || '/'
+    if (clean === '/index') clean = '/'
+    res.writeHead(301, { Location: clean + url.search })
     return res.end()
+  }
+
+  if (p === '/admin') {
+    return serveFile(res, path.join(SITE_DIR, 'admin.html'))
   }
 
   if (p === '/api/store' && req.method === 'GET') {
