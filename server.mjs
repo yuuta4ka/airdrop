@@ -32,6 +32,8 @@ function loadEnvFile() {
 
 loadEnvFile()
 
+console.log(`Starting Airdrop (Node ${process.version}), PORT=${PORT}`)
+
 const MIME = {
   '.html': 'text/html; charset=utf-8',
   '.css': 'text/css; charset=utf-8',
@@ -332,8 +334,8 @@ server.on('error', (err) => {
   throw err
 })
 
-server.listen(PORT, () => {
-  console.log(`АирДроп: http://localhost:${PORT}`)
+server.listen(PORT, '0.0.0.0', () => {
+  console.log(`АирДроп: http://0.0.0.0:${PORT}`)
   console.log(`Админка: http://localhost:${PORT}/admin`)
   const tg = getTelegramStatus()
   if (tg.configured) {
