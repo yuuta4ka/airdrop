@@ -501,6 +501,10 @@ const server = http.createServer(async (req, res) => {
     }
   }
 
+  if (p === '/api/ping' && req.method === 'GET') {
+    return sendJson(res, 200, { ok: true, importPdf: true })
+  }
+
   if (p === '/api/import-price-pdf' && req.method === 'POST') {
     if (!checkAuth(req)) return sendJson(res, 401, { error: 'Неверный пароль' })
     try {
@@ -524,6 +528,7 @@ const server = http.createServer(async (req, res) => {
         : null
       const { products, stats } = buildCatalogFromPdfText(text, existing.products, markup, {
         sections: sections?.length ? sections : null,
+        pricesOnly: body.pricesOnly !== false,
       })
 
       if (!body.dryRun) {
@@ -544,6 +549,7 @@ const server = http.createServer(async (req, res) => {
         stats,
         productCount: products.length,
         dryRun: Boolean(body.dryRun),
+        pricesOnly: body.pricesOnly !== false,
       })
     } catch (err) {
       console.error('PDF import error:', err)
@@ -659,9 +665,9 @@ const server = http.createServer(async (req, res) => {
 
 server.on('error', (err) => {
   if (err.code === 'EADDRINUSE') {
-    console.error(`\n❌ Порт ${PORT} уже занят.`)
-    console.error(`   Остановите процесс: kill $(lsof -ti:${PORT})`)
-    console.error(`   Или запустите: bash dev.sh\n`)
+    console.error(`\n❌ Порт ${PORT} уже занят — скорее всего работает СТАРАЯ версия сервера.`)
+    console.error(`   Выполните: bash start.sh  (он остановит старый процесс и запустит новый)`)
+    console.error(`   Или вручную: kill $(lsof -ti:${PORT}) && node server.mjs\n`)
     process.exit(1)
   }
   throw err
@@ -670,6 +676,7 @@ server.on('error', (err) => {
 server.listen(PORT, '0.0.0.0', () => {
   console.log(`АирДроп: http://0.0.0.0:${PORT}`)
   console.log(`Админка: http://localhost:${PORT}/admin`)
+  console.log(`Импорт PDF: http://localhost:${PORT}/admin → Импорт прайса`)
   const tg = getTelegramStatus()
   if (tg.configured) {
     console.log(`Telegram-уведомления: включены (${tg.chatCount} получателей)`)
