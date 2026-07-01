@@ -1,5 +1,8 @@
 import { invalidateStore } from './store.js'
 import { THEME_LABELS, getThemeVarKeys } from './theme.js'
+import { calcRetailFromPurchase, recalcAllVariants, getMarkupSettings } from './pricing.js'
+import { applySupplierImport } from './supplier-import.js'
+import { PDF_IMPORT_SECTIONS, groupPdfImportSections } from './pdf-import-sections.js'
 
 const AUTH_KEY = 'airdrop_admin_token'
 let storeData = null
@@ -15,6 +18,7 @@ const TITLES = {
   navigation: 'Меню',
   categories: 'Категории',
   products: 'Товары',
+  'price-import': 'Импорт прайса',
   theme: 'Темы и цвета',
   installment: 'Рассрочка',
   orders: 'Заказы',
@@ -94,7 +98,7 @@ function showLogin() {
   document.documentElement.classList.remove('admin-locked')
   document.body.classList.remove('admin-locked')
   clearToken()
-  loginError('')
+  showLoginForm()
   $('login-password')?.focus()
 }
 
@@ -112,6 +116,53 @@ function field(label, id, value = '', type = 'text', hint = '') {
     ? `<textarea id="${id}" rows="4">${value}</textarea>`
     : `<input type="${type}" id="${id}" value="${escAttr(value)}" />`
   return `<label class="field"><span>${label}</span>${input}${hint ? `<small>${hint}</small>` : ''}</label>`
+}
+
+function passwordField(label, id, value = '', options = {}) {
+  const visible = options.visible || false
+  const inputType = options.alwaysVisible ? 'text' : (visible ? 'text' : 'password')
+  return `<label class="field field--password">
+    <span>${label}</span>
+    <div class="password-input-wrap">
+      <input type="${inputType}" id="${id}" value="${escAttr(value)}" ${options.alwaysVisible ? '' : `data-password-toggle="${id}"`} />
+      ${options.alwaysVisible ? '' : `<button type="button" class="password-toggle" data-target="${id}" aria-label="Показать пароль">👁</button>`}
+    </div>
+    ${options.hint ? `<small>${options.hint}</small>` : ''}
+  </label>`
+}
+
+function bindPasswordToggles(root = document) {
+  root.querySelectorAll('.password-toggle').forEach((btn) => {
+    btn.onclick = () => {
+      const input = $(btn.dataset.target)
+      if (!input) return
+      const show = input.type === 'password'
+      input.type = show ? 'text' : 'password'
+      btn.textContent = show ? '🙈' : '👁'
+      btn.setAttribute('aria-label', show ? 'Скрыть пароль' : 'Показать пароль')
+    }
+  })
+}
+
+function showLoginForm() {
+  $('login-form').hidden = false
+  $('reset-form').hidden = true
+  loginError('')
+  resetError('')
+}
+
+function showResetForm() {
+  $('login-form').hidden = true
+  $('reset-form').hidden = false
+  loginError('')
+  resetError('')
+}
+
+function resetError(msg) {
+  const el = $('reset-error')
+  if (!msg) { el.hidden = true; el.textContent = ''; return }
+  el.textContent = msg
+  el.hidden = false
 }
 
 function escAttr(s) {
@@ -147,6 +198,55 @@ function downloadJson(filename, data) {
 }
 
 // ─── Login ───
+$('login-forgot')?.addEventListener('click', () => showResetForm())
+$('reset-back')?.addEventListener('click', () => showLoginForm())
+
+$('reset-request-code')?.addEventListener('click', async () => {
+  resetError('')
+  const btn = $('reset-request-code')
+  btn.disabled = true
+  btn.textContent = 'Отправка...'
+  try {
+    const res = await fetch('/api/admin/request-reset-code', { method: 'POST' })
+    const data = await res.json().catch(() => ({}))
+    if (!res.ok) throw new Error(data.error || 'Не удалось отправить код')
+    status('Код отправлен в Telegram', 'success')
+  } catch (err) {
+    resetError(err.message)
+  } finally {
+    btn.disabled = false
+    btn.textContent = 'Получить код в Telegram'
+  }
+})
+
+$('reset-form')?.addEventListener('submit', async (e) => {
+  e.preventDefault()
+  resetError('')
+  const btn = $('reset-submit')
+  btn.disabled = true
+  try {
+    const res = await fetch('/api/admin/reset-password', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        code: val('reset-code'),
+        password: val('reset-password'),
+        confirm: val('reset-confirm'),
+      }),
+    })
+    const data = await res.json().catch(() => ({}))
+    if (!res.ok) throw new Error(data.error || 'Ошибка сброса')
+    setToken(val('reset-password'))
+    await loadData()
+    showApp()
+    status('Пароль изменён', 'success')
+  } catch (err) {
+    resetError(err.message)
+  } finally {
+    btn.disabled = false
+  }
+})
+
 $('login-form').addEventListener('submit', async (e) => {
   e.preventDefault()
   loginError('')
@@ -183,6 +283,7 @@ $('login-form').addEventListener('submit', async (e) => {
 })
 
 showLogin()
+bindPasswordToggles()
 
 $('btn-logout')?.addEventListener('click', () => {
   showLogin()
@@ -221,6 +322,7 @@ function renderTab() {
   else if (activeTab === 'navigation') renderNavigation(c)
   else if (activeTab === 'categories') renderCategories(c)
   else if (activeTab === 'products') renderProducts(c)
+  else if (activeTab === 'price-import') renderPriceImport(c)
   else if (activeTab === 'theme') renderTheme(c)
   else if (activeTab === 'installment') renderInstallment(c)
   else if (activeTab === 'orders') renderOrders(c)
@@ -233,7 +335,57 @@ function renderGeneral(c) {
   const s = storeData.settings
   c.innerHTML = section('Магазин', `
     <div class="admin-grid">${field('Название', 'g-name', s.name)}${field('Слоган', 'g-tagline', s.tagline)}${field('Логотип (путь к файлу)', 'g-logo', s.logo)}${field('Бренд для отзывов', 'g-reviewBrand', s.reviewBrand)}</div>
-  `) + section('Безопасность', field('Пароль админки', 'g-password', storeData.adminPassword, 'password'))
+  `) + section('Безопасность', `
+    ${passwordField('Текущий пароль', 'g-password-view', storeData.adminPassword, { hint: 'Нажмите 👁 чтобы показать или скрыть' })}
+    <div class="admin-password-change">
+      <p class="admin-hint">Смена пароля требует код из Telegram (защита от взлома).</p>
+      <div class="admin-grid">
+        ${passwordField('Новый пароль', 'g-password-new', '', { hint: 'Минимум 6 символов' })}
+        ${passwordField('Повторите пароль', 'g-password-confirm', '', { alwaysVisible: true, hint: 'Второй раз — открытым текстом' })}
+        ${field('Код из Telegram', 'g-change-code', '', 'text', 'Запросите код кнопкой ниже')}
+      </div>
+      <div class="admin-row admin-row--actions">
+        <button type="button" class="btn btn--secondary" id="btn-request-change-code">Получить код в Telegram</button>
+        <button type="button" class="btn btn--primary" id="btn-change-password">Сменить пароль</button>
+      </div>
+    </div>
+  `)
+  bindPasswordToggles(c)
+
+  $('btn-request-change-code').onclick = async () => {
+    try {
+      const res = await fetch('/api/admin/request-change-code', {
+        method: 'POST',
+        headers: { Authorization: `Bearer ${getToken()}` },
+      })
+      const data = await res.json().catch(() => ({}))
+      if (!res.ok) throw new Error(data.error || 'Ошибка')
+      status('Код отправлен в Telegram', 'success')
+    } catch (err) { status(err.message, 'error') }
+  }
+
+  $('btn-change-password').onclick = async () => {
+    try {
+      const res = await fetch('/api/admin/change-password', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${getToken()}` },
+        body: JSON.stringify({
+          code: val('g-change-code'),
+          password: val('g-password-new'),
+          confirm: val('g-password-confirm'),
+        }),
+      })
+      const data = await res.json().catch(() => ({}))
+      if (!res.ok) throw new Error(data.error || 'Ошибка')
+      setToken(val('g-password-new'))
+      storeData.adminPassword = val('g-password-new')
+      $('g-password-view').value = val('g-password-new')
+      $('g-password-new').value = ''
+      $('g-password-confirm').value = ''
+      $('g-change-code').value = ''
+      status('Пароль изменён', 'success')
+    } catch (err) { status(err.message, 'error') }
+  }
 }
 
 function renderContacts(c) {
@@ -470,8 +622,10 @@ function renderProducts(c) {
     productsData.products.push({
       id, slug: `product-${id}`, name: 'Новый товар', category: defaultCat, brand: 'Apple',
       badge: null, image: '', description: '', simTypes: null, simModifiers: [],
-      colors: [{ id: 'black', name: 'Чёрный', hex: '#1a1a1a', priceAdd: 0, image: '' }],
-      storage: [{ label: '128 ГБ', price: 0 }], sizes: null, stock: [], images: [], variants: [],
+      colors: [{ id: 'black', name: 'Чёрный', hex: '#1a1a1a', image: '', importNames: '' }],
+      storage: [{ label: '128 ГБ' }], sizes: null, stock: [], images: [], variants: [],
+      markupPercent: 15,
+      markupFixed: 0,
       showCatalogSpec: false,
     })
     editingProductIdx = productsData.products.length - 1
@@ -503,21 +657,38 @@ function renderProductEditor(c) {
         <label class="btn btn--secondary admin-upload-btn">Добавить фото<input type="file" id="p-gallery-upload" accept="image/*" multiple hidden /></label>
         <button type="button" class="btn btn--ghost" id="add-gallery-url">+ URL</button>
       </div>
-      <p class="admin-hint">На странице товара фото можно листать и открыть на весь экран. Первое фото — в каталоге.</p>
+      <p class="admin-hint">На странице товара фото можно листать и открыть на весь экран. ★ — главное фото (каталог и первое при открытии).</p>
     `)}
 
     ${section('Цвета', `<div id="color-list"></div><button type="button" class="btn btn--secondary" id="add-color">+ Цвет</button>
-    <p class="admin-hint">Надбавка к цене — сколько добавить к базовой цене за этот цвет (₽)</p>`)}
+    <p class="admin-hint">Названия для сайта. В «Названия в прайсе» — как у поставщика (Silver, Deep Blue…), через запятую.</p>`)}
 
     ${section('Память', `<div id="storage-list"></div><button type="button" class="btn btn--secondary" id="add-storage">+ Объём</button>
-    <p class="admin-hint">Базовая цена телефона за этот объём памяти</p>`)}
+    <p class="admin-hint">Только названия объёмов — 256 ГБ, 512 ГБ, 1 ТБ. Цены задаются в прайс-листе поставщика.</p>`)}
 
     ${section('Версия SIM', `
       <label class="field field--check"><input type="checkbox" id="p-hasSim" ${p.simTypes?.length ? 'checked' : ''} /> Есть выбор SIM (eSIM / eSIM+SIM)</label>
       <div id="sim-block" ${p.simTypes?.length ? '' : 'hidden'}>
         <div id="sim-list"></div><button type="button" class="btn btn--secondary" id="add-sim">+ Версия SIM</button>
-        <p class="admin-hint">Надбавка — доплата за eSIM+SIM относительно eSIM only</p>
       </div>
+    `)}
+
+    ${section('Прайс-лист поставщика', `
+      <div class="admin-grid">
+        <label class="field"><span>Наценка, %</span><input type="number" id="p-markup" value="${p.markupPercent ?? 15}" min="0" step="0.1" /></label>
+        <label class="field"><span>Наценка фикс., ₽</span><input type="number" id="p-markup-fixed" value="${p.markupFixed ?? 0}" min="0" step="100" /></label>
+      </div>
+      <p class="admin-hint">Розница = закупка + % + фикс, округление до …900. Вставьте прайс поставщика — строка с моделью, затем цена.</p>
+      <label class="field"><span>Вставить прайс поставщика</span>
+        <textarea id="p-supplier-paste" rows="8" placeholder="17 Pro Max 256Gb Silver (eSim+eSim)&#10;98 800 ₽&#10;17 Pro Max 512Gb Orange (Sim+eSim)&#10;113 300 ₽"></textarea>
+      </label>
+      <div class="admin-row admin-row--actions">
+        <button type="button" class="btn btn--primary" id="import-supplier">Импортировать прайс</button>
+        <button type="button" class="btn btn--ghost" id="recalc-variants">Пересчитать розницу</button>
+      </div>
+      <p class="admin-hint" id="import-result"></p>
+      <div id="variant-list"></div>
+      <button type="button" class="btn btn--secondary" id="add-variant">+ Добавить вручную</button>
     `)}
 
     ${section('Размер (для часов)', `<div id="size-list"></div><button type="button" class="btn btn--secondary" id="add-size">+ Размер</button>
@@ -549,17 +720,37 @@ function renderProductEditor(c) {
   }
 
   const renderGallery = () => {
-    $('gallery-list').innerHTML = p.images.map((src, i) => `
-      <div class="admin-gallery-item">
+    if (!p.coverImage) p.coverImage = p.image || p.images?.[0] || ''
+    $('gallery-list').innerHTML = p.images.map((src, i) => {
+      const isCover = p.coverImage && src === p.coverImage
+      return `
+      <div class="admin-gallery-item${isCover ? ' admin-gallery-item--cover' : ''}">
         <img src="${escAttr(src)}" alt="" class="admin-gallery-item__preview" />
         <input type="text" id="gal-url-${i}" value="${escAttr(src)}" placeholder="assets/products/..." />
         <div class="admin-gallery-item__actions">
+          <button type="button" class="btn btn--ghost btn--sm${isCover ? ' admin-gallery-item__cover-btn--active' : ''}" data-gal-cover="${i}" title="Главное фото">★</button>
           <button type="button" class="btn btn--ghost btn--sm" data-gal-up="${i}" ${i === 0 ? 'disabled' : ''}>↑</button>
           <button type="button" class="btn btn--ghost btn--sm" data-gal-down="${i}" ${i === p.images.length - 1 ? 'disabled' : ''}>↓</button>
           <button type="button" class="btn btn--danger btn--sm" data-del-gal="${i}">✕</button>
         </div>
       </div>
-    `).join('') || '<p class="admin-hint">Пока нет фото в галерее</p>'
+    `}).join('') || '<p class="admin-hint">Пока нет фото в галерее</p>'
+
+    $('gallery-list').querySelectorAll('[data-gal-cover]').forEach((b) => {
+      b.onclick = () => {
+        const i = Number(b.dataset.galCover)
+        const src = val(`gal-url-${i}`) || p.images[i]
+        if (src) {
+          p.coverImage = src
+          p.image = src
+          renderGallery()
+          const colorMatch = p.colors?.find((c) => c.image === src || c.images?.includes(src))
+          status(colorMatch
+            ? `Главное фото выбрано (цвет «${colorMatch.name}»)`
+            : 'Главное фото выбрано', 'success')
+        }
+      }
+    })
 
     $('gallery-list').querySelectorAll('[data-del-gal]').forEach((b) => {
       b.onclick = () => { p.images.splice(Number(b.dataset.delGal), 1); renderGallery() }
@@ -602,7 +793,7 @@ function renderProductEditor(c) {
         <div class="admin-grid admin-grid--4">
           <label class="field"><span>Название</span><input type="text" id="col-name-${i}" value="${escAttr(col.name)}" /></label>
           <label class="field"><span>Цвет</span><input type="color" id="col-hex-${i}" value="${col.hex || '#000000'}" /></label>
-          <label class="field"><span>Надбавка ₽</span><input type="number" id="col-add-${i}" value="${col.priceAdd || 0}" /></label>
+          <label class="field"><span>Названия в прайсе</span><input type="text" id="col-import-${i}" value="${escAttr(col.importNames || '')}" placeholder="Silver, Deep Blue" /></label>
           <button type="button" class="btn btn--danger btn--sm" data-del-col="${i}">Удалить</button>
         </div>
         <div class="admin-row admin-row--color-photo">
@@ -642,13 +833,12 @@ function renderProductEditor(c) {
     })
   }
   renderColors()
-  $('add-color').onclick = () => { p.colors.push({ id: `c${Date.now()}`, name: '', hex: '#888888', priceAdd: 0, image: '' }); renderColors() }
+  $('add-color').onclick = () => { p.colors.push({ id: `c${Date.now()}`, name: '', hex: '#888888', image: '', importNames: '' }); renderColors() }
 
   const renderStorage = () => {
     $('storage-list').innerHTML = p.storage.map((s, i) => `
       <div class="admin-row">
         <input type="text" id="stor-label-${i}" value="${escAttr(s.label)}" placeholder="256 ГБ" />
-        <input type="number" id="stor-price-${i}" value="${s.price}" placeholder="Цена ₽" />
         <button type="button" class="btn btn--danger btn--sm" data-del-stor="${i}">✕</button>
       </div>
     `).join('')
@@ -657,7 +847,85 @@ function renderProductEditor(c) {
     })
   }
   renderStorage()
-  $('add-storage').onclick = () => { p.storage.push({ label: '', price: 0 }); renderStorage() }
+  $('add-storage').onclick = () => { p.storage.push({ label: '' }); renderStorage() }
+
+  if (!p.variants) p.variants = []
+  const getMarkup = () => ({
+    percent: num('p-markup') || p.markupPercent || 0,
+    fixed: num('p-markup-fixed') || p.markupFixed || 0,
+  })
+
+  const renderVariants = () => {
+    const markup = getMarkup()
+    const storageLabels = p.sizes?.length > 1 ? p.sizes.map((s) => s.label) : p.storage.map((s) => s.label)
+    const simList = p.simTypes?.length ? p.simTypes : ['']
+
+    $('variant-list').innerHTML = p.variants.map((v, i) => {
+      const retail = v.purchasePrice > 0 ? calcRetailFromPurchase(v.purchasePrice, markup) : (v.price || 0)
+      const colorName = p.colors.find((c) => c.id === v.colorId)?.name || v.colorId
+      return `
+      <div class="admin-card admin-card--compact admin-variant-row">
+        <div class="admin-grid admin-grid--variant">
+          <label class="field"><span>Цвет</span><select id="var-color-${i}">${p.colors.map((c) => `<option value="${c.id}"${v.colorId === c.id ? ' selected' : ''}>${escAttr(c.name)}</option>`).join('')}</select></label>
+          <label class="field"><span>Память</span><select id="var-storage-${i}">${storageLabels.map((l) => `<option value="${escAttr(l)}"${v.storage === l ? ' selected' : ''}>${escAttr(l)}</option>`).join('')}</select></label>
+          <label class="field"><span>SIM</span><select id="var-sim-${i}">${simList.map((s) => `<option value="${escAttr(s)}"${(v.simType || '') === s ? ' selected' : ''}>${escAttr(s || '—')}</option>`).join('')}</select></label>
+          <label class="field"><span>Закупка ₽</span><input type="number" id="var-purchase-${i}" value="${v.purchasePrice || 0}" min="0" /></label>
+          <label class="field"><span>Розница</span><input type="text" id="var-retail-${i}" value="${retail ? retail.toLocaleString('ru-RU') + ' ₽' : '—'}" readonly /></label>
+          <button type="button" class="btn btn--danger btn--sm" data-del-var="${i}">✕</button>
+        </div>
+        <small class="admin-hint">${escAttr(colorName)} · ${escAttr(v.storage)}${v.simType ? ` · ${escAttr(v.simType)}` : ''}</small>
+      </div>
+    `}).join('') || '<p class="admin-hint">Вставьте прайс поставщика выше или добавьте позиции вручную</p>'
+
+    $('variant-list').querySelectorAll('[data-del-var]').forEach((b) => {
+      b.onclick = () => { p.variants.splice(Number(b.dataset.delVar), 1); renderVariants() }
+    })
+
+    p.variants.forEach((_, i) => {
+      const updateRetail = () => {
+        const purchase = num(`var-purchase-${i}`)
+        const retail = purchase > 0 ? calcRetailFromPurchase(purchase, getMarkup()) : 0
+        const el = $(`var-retail-${i}`)
+        if (el) el.value = retail ? `${retail.toLocaleString('ru-RU')} ₽` : '—'
+      }
+      $(`var-purchase-${i}`)?.addEventListener('input', updateRetail)
+      ;['var-color', 'var-storage', 'var-sim'].forEach((prefix) => {
+        $(`${prefix}-${i}`)?.addEventListener('change', updateRetail)
+      })
+    })
+  }
+  renderVariants()
+
+  $('import-supplier').onclick = () => {
+    const text = $('p-supplier-paste')?.value || ''
+    if (!text.trim()) { status('Вставьте прайс в текстовое поле', 'error'); return }
+    collectProductColorsStorageSim(p)
+    const result = applySupplierImport(p, text, getMarkup())
+    const msgs = []
+    if (result.merged) msgs.push(`Импортировано: ${result.merged}`)
+    if (result.skipped) msgs.push(`Пропущено (другая модель): ${result.skipped}`)
+    if (result.errors.length) msgs.push(`Ошибки: ${result.errors.length}`)
+    $('import-result').textContent = msgs.join(' · ')
+    if (result.errors.length) {
+      $('import-result').innerHTML = msgs.join(' · ') + '<br>' + result.errors.map((e) => `⚠ ${e.title}: ${e.message}`).join('<br>')
+    }
+    renderVariants()
+    status(result.merged ? `Импортировано ${result.merged} позиций` : 'Ничего не импортировано', result.merged ? 'success' : 'error')
+  }
+
+  $('add-variant').onclick = () => {
+    p.variants.push({
+      colorId: p.colors[0]?.id || '',
+      storage: (p.storage[0]?.label || p.sizes?.[0]?.label || ''),
+      simType: p.simTypes?.[0] || '',
+      purchasePrice: 0,
+      price: 0,
+    })
+    renderVariants()
+  }
+  $('recalc-variants').onclick = () => { collectProductVariants(p); renderVariants(); status('Цены пересчитаны', 'success') }
+  $('p-markup')?.addEventListener('input', () => renderVariants())
+  $('p-markup-fixed')?.addEventListener('input', () => renderVariants())
 
   if (!p.simModifiers) p.simModifiers = []
   if (!p.simTypes) p.simTypes = []
@@ -665,17 +933,22 @@ function renderProductEditor(c) {
     $('sim-list').innerHTML = p.simTypes.map((t, i) => `
       <div class="admin-row">
         <input type="text" id="sim-type-${i}" value="${escAttr(t)}" placeholder="eSIM only" />
-        <input type="number" id="sim-add-${i}" value="${p.simModifiers[i]?.priceAdd || 0}" placeholder="Надбавка ₽" />
         <button type="button" class="btn btn--danger btn--sm" data-del-sim="${i}">✕</button>
       </div>
     `).join('')
     $('sim-list').querySelectorAll('[data-del-sim]').forEach((b) => {
-      b.onclick = () => { p.simTypes.splice(Number(b.dataset.delSim), 1); p.simModifiers.splice(Number(b.dataset.delSim), 1); renderSim() }
+      b.onclick = () => { p.simTypes.splice(Number(b.dataset.delSim), 1); renderSim() }
     })
   }
   renderSim()
-  $('p-hasSim').onchange = (e) => { $('sim-block').hidden = !e.target.checked; if (e.target.checked && !p.simTypes.length) { p.simTypes = ['eSIM only', 'eSIM + SIM']; p.simModifiers = [{ type: 'eSIM only', priceAdd: 0 }, { type: 'eSIM + SIM', priceAdd: 8000 }]; renderSim() } }
-  $('add-sim').onclick = () => { p.simTypes.push(''); p.simModifiers.push({ type: '', priceAdd: 0 }); renderSim() }
+  $('p-hasSim').onchange = (e) => {
+    $('sim-block').hidden = !e.target.checked
+    if (e.target.checked && !p.simTypes.length) {
+      p.simTypes = ['eSIM only', 'eSIM + SIM']
+      renderSim()
+    }
+  }
+  $('add-sim').onclick = () => { p.simTypes.push(''); renderSim() }
 
   if (!p.sizes) p.sizes = []
   const renderSizes = () => {
@@ -828,10 +1101,142 @@ function renderReviews(c) {
   `)
 }
 
+function renderPriceImport(c) {
+  const pi = storeData.priceImport || { markupPercent: 15, markupFixed: 0 }
+  const savedSections = pi.lastSections?.length ? pi.lastSections : PDF_IMPORT_SECTIONS.map((s) => s.id)
+  const groups = groupPdfImportSections()
+
+  const sectionChecks = [...groups.entries()].map(([group, items]) => `
+    <div class="pdf-import-group">
+      <div class="pdf-import-group__head">
+        <label class="pdf-import-group__title">
+          <input type="checkbox" class="pdf-import-group-toggle" data-group="${group}" checked />
+          <span>${group}</span>
+        </label>
+      </div>
+      <div class="pdf-import-group__items">
+        ${items.map((s) => `
+          <label class="pdf-import-check">
+            <input type="checkbox" class="pdf-import-section" data-group="${group}" value="${s.id}" ${savedSections.includes(s.id) ? 'checked' : ''} />
+            <span>${s.label}</span>
+          </label>
+        `).join('')}
+      </div>
+    </div>
+  `).join('')
+
+  c.innerHTML = section('Импорт прайса PDF (THLS)', `
+    <p class="admin-hint">Загрузите PDF-прайс поставщика. Обновятся только отмеченные категории: цены закупки, розница и варианты (цвет, память, SIM).</p>
+    <div class="admin-grid">
+      <label class="field"><span>Наценка при импорте, %</span><input type="number" id="pi-markup" value="${pi.markupPercent ?? 15}" min="0" step="0.1" /></label>
+      <label class="field"><span>Наценка фикс., ₽</span><input type="number" id="pi-markup-fixed" value="${pi.markupFixed ?? 0}" min="0" step="100" /></label>
+    </div>
+    <div class="admin-row admin-row--actions">
+      <button type="button" class="btn btn--ghost btn--sm" id="pi-select-all">Выбрать все</button>
+      <button type="button" class="btn btn--ghost btn--sm" id="pi-select-none">Снять все</button>
+    </div>
+    <div class="pdf-import-sections">${sectionChecks}</div>
+    <label class="btn btn--primary admin-upload-btn">Выбрать PDF и импортировать<input type="file" id="import-pdf-file" accept=".pdf,application/pdf" hidden /></label>
+    <p class="admin-hint" id="pdf-import-result">${pi.lastImportAt ? `Последний импорт: ${new Date(pi.lastImportAt).toLocaleString('ru-RU')}` : 'Файл ещё не загружали'}</p>
+  `)
+
+  const sectionInputs = () => [...c.querySelectorAll('.pdf-import-section')]
+  const getSelectedSections = () => sectionInputs().filter((el) => el.checked).map((el) => el.value)
+
+  c.querySelector('#pi-select-all')?.addEventListener('click', () => {
+    sectionInputs().forEach((el) => { el.checked = true })
+    c.querySelectorAll('.pdf-import-group-toggle').forEach((el) => { el.checked = true })
+  })
+
+  c.querySelector('#pi-select-none')?.addEventListener('click', () => {
+    sectionInputs().forEach((el) => { el.checked = false })
+    c.querySelectorAll('.pdf-import-group-toggle').forEach((el) => { el.checked = false })
+  })
+
+  c.querySelectorAll('.pdf-import-group-toggle').forEach((groupCb) => {
+    groupCb.addEventListener('change', () => {
+      const group = groupCb.dataset.group
+      c.querySelectorAll(`.pdf-import-section[data-group="${group}"]`).forEach((el) => {
+        el.checked = groupCb.checked
+      })
+    })
+  })
+
+  c.querySelectorAll('.pdf-import-section').forEach((el) => {
+    el.addEventListener('change', () => {
+      const group = el.dataset.group
+      const groupItems = c.querySelectorAll(`.pdf-import-section[data-group="${group}"]`)
+      const groupToggle = c.querySelector(`.pdf-import-group-toggle[data-group="${group}"]`)
+      if (groupToggle) {
+        groupToggle.checked = [...groupItems].every((item) => item.checked)
+        groupToggle.indeterminate = [...groupItems].some((item) => item.checked) && !groupToggle.checked
+      }
+    })
+  })
+
+  c.querySelectorAll('.pdf-import-group-toggle').forEach((groupCb) => {
+    const group = groupCb.dataset.group
+    const items = c.querySelectorAll(`.pdf-import-section[data-group="${group}"]`)
+    groupCb.checked = [...items].every((item) => item.checked)
+    groupCb.indeterminate = [...items].some((item) => item.checked) && !groupCb.checked
+  })
+
+  $('import-pdf-file').onchange = (e) => {
+    const file = e.target.files[0]
+    if (!file) return
+    const selected = getSelectedSections()
+    if (!selected.length) {
+      status('Выберите хотя бы одну категорию для импорта', 'error')
+      e.target.value = ''
+      return
+    }
+    const resultEl = $('pdf-import-result')
+    resultEl.textContent = 'Импорт…'
+    const reader = new FileReader()
+    reader.onload = async () => {
+      try {
+        const base64 = String(reader.result).split(',')[1]
+        const res = await fetch('/api/import-price-pdf', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${getToken()}` },
+          body: JSON.stringify({
+            data: base64,
+            markupPercent: num('pi-markup'),
+            markupFixed: num('pi-markup-fixed'),
+            sections: selected,
+          }),
+        })
+        const data = await res.json()
+        if (!res.ok) throw new Error(data.error || 'Ошибка импорта')
+        const s = data.stats
+        resultEl.textContent = `Готово: ${s.variants} позиций, обновлено ${s.updated}, создано ${s.created}, всего ${data.productCount} в каталоге${s.errors?.length ? `, ошибок: ${s.errors.length}` : ''}`
+        storeData.priceImport = {
+          markupPercent: num('pi-markup'),
+          markupFixed: num('pi-markup-fixed'),
+          lastImportAt: new Date().toISOString(),
+          lastSections: selected,
+        }
+        invalidateStore()
+        productsData = await (await fetch('/api/products')).json()
+        status('Прайс PDF импортирован', 'success')
+      } catch (err) {
+        resultEl.textContent = err.message
+        status(err.message, 'error')
+      }
+      e.target.value = ''
+    }
+    reader.onerror = () => {
+      resultEl.textContent = 'Не удалось прочитать файл'
+      e.target.value = ''
+    }
+    reader.readAsDataURL(file)
+  }
+}
+
 function renderConfig(c) {
   c.innerHTML = `
     ${section('Настройки сайта (store.json)', `
-      <p class="admin-hint">Меню, контакты, темы, категории, рассрочка, отзывы</p>
+      <p class="admin-hint">Меню, контакты, темы, категории, рассрочка, отзывы. Импорт прайса — в разделе «Импорт прайса» в меню слева.</p>
       <div class="admin-row admin-row--actions">
         <button type="button" class="btn btn--primary" id="export-store">Скачать store.json</button>
         <label class="btn btn--secondary admin-upload-btn">Импорт store.json<input type="file" id="import-store" accept=".json" hidden /></label>
@@ -893,7 +1298,6 @@ function collectTab() {
 function collectGeneral() {
   const s = storeData.settings
   s.name = val('g-name'); s.tagline = val('g-tagline'); s.logo = val('g-logo'); s.reviewBrand = val('g-reviewBrand')
-  storeData.adminPassword = val('g-password')
 }
 
 function collectContacts() {
@@ -943,6 +1347,44 @@ function collectTheme() {
   })
 }
 
+function collectProductColorsStorageSim(p) {
+  p.colors = p.colors.map((col, i) => ({
+    id: col.id || `c${i}`,
+    name: val(`col-name-${i}`),
+    hex: $(`col-hex-${i}`)?.value || '#000',
+    image: val(`col-image-${i}`) || '',
+    importNames: val(`col-import-${i}`) || '',
+  }))
+  p.storage = p.storage.map((_, i) => ({ label: val(`stor-label-${i}`) }))
+  if ($('p-hasSim')?.checked) {
+    p.simTypes = p.simTypes.map((_, i) => val(`sim-type-${i}`)).filter(Boolean)
+  } else {
+    p.simTypes = null
+  }
+  p.simModifiers = []
+}
+
+function collectProductVariants(p) {
+  if (!p.variants) p.variants = []
+  p.markupPercent = num('p-markup') || 0
+  p.markupFixed = num('p-markup-fixed') || 0
+  const markup = getMarkupSettings(p)
+
+  p.variants = p.variants.map((_, i) => {
+    const purchasePrice = num(`var-purchase-${i}`)
+    const price = purchasePrice > 0 ? calcRetailFromPurchase(purchasePrice, markup) : 0
+    return {
+      colorId: $(`var-color-${i}`)?.value || '',
+      storage: $(`var-storage-${i}`)?.value || '',
+      simType: $(`var-sim-${i}`)?.value || '',
+      purchasePrice,
+      price,
+    }
+  }).filter((v) => v.colorId && v.storage)
+
+  recalcAllVariants(p)
+}
+
 function collectProduct() {
   const p = productsData.products[editingProductIdx]
   p.name = val('p-name'); p.brand = val('p-brand'); p.category = val('p-category')
@@ -952,25 +1394,32 @@ function collectProduct() {
   p.showCatalogSpec = !!$('p-showCatalogSpec')?.checked
 
   p.images = (p.images || []).map((_, i) => val(`gal-url-${i}`)).filter(Boolean)
-  if (p.images.length) p.image = p.images[0]
-  else if (p.image) p.images = [p.image]
+  if (p.images.length) {
+    if (!p.coverImage || !p.images.includes(p.coverImage)) {
+      p.coverImage = p.images[0]
+    }
+    p.image = p.coverImage || p.images[0]
+  } else {
+    p.coverImage = p.image || ''
+    if (p.image) p.images = [p.image]
+  }
 
   p.colors = p.colors.map((col, i) => ({
     id: col.id || `c${i}`,
     name: val(`col-name-${i}`),
     hex: $(`col-hex-${i}`)?.value || '#000',
-    priceAdd: num(`col-add-${i}`),
     image: val(`col-image-${i}`) || '',
+    importNames: val(`col-import-${i}`) || '',
   }))
 
-  p.storage = p.storage.map((_, i) => ({ label: val(`stor-label-${i}`), price: num(`stor-price-${i}`) }))
+  p.storage = p.storage.map((_, i) => ({ label: val(`stor-label-${i}`) }))
 
   if ($('p-hasSim')?.checked) {
     p.simTypes = p.simTypes.map((_, i) => val(`sim-type-${i}`)).filter(Boolean)
-    p.simModifiers = p.simTypes.map((t, i) => ({ type: t, priceAdd: num(`sim-add-${i}`) }))
   } else {
-    p.simTypes = null; p.simModifiers = []
+    p.simTypes = null
   }
+  p.simModifiers = []
 
   if (p.sizes?.length) {
     p.sizes = p.sizes.map((_, i) => ({ label: val(`size-label-${i}`), price: num(`size-price-${i}`) }))
@@ -987,7 +1436,7 @@ function collectProduct() {
     }))
   }
 
-  p.variants = []
+  collectProductVariants(p)
 }
 
 function collectInstallment() {

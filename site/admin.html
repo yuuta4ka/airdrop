@@ -12,10 +12,29 @@
   <div id="login-screen" class="login-screen">
     <form class="login-card" id="login-form">
       <h1>АирДроп Admin</h1>
-      <p>Введите пароль для входа</p>
-      <input type="password" id="login-password" placeholder="Пароль" required autofocus />
+      <p id="login-subtitle">Введите пароль для входа</p>
+      <div class="password-input-wrap">
+        <input type="password" id="login-password" placeholder="Пароль" required autofocus />
+        <button type="button" class="password-toggle" data-target="login-password" aria-label="Показать пароль">👁</button>
+      </div>
       <button type="submit" class="btn btn--primary" id="login-submit">Войти</button>
+      <button type="button" class="btn btn--ghost btn--sm" id="login-forgot">Забыли пароль?</button>
       <p class="login-error" id="login-error" hidden></p>
+    </form>
+
+    <form class="login-card" id="reset-form" hidden>
+      <h1>Сброс пароля</h1>
+      <p class="admin-hint">Код придёт в Telegram-бот админам. Не чаще 3 раз в час.</p>
+      <button type="button" class="btn btn--secondary" id="reset-request-code">Получить код в Telegram</button>
+      <label class="field"><span>Код из Telegram</span><input type="text" id="reset-code" inputmode="numeric" maxlength="6" placeholder="123456" /></label>
+      <div class="password-input-wrap">
+        <input type="password" id="reset-password" placeholder="Новый пароль" />
+        <button type="button" class="password-toggle" data-target="reset-password" aria-label="Показать пароль">👁</button>
+      </div>
+      <label class="field"><span>Повторите пароль (видно)</span><input type="text" id="reset-confirm" placeholder="Новый пароль ещё раз" /></label>
+      <button type="submit" class="btn btn--primary" id="reset-submit">Сменить пароль</button>
+      <button type="button" class="btn btn--ghost btn--sm" id="reset-back">← Назад к входу</button>
+      <p class="login-error" id="reset-error" hidden></p>
     </form>
   </div>
 
@@ -36,6 +55,7 @@
         <div class="admin-nav-group__title">Каталог</div>
         <button class="admin-nav__btn" data-tab="categories">Категории</button>
         <button class="admin-nav__btn" data-tab="products">Товары</button>
+        <button class="admin-nav__btn" data-tab="price-import">Импорт прайса</button>
       </div>
 
       <div class="admin-nav-group">

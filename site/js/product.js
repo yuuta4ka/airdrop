@@ -1,6 +1,7 @@
 import {
   loadStore, getProductById, calcPrice, formatPrice, makeCartKey,
-  getAllProductImages, getProductImages, getStockForVariant,
+  getProductImages, getInitialColorIndex, getStockForVariant,
+  usesSupplierPricing, isComboOrderable, isOptionUnavailable,
 } from './store.js'
 import { renderHeader, renderFooter } from './layout.js'
 import { initCartUI, addItem, openCart, showToast } from './cart-ui.js'
@@ -70,7 +71,7 @@ async function init() {
     mainImg: els.photo,
     prevBtn: document.getElementById('gallery-prev'),
     nextBtn: document.getElementById('gallery-next'),
-    getImages: () => getAllProductImages(product),
+    getImages: () => getProductImages(product, selectedColor),
     getAlt: () => product.name,
   })
 
@@ -81,6 +82,44 @@ async function init() {
 function getSelectedSimType() {
   if (!product.simTypes?.length) return null
   return product.simTypes[selectedSim]
+}
+
+function getSelectionContext() {
+  return {
+    colorId: product.colors[selectedColor]?.id,
+    storage: getCurrentStorageLabel(),
+    simType: getSelectedSimType(),
+  }
+}
+
+function ensureValidSelection() {
+  if (!usesSupplierPricing(product)) return
+  const orderable = isComboOrderable(
+    product,
+    product.colors[selectedColor]?.id,
+    getCurrentStorageLabel(),
+    getSelectedSimType(),
+  )
+  if (orderable) return
+
+  for (const ci of product.colors.keys()) {
+    for (const si of product.storage.keys()) {
+      for (const simi of (product.simTypes?.length ? product.simTypes.keys() : [0])) {
+        const sim = product.simTypes?.[simi] ?? null
+        if (isComboOrderable(product, product.colors[ci].id, product.storage[si].label, sim)) {
+          selectedColor = ci
+          selectedStorage = si
+          if (product.simTypes?.length) selectedSim = simi
+          return
+        }
+      }
+    }
+  }
+}
+
+function isOptionGrayed(type, value) {
+  if (!usesSupplierPricing(product)) return false
+  return isOptionUnavailable(product, type, value, getSelectionContext())
 }
 
 function getCurrentStorageLabel() {
@@ -198,24 +237,41 @@ function renderWarrantyOptions() {
 }
 
 function updateUI(resetGallery = false) {
+  const basePrice = getBasePrice()
+  const orderable = isComboOrderable(
+    product,
+    product.colors[selectedColor]?.id,
+    getCurrentStorageLabel(),
+    getSelectedSimType(),
+  )
+
   gallery?.update(resetGallery)
-  els.price.textContent = formatPrice(getTotalPrice())
+  els.price.textContent = orderable && basePrice > 0 ? formatPrice(getTotalPrice()) : 'Нет в наличии'
+  if (els.addBtn) {
+    els.addBtn.disabled = !orderable || basePrice <= 0
+    els.addBtn.textContent = orderable && basePrice > 0 ? 'Купить' : 'Нет в наличии'
+    els.addBtn.classList.toggle('product-detail__buy--unavailable', !orderable || basePrice <= 0)
+  }
   updateStockInfo()
   renderWarrantyOptions()
   mountProductInstallmentCalc(els.installmentCalc, getTotalPrice(), store.settings.installment)
 
   els.colors.querySelectorAll('.color-swatch').forEach((btn, i) => {
     const colorId = product.colors[i].id
+    const unavailable = isOptionGrayed('color', colorId)
     const hasStock = product.stock?.some((s) => s.colorId === colorId && s.qty > 0)
     btn.classList.toggle('color-swatch--active', i === selectedColor)
     btn.classList.toggle('color-swatch--instock', !!hasStock)
+    btn.classList.toggle('color-swatch--unavailable', unavailable)
   })
 
   els.storage?.querySelectorAll('.option-btn').forEach((btn, i) => {
     const label = product.storage[i].label
+    const unavailable = isOptionGrayed('storage', label)
     const stock = getStockForVariant(product, product.colors[selectedColor].id, getSelectedSimType(), label)
     btn.classList.toggle('option-btn--active', i === selectedStorage)
     btn.classList.toggle('option-btn--instock', stock?.qty > 0)
+    btn.classList.toggle('option-btn--unavailable', unavailable)
     const badge = btn.querySelector('.option-btn__stock')
     const next = optionStockBadge(stock)
     if (badge) badge.outerHTML = next
@@ -224,9 +280,11 @@ function updateUI(resetGallery = false) {
 
   els.sizes?.querySelectorAll('.option-btn').forEach((btn, i) => {
     const label = product.sizes[i].label
+    const unavailable = isOptionGrayed('storage', label)
     const stock = getStockForVariant(product, product.colors[selectedColor].id, getSelectedSimType(), label)
     btn.classList.toggle('option-btn--active', i === selectedSize)
     btn.classList.toggle('option-btn--instock', stock?.qty > 0)
+    btn.classList.toggle('option-btn--unavailable', unavailable)
     const badge = btn.querySelector('.option-btn__stock')
     const next = optionStockBadge(stock)
     if (badge) badge.outerHTML = next
@@ -235,9 +293,11 @@ function updateUI(resetGallery = false) {
 
   els.simTypes?.querySelectorAll('.option-btn').forEach((btn, i) => {
     const sim = product.simTypes[i]
+    const unavailable = isOptionGrayed('sim', sim)
     const stock = getStockForVariant(product, product.colors[selectedColor].id, sim, getCurrentStorageLabel())
     btn.classList.toggle('option-btn--active', i === selectedSim)
     btn.classList.toggle('option-btn--instock', stock?.qty > 0)
+    btn.classList.toggle('option-btn--unavailable', unavailable)
     const badge = btn.querySelector('.option-btn__stock')
     const next = optionStockBadge(stock)
     if (badge) badge.outerHTML = next
@@ -274,7 +334,7 @@ function renderOptions() {
     btn.addEventListener('click', () => {
       hideColorTip()
       selectedColor = idx
-      updateUI(false)
+      updateUI(true)
     })
   })
 
@@ -326,15 +386,21 @@ function renderOptions() {
   }
 
   els.warrantyGroup.style.display = 'block'
-  updateUI()
+  selectedColor = getInitialColorIndex(product)
+  ensureValidSelection()
+  updateUI(true)
 }
 
 function addToCart() {
   const color = product.colors[selectedColor]
   const sim = getSelectedSimType()
-  const storageLabel = product.sizes?.length > 1
-    ? product.sizes[selectedSize].label
-    : product.storage[selectedStorage].label
+  const storageLabel = getCurrentStorageLabel()
+
+  if (!isComboOrderable(product, color.id, storageLabel, sim) || getBasePrice() <= 0) {
+    showToast('Эта комбинация недоступна для заказа')
+    return
+  }
+
   const sizeLabel = product.sizes?.length > 1 ? product.sizes[selectedSize].label : ''
   const warranty = getWarrantyOption()
   const key = makeCartKey(product.id, color.id, storageLabel, sizeLabel, sim) + `|w${warranty.months}`

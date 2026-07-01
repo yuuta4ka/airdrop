@@ -1,3 +1,8 @@
+import {
+  usesSupplierPricing, findVariant, getOrderableVariants,
+  calcRetailFromPurchase, recalcAllVariants,
+} from './pricing.js'
+
 let storeCache = null
 let productsCache = null
 
@@ -71,35 +76,34 @@ export function getProductById(store, id) {
 export function calcPrice(product, colorIdx = 0, storageIdx = 0, sizeIdx = 0, simType = null) {
   const color = product.colors?.[colorIdx]
   const storage = product.storage?.[storageIdx]
-  const storageLabel = storage?.label
+  const storageLabel = product.sizes?.length > 1
+    ? product.sizes[sizeIdx ?? 0]?.label
+    : storage?.label
 
-  if (product.variants?.length && color && storageLabel) {
-    const exact = product.variants.find((v) =>
-      v.colorId === color.id &&
-      v.storage === storageLabel &&
-      (simType ? v.simType === simType : !v.simType)
-    )
-    if (exact) return exact.price
+  if (usesSupplierPricing(product) && color && storageLabel) {
+    const variant = findVariant(product, color.id, storageLabel, simType)
+    return variant?.price ?? 0
   }
 
-  let price = 0
-  if (product.sizes?.length > 1) {
-    price = product.sizes[sizeIdx ?? 0]?.price ?? 0
-  } else {
-    price = storage?.price ?? 0
+  if (!usesSupplierPricing(product)) {
+    let price = 0
+    if (product.sizes?.length > 1) {
+      price = product.sizes[sizeIdx ?? 0]?.price ?? 0
+    } else {
+      price = storage?.price ?? 0
+    }
+    return price
   }
 
-  price += color?.priceAdd ?? 0
-
-  if (simType && product.simModifiers?.length) {
-    const simMod = product.simModifiers.find((s) => s.type === simType)
-    price += simMod?.priceAdd ?? 0
-  }
-
-  return price
+  return 0
 }
 
 export function getMinPrice(product) {
+  if (usesSupplierPricing(product)) {
+    const prices = getOrderableVariants(product).map((v) => v.price).filter((p) => p > 0)
+    return prices.length ? Math.min(...prices) : 0
+  }
+
   const simTypes = product.simTypes?.length ? product.simTypes : [null]
   let min = Infinity
 
@@ -124,6 +128,9 @@ export function getMinPrice(product) {
   return min === Infinity ? 0 : min
 }
 
+export { usesSupplierPricing, findVariant, getOrderableVariants, calcRetailFromPurchase, recalcAllVariants } from './pricing.js'
+export { isComboOrderable, isComboUnavailable, isOptionUnavailable, getAvailableOptions, roundPriceTo900, recalcVariantPrice, getMarkupSettings } from './pricing.js'
+
 export function formatPrice(price) {
   return new Intl.NumberFormat('ru-RU', { style: 'currency', currency: 'RUB', maximumFractionDigits: 0 }).format(price)
 }
@@ -145,6 +152,8 @@ export function getAllProductImages(product) {
     if (img && !merged.includes(img)) merged.push(img)
   }
 
+  add(product.coverImage)
+
   if (product.images?.length) {
     product.images.forEach(add)
   } else if (product.image) {
@@ -159,17 +168,43 @@ export function getAllProductImages(product) {
   return merged.length ? merged : ['assets/logo.png']
 }
 
+export function findColorIndexByImage(product, image) {
+  if (!image || !product.colors?.length) return -1
+  return product.colors.findIndex((c) =>
+    c.image === image || c.images?.includes(image),
+  )
+}
+
+export function getInitialColorIndex(product) {
+  const coverIdx = findColorIndexByImage(product, product.coverImage)
+  if (coverIdx >= 0) return coverIdx
+  const imageIdx = findColorIndexByImage(product, product.image)
+  if (imageIdx >= 0) return imageIdx
+  return 0
+}
+
+/** Фото для карточки товара: сначала выбранный цвет, затем остальная галерея */
 export function getProductImages(product, colorIdx = 0) {
   const all = getAllProductImages(product)
   const color = product.colors?.[colorIdx]
   if (!color?.image) return all
 
-  const prioritized = [color.image, ...all.filter((img) => img !== color.image)]
+  const prioritized = [color.image]
+  const add = (img) => {
+    if (img && !prioritized.includes(img)) prioritized.push(img)
+  }
+  color.images?.forEach(add)
+  all.forEach(add)
   return prioritized
 }
 
+/** Превью в каталоге — всегда главное фото */
 export function getProductImage(product, colorIdx = 0) {
-  return getProductImages(product, colorIdx)[0]
+  if (product.coverImage) return product.coverImage
+  if (product.image) return product.image
+  const color = product.colors?.[colorIdx]
+  if (color?.image) return color.image
+  return getAllProductImages(product)[0]
 }
 
 export function getStockForVariant(product, colorId, simType, storageLabel) {

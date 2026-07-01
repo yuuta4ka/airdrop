@@ -1,0 +1,34 @@
+{
+  "codes": {
+    "reset": {
+      "code": "102237",
+      "expiresAt": 1782921974456,
+      "attempts": 0,
+      "used": false,
+      "createdAt": "2026-07-01T15:56:14.456Z",
+      "ip": "127.0.0.1"
+    },
+    "change": {
+      "code": "487588",
+      "expiresAt": 1782922213982,
+      "attempts": 0,
+      "used": false,
+      "createdAt": "2026-07-01T16:00:13.982Z",
+      "ip": "127.0.0.1"
+    }
+  },
+  "rateLimits": {
+    "reset-req:127.0.0.1": {
+      "count": 1,
+      "resetAt": 1782924974453
+    },
+    "login:127.0.0.1": {
+      "count": 0,
+      "resetAt": 1782926702430
+    },
+    "change-req:127.0.0.1": {
+      "count": 1,
+      "resetAt": 1782925213982
+    }
+  }
+}

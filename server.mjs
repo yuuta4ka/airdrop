@@ -2,14 +2,25 @@ import http from 'node:http'
 import fs from 'node:fs'
 import path from 'node:path'
 import { fileURLToPath } from 'node:url'
+import { buildCatalogFromPdfText, extractTextFromPdfBuffer } from './price-pdf-catalog.mjs'
 
 const __dirname = path.dirname(fileURLToPath(import.meta.url))
 const SITE_DIR = path.join(__dirname, 'site')
 const STORE_FILE = path.join(SITE_DIR, 'data', 'store.json')
 const PRODUCTS_FILE = path.join(SITE_DIR, 'data', 'products.json')
 const ORDERS_FILE = path.join(SITE_DIR, 'data', 'orders.json')
+const AUTH_STATE_FILE = path.join(SITE_DIR, 'data', 'auth-state.json')
 const ENV_FILE = path.join(__dirname, '.env')
 const PORT = process.env.PORT || 8080
+
+const AUTH_LIMITS = {
+  resetRequestsPerHour: 3,
+  changeRequestsPerHour: 5,
+  loginFailuresPer15Min: 10,
+  codeTtlMs: 10 * 60 * 1000,
+  maxCodeAttempts: 5,
+  minPasswordLength: 6,
+}
 
 function loadEnvFile() {
   if (!fs.existsSync(ENV_FILE)) return
@@ -64,6 +75,158 @@ function readOrders() {
   return readJson(ORDERS_FILE)
 }
 function writeOrders(data) { writeJson(ORDERS_FILE, data) }
+
+function readAuthState() {
+  if (!fs.existsSync(AUTH_STATE_FILE)) return { codes: {}, rateLimits: {} }
+  try {
+    return readJson(AUTH_STATE_FILE)
+  } catch {
+    return { codes: {}, rateLimits: {} }
+  }
+}
+
+function writeAuthState(data) {
+  writeJson(AUTH_STATE_FILE, data)
+}
+
+function getClientIp(req) {
+  const fwd = req.headers['x-forwarded-for']
+  if (fwd) return String(fwd).split(',')[0].trim()
+  return req.socket?.remoteAddress || 'unknown'
+}
+
+function checkRateLimit(state, key, max, windowMs) {
+  const now = Date.now()
+  const entry = state.rateLimits[key] || { count: 0, resetAt: now + windowMs }
+  if (now > entry.resetAt) {
+    entry.count = 0
+    entry.resetAt = now + windowMs
+  }
+  if (entry.count >= max) {
+    return { ok: false, retrySec: Math.ceil((entry.resetAt - now) / 1000) }
+  }
+  entry.count += 1
+  state.rateLimits[key] = entry
+  return { ok: true }
+}
+
+function generateAuthCode() {
+  return String(Math.floor(100000 + Math.random() * 900000))
+}
+
+function getAdminChatIds() {
+  const rawIds = process.env.TELEGRAM_ADMIN_CHAT_IDS || process.env.TELEGRAM_ADMIN_CHAT_ID || ''
+  return [...new Set(rawIds.split(/[,\s]+/).map((id) => id.trim()).filter(Boolean))]
+}
+
+async function sendTelegramMessage(chatId, text) {
+  const token = process.env.TELEGRAM_BOT_TOKEN?.trim()
+  if (!token) throw new Error('Telegram не настроен')
+  const res = await fetch(`https://api.telegram.org/bot${token}/sendMessage`, {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({ chat_id: chatId, text }),
+    signal: AbortSignal.timeout(10000),
+  })
+  const data = await res.json().catch(() => ({}))
+  if (!res.ok) throw new Error(data.description || `HTTP ${res.status}`)
+  return data
+}
+
+async function sendTelegramToAdmins(text) {
+  const chatIds = getAdminChatIds()
+  if (!chatIds.length) return { ok: false, error: 'Telegram не настроен' }
+  const results = await Promise.allSettled(chatIds.map((chatId) => sendTelegramMessage(chatId, text)))
+  const sent = results.filter((r) => r.status === 'fulfilled').length
+  return sent > 0 ? { ok: true, sent } : { ok: false, error: 'Не удалось отправить в Telegram' }
+}
+
+function createAuthCode(state, type, meta = {}) {
+  const code = generateAuthCode()
+  state.codes[type] = {
+    code,
+    expiresAt: Date.now() + AUTH_LIMITS.codeTtlMs,
+    attempts: 0,
+    used: false,
+    createdAt: new Date().toISOString(),
+    ...meta,
+  }
+  return code
+}
+
+function verifyAuthCode(state, type, inputCode) {
+  const entry = state.codes[type]
+  if (!entry || entry.used) return { ok: false, error: 'Код не запрошен или уже использован' }
+  if (Date.now() > entry.expiresAt) return { ok: false, error: 'Код истёк — запросите новый' }
+  entry.attempts += 1
+  if (entry.attempts > AUTH_LIMITS.maxCodeAttempts) {
+    entry.used = true
+    writeAuthState(state)
+    return { ok: false, error: 'Превышено число попыток' }
+  }
+  if (String(inputCode ?? '').trim() !== entry.code) {
+    writeAuthState(state)
+    return { ok: false, error: 'Неверный код' }
+  }
+  entry.used = true
+  return { ok: true, entry }
+}
+
+function validateNewPassword(password, confirm) {
+  const p = String(password ?? '')
+  const c = String(confirm ?? '')
+  if (p.length < AUTH_LIMITS.minPasswordLength) {
+    return { ok: false, error: `Пароль не короче ${AUTH_LIMITS.minPasswordLength} символов` }
+  }
+  if (p !== c) return { ok: false, error: 'Пароли не совпадают' }
+  return { ok: true, password: p }
+}
+
+let telegramOffset = 0
+
+async function handleTelegramUpdate(update) {
+  const msg = update.message
+  if (!msg?.text) return
+  const chatId = String(msg.chat.id)
+  const adminIds = getAdminChatIds()
+  if (!adminIds.includes(chatId)) return
+
+  const text = msg.text.trim()
+  if (text === '/start' || text === '/code' || text === '/код') {
+    await sendTelegramMessage(chatId, [
+      '🔐 Бот АирДроп Admin',
+      '',
+      'Коды приходят автоматически при:',
+      '• сбросе пароля (кнопка «Забыли пароль?»)',
+      '• смене пароля в админке',
+      '',
+      'Код действует 10 минут.',
+    ].join('\n'))
+  }
+}
+
+async function pollTelegram() {
+  const token = process.env.TELEGRAM_BOT_TOKEN?.trim()
+  if (!token) return
+  try {
+    const res = await fetch(
+      `https://api.telegram.org/bot${token}/getUpdates?offset=${telegramOffset}&timeout=25`,
+      { signal: AbortSignal.timeout(35000) },
+    )
+    const data = await res.json()
+    if (data.ok && data.result?.length) {
+      for (const update of data.result) {
+        telegramOffset = update.update_id + 1
+        await handleTelegramUpdate(update).catch((err) => {
+          console.error('Telegram update error:', err.message)
+        })
+      }
+    }
+  } catch (err) {
+    if (err.name !== 'TimeoutError') console.error('Telegram poll error:', err.message)
+  }
+  setTimeout(pollTelegram, 500)
+}
 
 function normalizePhone(value) {
   let digits = String(value ?? '').replace(/\D/g, '')
@@ -181,11 +344,129 @@ const server = http.createServer(async (req, res) => {
 
   if (p === '/api/admin/login' && req.method === 'POST') {
     try {
+      const ip = getClientIp(req)
+      const state = readAuthState()
+      const limit = checkRateLimit(state, `login:${ip}`, AUTH_LIMITS.loginFailuresPer15Min, 15 * 60 * 1000)
+      if (!limit.ok) {
+        writeAuthState(state)
+        return sendJson(res, 429, { error: `Слишком много попыток. Подождите ${limit.retrySec} сек.` })
+      }
+
       const { password } = JSON.parse(await readBody(req))
       if (String(password ?? '') === readStore().adminPassword) {
+        state.rateLimits[`login:${ip}`] = { count: 0, resetAt: Date.now() + 15 * 60 * 1000 }
+        writeAuthState(state)
         return sendJson(res, 200, { ok: true })
       }
+      writeAuthState(state)
       return sendJson(res, 401, { error: 'Неверный пароль' })
+    } catch {
+      return sendJson(res, 400, { error: 'Некорректный запрос' })
+    }
+  }
+
+  if (p === '/api/admin/request-reset-code' && req.method === 'POST') {
+    try {
+      const ip = getClientIp(req)
+      const state = readAuthState()
+      const limit = checkRateLimit(state, `reset-req:${ip}`, AUTH_LIMITS.resetRequestsPerHour, 60 * 60 * 1000)
+      if (!limit.ok) {
+        writeAuthState(state)
+        return sendJson(res, 429, { error: `Лимит запросов. Повторите через ${Math.ceil(limit.retrySec / 60)} мин.` })
+      }
+
+      const code = createAuthCode(state, 'reset', { ip })
+      writeAuthState(state)
+
+      const notify = await sendTelegramToAdmins([
+        '🔑 Сброс пароля админки',
+        '',
+        `Код: ${code}`,
+        'Действует 10 минут.',
+        '',
+        `IP: ${ip}`,
+      ].join('\n'))
+
+      if (!notify.ok) return sendJson(res, 503, { error: notify.error || 'Telegram не настроен' })
+      return sendJson(res, 200, { ok: true, message: 'Код отправлен в Telegram' })
+    } catch {
+      return sendJson(res, 400, { error: 'Ошибка запроса' })
+    }
+  }
+
+  if (p === '/api/admin/reset-password' && req.method === 'POST') {
+    try {
+      const ip = getClientIp(req)
+      const { code, password, confirm } = JSON.parse(await readBody(req))
+      const passCheck = validateNewPassword(password, confirm)
+      if (!passCheck.ok) return sendJson(res, 400, { error: passCheck.error })
+
+      const state = readAuthState()
+      const verify = verifyAuthCode(state, 'reset', code)
+      if (!verify.ok) {
+        writeAuthState(state)
+        return sendJson(res, 400, { error: verify.error })
+      }
+
+      const store = readStore()
+      store.adminPassword = passCheck.password
+      writeStore(store)
+      delete state.codes.reset
+      writeAuthState(state)
+      return sendJson(res, 200, { ok: true })
+    } catch {
+      return sendJson(res, 400, { error: 'Некорректный запрос' })
+    }
+  }
+
+  if (p === '/api/admin/request-change-code' && req.method === 'POST') {
+    if (!checkAuth(req)) return sendJson(res, 401, { error: 'Неверный пароль' })
+    try {
+      const ip = getClientIp(req)
+      const state = readAuthState()
+      const limit = checkRateLimit(state, `change-req:${ip}`, AUTH_LIMITS.changeRequestsPerHour, 60 * 60 * 1000)
+      if (!limit.ok) {
+        writeAuthState(state)
+        return sendJson(res, 429, { error: `Лимит запросов. Повторите через ${Math.ceil(limit.retrySec / 60)} мин.` })
+      }
+
+      const code = createAuthCode(state, 'change', { ip })
+      writeAuthState(state)
+
+      const notify = await sendTelegramToAdmins([
+        '🔐 Смена пароля админки',
+        '',
+        `Код: ${code}`,
+        'Действует 10 минут.',
+      ].join('\n'))
+
+      if (!notify.ok) return sendJson(res, 503, { error: notify.error || 'Telegram не настроен' })
+      return sendJson(res, 200, { ok: true, message: 'Код отправлен в Telegram' })
+    } catch {
+      return sendJson(res, 400, { error: 'Ошибка запроса' })
+    }
+  }
+
+  if (p === '/api/admin/change-password' && req.method === 'POST') {
+    if (!checkAuth(req)) return sendJson(res, 401, { error: 'Неверный пароль' })
+    try {
+      const { code, password, confirm } = JSON.parse(await readBody(req))
+      const passCheck = validateNewPassword(password, confirm)
+      if (!passCheck.ok) return sendJson(res, 400, { error: passCheck.error })
+
+      const state = readAuthState()
+      const verify = verifyAuthCode(state, 'change', code)
+      if (!verify.ok) {
+        writeAuthState(state)
+        return sendJson(res, 400, { error: verify.error })
+      }
+
+      const store = readStore()
+      store.adminPassword = passCheck.password
+      writeStore(store)
+      delete state.codes.change
+      writeAuthState(state)
+      return sendJson(res, 200, { ok: true })
     } catch {
       return sendJson(res, 400, { error: 'Некорректный запрос' })
     }
@@ -200,7 +481,9 @@ const server = http.createServer(async (req, res) => {
     try {
       const data = JSON.parse(await readBody(req))
       const current = readStore()
-      writeStore({ ...data, adminPassword: data.adminPassword || current.adminPassword })
+      // Пароль меняется только через /api/admin/change-password
+      delete data.adminPassword
+      writeStore({ ...data, adminPassword: current.adminPassword })
       return sendJson(res, 200, { ok: true })
     } catch {
       return sendJson(res, 400, { error: 'Некорректный JSON' })
@@ -215,6 +498,56 @@ const server = http.createServer(async (req, res) => {
       return sendJson(res, 200, { ok: true })
     } catch {
       return sendJson(res, 400, { error: 'Некорректный JSON' })
+    }
+  }
+
+  if (p === '/api/import-price-pdf' && req.method === 'POST') {
+    if (!checkAuth(req)) return sendJson(res, 401, { error: 'Неверный пароль' })
+    try {
+      const body = JSON.parse(await readBody(req))
+      const raw = body.data ?? body.pdf
+      if (!raw) return sendJson(res, 400, { error: 'Файл не передан' })
+
+      const buffer = Buffer.from(String(raw).replace(/^data:[^;]+;base64,/, ''), 'base64')
+      if (buffer.length < 100) return sendJson(res, 400, { error: 'Пустой или повреждённый PDF' })
+
+      const text = await extractTextFromPdfBuffer(buffer)
+      const store = readStore()
+      const markup = {
+        percent: Number(body.markupPercent ?? store.priceImport?.markupPercent ?? 15),
+        fixed: Number(body.markupFixed ?? store.priceImport?.markupFixed ?? 0),
+      }
+
+      const existing = readProducts()
+      const sections = Array.isArray(body.sections)
+        ? body.sections.filter((s) => typeof s === 'string' && s.trim())
+        : null
+      const { products, stats } = buildCatalogFromPdfText(text, existing.products, markup, {
+        sections: sections?.length ? sections : null,
+      })
+
+      if (!body.dryRun) {
+        writeProducts({ products })
+        if (body.saveMarkup !== false) {
+          store.priceImport = {
+            markupPercent: markup.percent,
+            markupFixed: markup.fixed,
+            lastImportAt: new Date().toISOString(),
+            lastSections: sections?.length ? sections : store.priceImport?.lastSections,
+          }
+          writeStore(store)
+        }
+      }
+
+      return sendJson(res, 200, {
+        ok: true,
+        stats,
+        productCount: products.length,
+        dryRun: Boolean(body.dryRun),
+      })
+    } catch (err) {
+      console.error('PDF import error:', err)
+      return sendJson(res, 500, { error: err.message || 'Ошибка импорта PDF' })
     }
   }
 
@@ -340,6 +673,7 @@ server.listen(PORT, '0.0.0.0', () => {
   const tg = getTelegramStatus()
   if (tg.configured) {
     console.log(`Telegram-уведомления: включены (${tg.chatCount} получателей)`)
+    pollTelegram()
   } else {
     console.log('Telegram-уведомления: выключены — создайте .env по образцу .env.example')
   }

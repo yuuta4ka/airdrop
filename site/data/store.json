@@ -1,5 +1,5 @@
 {
-  "adminPassword": "321",
+  "adminPassword": "Bkmz98754321",
   "settings": {
     "name": "АирДроп",
     "tagline": "техника Apple в наличии и под заказ",
@@ -173,8 +173,17 @@
     {
       "id": "galaxy-watch",
       "label": "Galaxy Watch"
+    },
+    {
+      "id": "huawei",
+      "label": "Huawei"
     }
   ],
+  "priceImport": {
+    "markupPercent": 15,
+    "markupFixed": 0,
+    "lastImportAt": "2026-07-01T17:07:01.000Z"
+  },
   "theme": {
     "active": "light-gray",
     "presets": {
