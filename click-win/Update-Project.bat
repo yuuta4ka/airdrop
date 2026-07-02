@@ -29,6 +29,9 @@ if not exist ".git\" (
   goto :end
 )
 
+REM Phase 2 runs in a NEW cmd after git pull replaced .bat files on disk.
+if /i "%~1"=="--deps-only" goto :deps
+
 echo Updating from GitHub...
 git pull
 if errorlevel 1 (
@@ -38,6 +41,11 @@ if errorlevel 1 (
 )
 
 echo.
+echo Continuing in a fresh process (Windows cannot safely run a .bat after git pull rewrites it)...
+cmd /c ""%~f0" --deps-only"
+exit /b %ERRORLEVEL%
+
+:deps
 echo Installing dependencies...
 call "%ROOT%\scripts\win\npm-install.cmd"
 if errorlevel 1 goto :end
