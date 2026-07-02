@@ -21,13 +21,9 @@ if errorlevel 1 (
 
 call "%~dp0kill-port.cmd" %PORT%
 
-if not exist "node_modules\" (
-  echo Running npm install ...
-  call npm install
-  if errorlevel 1 (
-    echo [ERROR] npm install failed
-    endlocal & exit /b 1
-  )
+call "%~dp0npm-install.cmd"
+if errorlevel 1 (
+  endlocal & exit /b 1
 )
 
 echo.

@@ -38,6 +38,11 @@ if errorlevel 1 (
 )
 
 echo.
+echo Installing dependencies...
+call "%ROOT%\scripts\win\npm-install.cmd"
+if errorlevel 1 goto :end
+
+echo.
 echo Update OK. Now run:
 echo   click-win\Diagnose.bat
 echo   click-win\Start.bat

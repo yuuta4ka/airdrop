@@ -15,7 +15,13 @@ cd /d "%ROOT%" && (
 )
 
 if exist "server.mjs" (echo server.mjs: OK) else (echo [ERROR] server.mjs not found)
-if exist "node_modules\" (echo node_modules: OK) else (echo node_modules: missing - will run npm install on first start)
+if exist "node_modules\adm-zip\" (
+  echo node_modules: OK (adm-zip found)
+) else if exist "node_modules\" (
+  echo [WARN] node_modules incomplete - run: npm install
+) else (
+  echo node_modules: missing - Start.bat will run npm install
+)
 
 echo.
 echo --- Node.js ---

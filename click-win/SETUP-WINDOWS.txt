@@ -21,7 +21,15 @@ BEST WAY: git clone (fast, correct files)
 UPDATE PROJECT (after changes on Mac):
 
      cd path\to\airdrop
+     click-win\Update-Project.bat
+     click-win\Start.bat
+
+  Update-Project runs git pull + npm install automatically.
+  Start.bat also installs missing packages (e.g. after new features).
+
+  Manual update:
      git pull
+     npm install
      click-win\Start.bat
 
 IF YOU MUST USE USB:
