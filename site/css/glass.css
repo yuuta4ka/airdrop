@@ -766,3 +766,34 @@ body[data-theme="light-gray"] .catalog-top::before {
 .toast:empty {
   display: none !important;
 }
+
+/* Mobile: меньше blur и без shimmer — плавнее на телефонах */
+@media (max-width: 768px) {
+  :root {
+    --glass-blur: 16px;
+    --glass-blur-sm: 10px;
+    --glass-saturate: 130%;
+  }
+
+  .liquid-glass::before,
+  .liquid-glass::after {
+    animation: none !important;
+  }
+
+  .header,
+  .mobile-nav__glass,
+  .cart,
+  .product-card,
+  .category-btn,
+  .checkout-modal__dialog {
+    backdrop-filter: blur(12px) saturate(130%) !important;
+    -webkit-backdrop-filter: blur(12px) saturate(130%) !important;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .liquid-glass::before,
+  .liquid-glass::after {
+    animation: none !important;
+  }
+}

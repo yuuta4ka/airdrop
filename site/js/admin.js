@@ -3,6 +3,9 @@ import { THEME_LABELS, getThemeVarKeys } from './theme.js'
 import { calcRetailFromPurchase, recalcAllVariants, getMarkupSettings } from './pricing.js'
 import { applySupplierImport } from './supplier-import.js'
 import { PDF_IMPORT_SECTIONS, groupPdfImportSections } from './pdf-import-sections.js'
+import {
+  getDisplayStorage, isPhoneCategory, isWatchCategory, isAccessoryCategory, isMeaningfulStorageLabel,
+} from './product-options.js'
 
 const AUTH_KEY = 'airdrop_admin_token'
 let storeData = null
@@ -46,6 +49,21 @@ function status(msg, type = 'info') {
   el.textContent = msg
   el.className = `admin-status admin-status--${type}`
   if (type === 'success') setTimeout(() => { el.textContent = '' }, 3000)
+}
+
+async function parseApiJson(res) {
+  const text = await res.text()
+  if (!text) return null
+  try {
+    return JSON.parse(text)
+  } catch {
+    if (res.status === 404) {
+      throw new Error(
+        'Сервер не поддерживает импорт PDF (404). Остановите старый процесс и перезапустите: bash start.sh',
+      )
+    }
+    throw new Error(`Ошибка сервера (${res.status}): ${text.slice(0, 160)}`)
+  }
 }
 
 async function loadData() {
@@ -636,67 +654,77 @@ function renderProducts(c) {
 function renderProductEditor(c) {
   const p = productsData.products[editingProductIdx]
   if (!p.images) p.images = p.image ? [p.image] : []
+  const showStorage = !isAccessoryCategory(p.category) || getDisplayStorage(p).length > 0
+  const showSizes = isWatchCategory(p.category) || (p.sizes?.length > 0)
+  const showSim = isPhoneCategory(p.category) || p.simTypes?.length > 0
 
   c.innerHTML = `
-    <button type="button" class="btn btn--ghost" id="back-products">← К списку товаров</button>
+    <div class="admin-editor-toolbar">
+      <button type="button" class="btn btn--ghost" id="back-products">← К списку</button>
+      <button type="button" class="btn btn--primary" id="save-product">Сохранить товар</button>
+    </div>
     <h3 class="admin-editor-title">${p.name}</h3>
 
     ${section('Основное', `<div class="admin-grid">
       ${field('Название', 'p-name', p.name)}${field('Бренд', 'p-brand', p.brand)}
       ${categorySelect('p-category', p.category)}
-      ${field('Бейдж', 'p-badge', p.badge || '', 'text', 'Новинка, Хит, В наличии — или пусто')}
-      ${field('Фото (URL или путь)', 'p-image', p.image)}
+      ${field('Бейдж', 'p-badge', p.badge || '', 'text', 'Новинка, Хит — или пусто')}
     </div>
     <label class="field field--check"><input type="checkbox" id="p-showCatalogSpec" ${p.showCatalogSpec ? 'checked' : ''} /> Показывать «В наличии / Под заказ» на карточке в каталоге</label>
-    <label class="btn btn--secondary admin-upload-btn">Загрузить главное фото<input type="file" id="p-upload" accept="image/*" hidden /></label>
     ${field('Описание', 'p-desc', p.description, 'textarea')}`)}
 
-    ${section('Галерея', `
+    ${section('Галерея и главное фото', `
       <div id="gallery-list" class="admin-gallery-list"></div>
       <div class="admin-row admin-row--actions">
-        <label class="btn btn--secondary admin-upload-btn">Добавить фото<input type="file" id="p-gallery-upload" accept="image/*" multiple hidden /></label>
+        <label class="btn btn--secondary admin-upload-btn">Загрузить фото<input type="file" id="p-gallery-upload" accept="image/*" multiple hidden /></label>
         <button type="button" class="btn btn--ghost" id="add-gallery-url">+ URL</button>
       </div>
-      <p class="admin-hint">На странице товара фото можно листать и открыть на весь экран. ★ — главное фото (каталог и первое при открытии).</p>
+      <p class="admin-hint">★ — главное фото для каталога. На странице товара фото листаются и открываются на весь экран.</p>
     `)}
 
     ${section('Цвета', `<div id="color-list"></div><button type="button" class="btn btn--secondary" id="add-color">+ Цвет</button>
-    <p class="admin-hint">Названия для сайта. В «Названия в прайсе» — как у поставщика (Silver, Deep Blue…), через запятую.</p>`)}
+    <p class="admin-hint">В «Названия в прайсе» — как у поставщика (Silver, Deep Blue…), через запятую.</p>`)}
 
-    ${section('Память', `<div id="storage-list"></div><button type="button" class="btn btn--secondary" id="add-storage">+ Объём</button>
-    <p class="admin-hint">Только названия объёмов — 256 ГБ, 512 ГБ, 1 ТБ. Цены задаются в прайс-листе поставщика.</p>`)}
+    ${showStorage ? section('Память', `<div id="storage-list"></div><button type="button" class="btn btn--secondary" id="add-storage">+ Объём</button>
+    <p class="admin-hint">256 ГБ, 512 ГБ, 1 ТБ. Цены — в блоке прайса ниже.</p>`) : ''}
 
-    ${section('Версия SIM', `
+    ${showSim ? section('Версия SIM', `
       <label class="field field--check"><input type="checkbox" id="p-hasSim" ${p.simTypes?.length ? 'checked' : ''} /> Есть выбор SIM (eSIM / eSIM+SIM)</label>
       <div id="sim-block" ${p.simTypes?.length ? '' : 'hidden'}>
         <div id="sim-list"></div><button type="button" class="btn btn--secondary" id="add-sim">+ Версия SIM</button>
       </div>
-    `)}
+    `) : ''}
 
     ${section('Прайс-лист поставщика', `
       <div class="admin-grid">
         <label class="field"><span>Наценка, %</span><input type="number" id="p-markup" value="${p.markupPercent ?? 15}" min="0" step="0.1" /></label>
         <label class="field"><span>Наценка фикс., ₽</span><input type="number" id="p-markup-fixed" value="${p.markupFixed ?? 0}" min="0" step="100" /></label>
       </div>
-      <p class="admin-hint">Розница = закупка + % + фикс, округление до …900. Вставьте прайс поставщика — строка с моделью, затем цена.</p>
-      <label class="field"><span>Вставить прайс поставщика</span>
-        <textarea id="p-supplier-paste" rows="8" placeholder="17 Pro Max 256Gb Silver (eSim+eSim)&#10;98 800 ₽&#10;17 Pro Max 512Gb Orange (Sim+eSim)&#10;113 300 ₽"></textarea>
+      <label class="field"><span>Вставить прайс (только этот товар)</span>
+        <textarea id="p-supplier-paste" rows="6" placeholder="17 Pro Max 256Gb Silver (eSim+eSim)&#10;98 800 ₽"></textarea>
       </label>
       <div class="admin-row admin-row--actions">
-        <button type="button" class="btn btn--primary" id="import-supplier">Импортировать прайс</button>
+        <button type="button" class="btn btn--primary" id="import-supplier">Импортировать в этот товар</button>
         <button type="button" class="btn btn--ghost" id="recalc-variants">Пересчитать розницу</button>
       </div>
       <p class="admin-hint" id="import-result"></p>
       <div id="variant-list"></div>
-      <button type="button" class="btn btn--secondary" id="add-variant">+ Добавить вручную</button>
+      <button type="button" class="btn btn--secondary" id="add-variant">+ Позиция вручную</button>
     `)}
 
-    ${section('Размер (для часов)', `<div id="size-list"></div><button type="button" class="btn btn--secondary" id="add-size">+ Размер</button>
-    <p class="admin-hint">Оставьте пустым для телефонов и iPad</p>`)}
+    ${showSizes ? section('Размер (часы)', `<div id="size-list"></div><button type="button" class="btn btn--secondary" id="add-size">+ Размер</button>`) : ''}
 
-    ${section('Наличие', `<div id="stock-list"></div><button type="button" class="btn btn--secondary" id="add-stock">+ Позиция в наличии</button>
-    <p class="admin-hint">Укажите цвет, версию SIM и объём памяти из настроек товара выше</p>`)}
+    ${section('Наличие на складе', `<div id="stock-list"></div><button type="button" class="btn btn--secondary" id="add-stock">+ Позиция в наличии</button>
+    <p class="admin-hint">Только то, что реально есть у вас в магазине</p>`)}
   `
+
+  $('save-product').onclick = async () => {
+    collectProduct()
+    try {
+      await saveProducts()
+      status('Товар сохранён', 'success')
+    } catch (err) { status(err.message, 'error') }
+  }
 
   $('back-products').onclick = () => { collectProduct(); editingProductIdx = null; renderProducts(c) }
 
@@ -836,7 +864,11 @@ function renderProductEditor(c) {
   $('add-color').onclick = () => { p.colors.push({ id: `c${Date.now()}`, name: '', hex: '#888888', image: '', importNames: '' }); renderColors() }
 
   const renderStorage = () => {
-    $('storage-list').innerHTML = p.storage.map((s, i) => `
+    if (!$('storage-list')) return
+    if (isPhoneCategory(p.category)) {
+      p.storage = (p.storage || []).filter((s) => isMeaningfulStorageLabel(s.label))
+    }
+    $('storage-list').innerHTML = (p.storage || []).map((s, i) => `
       <div class="admin-row">
         <input type="text" id="stor-label-${i}" value="${escAttr(s.label)}" placeholder="256 ГБ" />
         <button type="button" class="btn btn--danger btn--sm" data-del-stor="${i}">✕</button>
@@ -846,8 +878,10 @@ function renderProductEditor(c) {
       b.onclick = () => { p.storage.splice(Number(b.dataset.delStor), 1); renderStorage() }
     })
   }
-  renderStorage()
-  $('add-storage').onclick = () => { p.storage.push({ label: '' }); renderStorage() }
+  if (showStorage) {
+    renderStorage()
+    $('add-storage').onclick = () => { p.storage.push({ label: '' }); renderStorage() }
+  }
 
   if (!p.variants) p.variants = []
   const getMarkup = () => ({
@@ -857,10 +891,16 @@ function renderProductEditor(c) {
 
   const renderVariants = () => {
     const markup = getMarkup()
-    const storageLabels = p.sizes?.length > 1 ? p.sizes.map((s) => s.label) : p.storage.map((s) => s.label)
+    const storageLabels = (p.sizes?.length > 1 ? p.sizes.map((s) => s.label) : getDisplayStorage(p).map((s) => s.label))
+      .filter((l) => l && (isPhoneCategory(p.category) ? isMeaningfulStorageLabel(l) : true))
     const simList = p.simTypes?.length ? p.simTypes : ['']
 
-    $('variant-list').innerHTML = p.variants.map((v, i) => {
+    const displayVariants = isPhoneCategory(p.category)
+      ? p.variants.filter((v) => isMeaningfulStorageLabel(v.storage))
+      : p.variants
+
+    $('variant-list').innerHTML = displayVariants.map((v) => {
+      const i = p.variants.indexOf(v)
       const retail = v.purchasePrice > 0 ? calcRetailFromPurchase(v.purchasePrice, markup) : (v.price || 0)
       const colorName = p.colors.find((c) => c.id === v.colorId)?.name || v.colorId
       return `
@@ -914,9 +954,10 @@ function renderProductEditor(c) {
   }
 
   $('add-variant').onclick = () => {
+    const storages = getDisplayStorage(p)
     p.variants.push({
       colorId: p.colors[0]?.id || '',
-      storage: (p.storage[0]?.label || p.sizes?.[0]?.label || ''),
+      storage: storages[0]?.label || p.sizes?.[0]?.label || '',
       simType: p.simTypes?.[0] || '',
       purchasePrice: 0,
       price: 0,
@@ -929,42 +970,46 @@ function renderProductEditor(c) {
 
   if (!p.simModifiers) p.simModifiers = []
   if (!p.simTypes) p.simTypes = []
-  const renderSim = () => {
-    $('sim-list').innerHTML = p.simTypes.map((t, i) => `
-      <div class="admin-row">
-        <input type="text" id="sim-type-${i}" value="${escAttr(t)}" placeholder="eSIM only" />
-        <button type="button" class="btn btn--danger btn--sm" data-del-sim="${i}">✕</button>
-      </div>
-    `).join('')
-    $('sim-list').querySelectorAll('[data-del-sim]').forEach((b) => {
-      b.onclick = () => { p.simTypes.splice(Number(b.dataset.delSim), 1); renderSim() }
-    })
-  }
-  renderSim()
-  $('p-hasSim').onchange = (e) => {
-    $('sim-block').hidden = !e.target.checked
-    if (e.target.checked && !p.simTypes.length) {
-      p.simTypes = ['eSIM only', 'eSIM + SIM']
-      renderSim()
+  if (showSim) {
+    const renderSim = () => {
+      $('sim-list').innerHTML = p.simTypes.map((t, i) => `
+        <div class="admin-row">
+          <input type="text" id="sim-type-${i}" value="${escAttr(t)}" placeholder="eSIM only" />
+          <button type="button" class="btn btn--danger btn--sm" data-del-sim="${i}">✕</button>
+        </div>
+      `).join('')
+      $('sim-list').querySelectorAll('[data-del-sim]').forEach((b) => {
+        b.onclick = () => { p.simTypes.splice(Number(b.dataset.delSim), 1); renderSim() }
+      })
     }
+    renderSim()
+    $('p-hasSim').onchange = (e) => {
+      $('sim-block').hidden = !e.target.checked
+      if (e.target.checked && !p.simTypes.length) {
+        p.simTypes = ['eSIM only', 'eSIM + SIM']
+        renderSim()
+      }
+    }
+    $('add-sim').onclick = () => { p.simTypes.push(''); renderSim() }
   }
-  $('add-sim').onclick = () => { p.simTypes.push(''); renderSim() }
 
   if (!p.sizes) p.sizes = []
-  const renderSizes = () => {
-    $('size-list').innerHTML = p.sizes.map((s, i) => `
-      <div class="admin-row">
-        <input type="text" id="size-label-${i}" value="${escAttr(s.label)}" placeholder="42 мм" />
-        <input type="number" id="size-price-${i}" value="${s.price}" placeholder="Цена ₽" />
-        <button type="button" class="btn btn--danger btn--sm" data-del-size="${i}">✕</button>
-      </div>
-    `).join('')
-    $('size-list').querySelectorAll('[data-del-size]').forEach((b) => {
-      b.onclick = () => { p.sizes.splice(Number(b.dataset.delSize), 1); renderSizes() }
-    })
+  if (showSizes) {
+    const renderSizes = () => {
+      $('size-list').innerHTML = p.sizes.map((s, i) => `
+        <div class="admin-row">
+          <input type="text" id="size-label-${i}" value="${escAttr(s.label)}" placeholder="42 мм" />
+          <input type="number" id="size-price-${i}" value="${s.price}" placeholder="Цена ₽" />
+          <button type="button" class="btn btn--danger btn--sm" data-del-size="${i}">✕</button>
+        </div>
+      `).join('')
+      $('size-list').querySelectorAll('[data-del-size]').forEach((b) => {
+        b.onclick = () => { p.sizes.splice(Number(b.dataset.delSize), 1); renderSizes() }
+      })
+    }
+    renderSizes()
+    $('add-size').onclick = () => { if (!p.sizes) p.sizes = []; p.sizes.push({ label: '', price: 0 }); renderSizes() }
   }
-  renderSizes()
-  $('add-size').onclick = () => { if (!p.sizes) p.sizes = []; p.sizes.push({ label: '', price: 0 }); renderSizes() }
 
   if (!p.stock) p.stock = []
   const colorOptions = (selected) => p.colors.map((c) => `<option value="${c.id}"${selected === c.id ? ' selected' : ''}>${escAttr(c.name)}</option>`).join('')
@@ -973,7 +1018,9 @@ function renderProductEditor(c) {
     return types.map((t) => `<option value="${escAttr(t)}"${selected === t ? ' selected' : ''}>${escAttr(t || 'Любая / не указана')}</option>`).join('')
   }
   const storageOptions = (selected) => {
-    const items = p.sizes?.length > 1 ? p.sizes.map((s) => s.label) : p.storage.map((s) => s.label)
+    const items = p.sizes?.length > 1
+      ? p.sizes.map((s) => s.label)
+      : getDisplayStorage(p).map((s) => s.label).filter((l) => isPhoneCategory(p.category) ? isMeaningfulStorageLabel(l) : true)
     const labels = ['', ...items]
     return labels.map((label) => `<option value="${escAttr(label)}"${selected === label ? ' selected' : ''}>${escAttr(label || 'Любая / не указана')}</option>`).join('')
   }
@@ -995,27 +1042,15 @@ function renderProductEditor(c) {
   }
   renderStock()
   $('add-stock').onclick = () => {
+    const storages = getDisplayStorage(p)
     p.stock.push({
       colorId: p.colors[0]?.id || '',
       simType: p.simTypes?.[0] || '',
-      storageLabel: p.storage[0]?.label || '',
+      storageLabel: storages[0]?.label || p.storage[0]?.label || '',
       qty: 1,
       note: 'В наличии',
     })
     renderStock()
-  }
-
-  $('p-upload').onchange = async (e) => {
-    const file = e.target.files[0]
-    if (!file) return
-    try {
-      const path = await uploadImage(file)
-      $('p-image').value = path
-      if (!p.images.length) p.images.push(path)
-      else p.images[0] = path
-      renderGallery()
-      status('Фото загружено', 'success')
-    } catch (err) { status(err.message, 'error') }
   }
 }
 
@@ -1126,7 +1161,7 @@ function renderPriceImport(c) {
   `).join('')
 
   c.innerHTML = section('Импорт прайса PDF (THLS)', `
-    <p class="admin-hint">Загрузите PDF-прайс поставщика. Обновятся только отмеченные категории: цены закупки, розница и варианты (цвет, память, SIM).</p>
+    <p class="admin-hint">Обновляет только <strong>цены</strong> у уже созданных товаров. Новые карточки не создаются. Сначала создайте товары в разделе «Товары», затем загружайте PDF.</p>
     <div class="admin-grid">
       <label class="field"><span>Наценка при импорте, %</span><input type="number" id="pi-markup" value="${pi.markupPercent ?? 15}" min="0" step="0.1" /></label>
       <label class="field"><span>Наценка фикс., ₽</span><input type="number" id="pi-markup-fixed" value="${pi.markupFixed ?? 0}" min="0" step="100" /></label>
@@ -1137,6 +1172,7 @@ function renderPriceImport(c) {
     </div>
     <div class="pdf-import-sections">${sectionChecks}</div>
     <label class="btn btn--primary admin-upload-btn">Выбрать PDF и импортировать<input type="file" id="import-pdf-file" accept=".pdf,application/pdf" hidden /></label>
+    <p class="admin-hint" id="pdf-import-status"></p>
     <p class="admin-hint" id="pdf-import-result">${pi.lastImportAt ? `Последний импорт: ${new Date(pi.lastImportAt).toLocaleString('ru-RU')}` : 'Файл ещё не загружали'}</p>
   `)
 
@@ -1181,6 +1217,23 @@ function renderPriceImport(c) {
     groupCb.indeterminate = [...items].some((item) => item.checked) && !groupCb.checked
   })
 
+  const statusEl = $('pdf-import-status')
+  fetch('/api/ping')
+    .then((r) => r.json())
+    .then((data) => {
+      if (data?.importPdf) {
+        statusEl.textContent = 'Сервер готов к импорту PDF'
+        statusEl.className = 'admin-hint admin-hint--ok'
+      } else {
+        statusEl.textContent = 'Обновите сервер до последней версии (bash start.sh)'
+        statusEl.className = 'admin-hint admin-hint--warn'
+      }
+    })
+    .catch(() => {
+      statusEl.textContent = 'Не удалось проверить сервер. Запустите: bash start.sh и откройте http://localhost:8080/admin'
+      statusEl.className = 'admin-hint admin-hint--warn'
+    })
+
   $('import-pdf-file').onchange = (e) => {
     const file = e.target.files[0]
     if (!file) return
@@ -1206,10 +1259,10 @@ function renderPriceImport(c) {
             sections: selected,
           }),
         })
-        const data = await res.json()
-        if (!res.ok) throw new Error(data.error || 'Ошибка импорта')
+        const data = await parseApiJson(res)
+        if (!res.ok) throw new Error(data?.error || 'Ошибка импорта')
         const s = data.stats
-        resultEl.textContent = `Готово: ${s.variants} позиций, обновлено ${s.updated}, создано ${s.created}, всего ${data.productCount} в каталоге${s.errors?.length ? `, ошибок: ${s.errors.length}` : ''}`
+        resultEl.textContent = `Готово: обновлено ${s.pricesUpdated} цен в ${s.productsUpdated} товарах. Пропущено позиций: ${s.skippedVariants}${s.skipped ? `, не найдено в каталоге: ${s.skipped}` : ''}${s.errors?.length ? `, ошибок: ${s.errors.length}` : ''}`
         storeData.priceImport = {
           markupPercent: num('pi-markup'),
           markupFixed: num('pi-markup-fixed'),
@@ -1355,7 +1408,13 @@ function collectProductColorsStorageSim(p) {
     image: val(`col-image-${i}`) || '',
     importNames: val(`col-import-${i}`) || '',
   }))
-  p.storage = p.storage.map((_, i) => ({ label: val(`stor-label-${i}`) }))
+  if ($('storage-list')) {
+    p.storage = p.storage.map((_, i) => ({ label: val(`stor-label-${i}`) })).filter((s) => s.label)
+    if (isPhoneCategory(p.category)) {
+      p.storage = p.storage.filter((s) => isMeaningfulStorageLabel(s.label))
+      p.variants = (p.variants || []).filter((v) => isMeaningfulStorageLabel(v.storage))
+    }
+  }
   if ($('p-hasSim')?.checked) {
     p.simTypes = p.simTypes.map((_, i) => val(`sim-type-${i}`)).filter(Boolean)
   } else {
@@ -1389,7 +1448,6 @@ function collectProduct() {
   const p = productsData.products[editingProductIdx]
   p.name = val('p-name'); p.brand = val('p-brand'); p.category = val('p-category')
   p.badge = val('p-badge') || null
-  p.image = val('p-image')
   p.description = val('p-desc')
   p.showCatalogSpec = !!$('p-showCatalogSpec')?.checked
 
@@ -1412,7 +1470,13 @@ function collectProduct() {
     importNames: val(`col-import-${i}`) || '',
   }))
 
-  p.storage = p.storage.map((_, i) => ({ label: val(`stor-label-${i}`) }))
+  if ($('storage-list')) {
+    p.storage = p.storage.map((_, i) => ({ label: val(`stor-label-${i}`) })).filter((s) => s.label)
+    if (isPhoneCategory(p.category)) {
+      p.storage = p.storage.filter((s) => isMeaningfulStorageLabel(s.label))
+      p.variants = (p.variants || []).filter((v) => isMeaningfulStorageLabel(v.storage))
+    }
+  }
 
   if ($('p-hasSim')?.checked) {
     p.simTypes = p.simTypes.map((_, i) => val(`sim-type-${i}`)).filter(Boolean)

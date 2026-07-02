@@ -1,5 +1,4 @@
 {
-  "adminPassword": "Bkmz98754321",
   "settings": {
     "name": "АирДроп",
     "tagline": "техника Apple в наличии и под заказ",
@@ -180,9 +179,27 @@
     }
   ],
   "priceImport": {
-    "markupPercent": 15,
+    "markupPercent": 11.4,
     "markupFixed": 0,
-    "lastImportAt": "2026-07-01T17:07:01.000Z"
+    "lastImportAt": "2026-07-01T17:57:41.538Z",
+    "lastSections": [
+      "iPhone 17 Pro Max",
+      "iPhone 17 Pro",
+      "iPhone 17",
+      "iPhone 16",
+      "Apple iPad",
+      "Apple MacBook",
+      "Apple Watch S / SE",
+      "Apple Watch Ultra",
+      "Apple AirPods / Marshall",
+      "Samsung Серия Z",
+      "Samsung Серия S26",
+      "Samsung Серия S25",
+      "Samsung Watch",
+      "Xiaomi",
+      "Huawei",
+      "Умные устройства Huawei"
+    ]
   },
   "theme": {
     "active": "light-gray",
@@ -224,5 +241,6 @@
         "headerBg": "rgba(255,255,255,0.55)"
       }
     }
-  }
+  },
+  "adminPassword": "Bkmz98754321"
 }

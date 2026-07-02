@@ -726,3 +726,25 @@ body::before {
 .pdf-import-check span {
   color: var(--admin-muted);
 }
+
+.admin-editor-toolbar {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  margin-bottom: 16px;
+  padding-bottom: 12px;
+  border-bottom: 1px solid var(--admin-border);
+  position: sticky;
+  top: 0;
+  z-index: 5;
+  background: var(--admin-bg);
+}
+
+.admin-hint--ok {
+  color: #7bc99a;
+}
+
+.admin-hint--warn {
+  color: #e8b86d;
+}

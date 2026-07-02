@@ -41,6 +41,34 @@
   root.style.setProperty('--gradient', 'linear-gradient(135deg, ' + p.gradientFrom + ' 0%, ' + p.gradientMid + ' 50%, ' + p.gradientTo + ' 100%)')
   root.style.setProperty('--header-bg', p.headerBg)
   root.dataset.theme = active
+  document.body?.setAttribute('data-theme', active)
+
+  var themeColor = document.querySelector('meta[name="theme-color"]')
+  if (!themeColor) {
+    themeColor = document.createElement('meta')
+    themeColor.name = 'theme-color'
+    document.head.appendChild(themeColor)
+  }
+  themeColor.content = p.bg
+
+  var colorScheme = document.querySelector('meta[name="color-scheme"]')
+  if (!colorScheme) {
+    colorScheme = document.createElement('meta')
+    colorScheme.name = 'color-scheme'
+    document.head.appendChild(colorScheme)
+  }
+  colorScheme.content = active === 'light-gray' ? 'light' : 'dark'
+
+  var appleBar = document.querySelector('meta[name="apple-mobile-web-app-status-bar-style"]')
+  if (!appleBar) {
+    appleBar = document.createElement('meta')
+    appleBar.name = 'apple-mobile-web-app-status-bar-style'
+    document.head.appendChild(appleBar)
+  }
+  appleBar.content = active === 'light-gray' ? 'default' : 'black-translucent'
+
+  root.style.backgroundColor = p.bg
+  if (document.body) document.body.style.backgroundColor = p.bg
 
   function unlockScroll() {
     if (document.body) document.body.style.overflow = ''

@@ -4,3 +4,4 @@ node_modules/
 *.log
 tools/cloudflared
 tools/gh_*
+site/data/auth-state.json

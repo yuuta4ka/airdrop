@@ -67,11 +67,120 @@ function ensureColor(product, colorName) {
 }
 
 function ensureStorage(product, label) {
-  if (!label) return 'Стандарт'
+  if (!label || label === 'Стандарт') return null
   if (!product.storage.find((x) => x.label === label)) {
     product.storage.push({ label })
   }
   return label
+}
+
+function resolveColorId(name, product) {
+  return findColorId(name, product.colors || [])
+}
+
+function resolveStorageLabel(label, product, meta) {
+  if (!label || label === 'Стандарт') {
+    if (['watch', 'watch-ultra', 'airpods', 'samsung-watch'].includes(meta.type)) {
+      return product.storage?.some((s) => s.label === 'Стандарт') ? 'Стандарт' : null
+    }
+    return null
+  }
+  const exact = product.storage?.find((s) => s.label === label)
+  if (exact) return exact.label
+  const norm = label.replace(/\s/g, '').toLowerCase()
+  const fuzzy = product.storage?.find((s) => s.label.replace(/\s/g, '').toLowerCase() === norm)
+  return fuzzy?.label || label
+}
+
+/** Разбор строки прайса без изменения карточки товара (только для обновления цен) */
+function parseVariantForUpdate(name, product, meta) {
+  if (meta.type === 'iphone') {
+    const simMatch = name.match(/\(([^)]+)\)\s*$/)
+    const simRaw = simMatch ? simMatch[1] : ''
+    const withoutSim = simMatch ? name.slice(0, simMatch.index).trim() : name
+    const storageMatch = withoutSim.match(/\b(\d+)\s*(Tb|TB|GB|Gb|ТБ|ГБ)\b/i)
+    const storage = storageMatch ? normalizeStorage(storageMatch[0]) : null
+    let rest = withoutSim
+    if (storageMatch) {
+      rest = withoutSim.slice(0, storageMatch.index) + withoutSim.slice(storageMatch.index + storageMatch[0].length)
+    }
+    rest = rest.replace(/^\d+\s+Pro\s+Max\s+|^\d+\s+Pro\s+|^\d+\s+/i, '').trim()
+    const colorId = findColorId(rest.trim(), product.colors)
+    if (!colorId || !storage) return null
+    const simType = normalizeSim(simRaw) || ''
+    if (simType && product.simTypes?.length && !product.simTypes.includes(simType)) return null
+    const storageLabel = resolveStorageLabel(storage, product, meta)
+    if (!storageLabel) return null
+    return { colorId, storage: storageLabel, simType }
+  }
+
+  if (meta.type === 'samsung-phone') {
+    const m = name.match(/(\d+\/\d+\s*Gb?|\d+\s*Gb|\d+\/\d+)\s*(.+)$/i)
+    if (!m) return null
+    let storage = m[1].replace(/\s*Gb/i, ' ГБ').trim()
+    if (!/ГБ|ТБ/.test(storage)) storage += ' ГБ'
+    const colorId = findColorId(m[2].trim(), product.colors)
+    if (!colorId) return null
+    const storageLabel = resolveStorageLabel(storage, product, meta)
+    if (!storageLabel) return null
+    return { colorId, storage: storageLabel, simType: '' }
+  }
+
+  if (meta.type === 'ipad') {
+    const storageMatch = name.match(/(\d+\s*Gb|\d+\s*ТБ)/i)
+    if (!storageMatch) return null
+    const storage = normalizeStorage(storageMatch[0])
+    const wifi = /cellular|lte/i.test(name.toLowerCase()) ? ' Wi-Fi + Cellular' : ' Wi-Fi'
+    const storageLabel = resolveStorageLabel(`${storage}${wifi}`, product, meta)
+    const colorId = findColorId(name, product.colors)
+    if (!colorId || !storageLabel) return null
+    return { colorId, storage: storageLabel, simType: '' }
+  }
+
+  if (meta.type === 'macbook') {
+    const m = name.match(/(\d+\/\d+GB|\d+\/\d+)\s+(.+)$/i)
+    if (!m) return null
+    const storage = m[1].replace(/GB/i, ' ГБ')
+    const colorId = findColorId(m[2].trim(), product.colors)
+    if (!colorId) return null
+    const storageLabel = resolveStorageLabel(storage, product, meta)
+    if (!storageLabel) return null
+    return { colorId, storage: storageLabel, simType: '' }
+  }
+
+  if (meta.type === 'watch' || meta.type === 'watch-ultra' || meta.type === 'samsung-watch') {
+    const colorId = findColorId(name, product.colors)
+    if (!colorId) return null
+    const storageLabel = resolveStorageLabel('Стандарт', product, meta) || product.storage?.[0]?.label
+    if (!storageLabel) return null
+    return { colorId, storage: storageLabel, simType: '' }
+  }
+
+  if (meta.type === 'airpods') {
+    const colorMatch = name.match(/\(([^)]+)\)\s*$/)
+    let colorName = ''
+    if (colorMatch) colorName = colorMatch[1]
+    else {
+      for (const w of ['Purple', 'Orange', 'Midnight', 'Black', 'White', 'Blue', 'Red', 'Green', 'Cream', 'Brown']) {
+        if (name.includes(w)) { colorName = w; break }
+      }
+    }
+    const colorId = colorName ? findColorId(colorName, product.colors) : product.colors?.[0]?.id
+    if (!colorId) return null
+    const storageLabel = resolveStorageLabel('Стандарт', product, meta) || product.storage?.[0]?.label
+    if (!storageLabel) return null
+    return { colorId, storage: storageLabel, simType: '' }
+  }
+
+  const storageMatch = name.match(/(\d+\/\d+\s*Gb?|\d+\/\d+GB|\d+\s*Gb)/i)
+  if (!storageMatch) return null
+  let storage = storageMatch[0].replace(/\s*Gb/i, ' ГБ').replace(/GB/i, ' ГБ')
+  if (!/ГБ|ТБ/.test(storage)) storage += ' ГБ'
+  const colorId = findColorId(name, product.colors)
+  if (!colorId) return null
+  const storageLabel = resolveStorageLabel(storage, product, meta)
+  if (!storageLabel) return null
+  return { colorId, storage: storageLabel, simType: '' }
 }
 
 function ensureSimTypes(product, simType) {
@@ -95,7 +204,9 @@ function parseIphoneVariant(line, product) {
   const colorName = rest.trim()
   const colorId = findColorId(colorName, product.colors) || ensureColor(product, colorName.split(/\s+/).slice(-2).join(' ') || 'Стандарт')
   const simType = ensureSimTypes(product, normalizeSim(simRaw))
-  const storageLabel = ensureStorage(product, storage || 'Стандарт')
+  if (!storage) return null
+  const storageLabel = ensureStorage(product, storage)
+  if (!storageLabel) return null
   return { colorId, storage: storageLabel, simType: simType || '' }
 }
 
@@ -300,21 +411,35 @@ export function buildCatalogFromPdfText(text, existingProducts, markup = { perce
     const allowed = new Set(options.sections)
     entries = entries.filter((e) => allowed.has(e.section))
   }
+
+  const pricesOnly = options.pricesOnly !== false
   const products = existingProducts.map((p) => {
     const copy = structuredClone(p)
     if (!Array.isArray(copy.variants)) copy.variants = []
-    if (!Array.isArray(copy.colors)) copy.colors = [{ id: 'default', name: 'Стандарт', hex: '#888888', image: '', importNames: '' }]
-    if (!Array.isArray(copy.storage)) copy.storage = [{ label: 'Стандарт' }]
     return copy
   })
-  let nextId = Math.max(0, ...products.map((p) => p.id)) + 1
-  const stats = { entries: entries.length, updated: 0, created: 0, variants: 0, errors: [] }
+
+  const stats = {
+    entries: entries.length,
+    pricesUpdated: 0,
+    productsUpdated: 0,
+    skipped: 0,
+    skippedVariants: 0,
+    notFound: [],
+    errors: [],
+  }
 
   const productMap = new Map()
   for (const p of products) {
-    productMap.set(`${p.category}::${p.name.toLowerCase()}`, p)
+    const lower = p.name.toLowerCase()
+    productMap.set(`${p.category}::${lower}`, p)
     productMap.set(`${p.category}::${p.slug}`, p)
+    if (lower.startsWith('samsung ')) {
+      productMap.set(`${p.category}::${lower.slice(8)}`, p)
+    }
   }
+
+  const touchedProducts = new Set()
 
   for (const entry of entries) {
     const meta = CATALOG_SECTIONS.get(entry.section)
@@ -324,24 +449,61 @@ export function buildCatalogFromPdfText(text, existingProducts, markup = { perce
       const productName = productKeyFromEntry(entry, meta)
       const key = `${meta.category}::${productName.toLowerCase()}`
       let product = productMap.get(key)
-
-      if (!product) {
-        product = createEmptyProduct(productName, meta, nextId++)
-        products.push(product)
-        productMap.set(key, product)
-        stats.created += 1
-      } else {
-        stats.updated += 1
+      if (!product && meta.brand === 'Samsung') {
+        product = productMap.get(`${meta.category}::samsung ${productName.toLowerCase()}`)
       }
 
-      const variant = parseVariant(entry, product, meta)
-      upsertVariant(product, variant, entry.price, markup)
-      stats.variants += 1
+      if (!product) {
+        stats.skipped += 1
+        if (stats.notFound.length < 20) stats.notFound.push(productName)
+        continue
+      }
+
+      if (pricesOnly) {
+        const variant = parseVariantForUpdate(entry.name, product, meta)
+        if (!variant) {
+          stats.skippedVariants += 1
+          continue
+        }
+
+        const idx = product.variants.findIndex((v) =>
+          v.colorId === variant.colorId &&
+          v.storage === variant.storage &&
+          (v.simType || '') === (variant.simType || '')
+        )
+
+        if (idx < 0) {
+          stats.skippedVariants += 1
+          continue
+        }
+
+        const price = calcRetailFromPurchase(entry.price, markup)
+        product.variants[idx] = {
+          ...product.variants[idx],
+          purchasePrice: entry.price,
+          price,
+        }
+        stats.pricesUpdated += 1
+        touchedProducts.add(product.id)
+        continue
+      }
+
+      // Режим полного импорта (если явно включён) — не используется по умолчанию
+      let nextId = Math.max(0, ...products.map((p) => p.id)) + 1
+      let target = product
+      if (!target) {
+        target = createEmptyProduct(productName, meta, nextId++)
+        products.push(target)
+        productMap.set(key, target)
+      }
+      const variant = parseVariant(entry, target, meta)
+      if (variant) upsertVariant(target, variant, entry.price, markup)
     } catch (err) {
       stats.errors.push({ name: entry.name, error: err.message })
     }
   }
 
+  stats.productsUpdated = touchedProducts.size
   return { products, stats }
 }
 

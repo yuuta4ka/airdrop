@@ -1,7 +1,9 @@
 import {
   usesSupplierPricing, findVariant, getOrderableVariants,
-  calcRetailFromPurchase, recalcAllVariants,
+  calcRetailFromPurchase, recalcAllVariants, getStockFallbackPrice,
+  getStockForVariant, hasPhysicalStock, isComboOrderable,
 } from './pricing.js'
+import { getDisplayStorage } from './product-options.js'
 
 let storeCache = null
 let productsCache = null
@@ -82,7 +84,11 @@ export function calcPrice(product, colorIdx = 0, storageIdx = 0, sizeIdx = 0, si
 
   if (usesSupplierPricing(product) && color && storageLabel) {
     const variant = findVariant(product, color.id, storageLabel, simType)
-    return variant?.price ?? 0
+    if (variant?.price) return variant.price
+    if (hasPhysicalStock(product, color.id, storageLabel, simType)) {
+      return getStockFallbackPrice(product, color.id, storageLabel, simType)
+    }
+    return 0
   }
 
   if (!usesSupplierPricing(product)) {
@@ -101,6 +107,13 @@ export function calcPrice(product, colorIdx = 0, storageIdx = 0, sizeIdx = 0, si
 export function getMinPrice(product) {
   if (usesSupplierPricing(product)) {
     const prices = getOrderableVariants(product).map((v) => v.price).filter((p) => p > 0)
+    product.stock?.forEach((s) => {
+      if (s.qty > 0 && s.price > 0) prices.push(s.price)
+      else if (s.qty > 0) {
+        const fallback = getStockFallbackPrice(product, s.colorId, s.storageLabel, s.simType || null)
+        if (fallback > 0) prices.push(fallback)
+      }
+    })
     return prices.length ? Math.min(...prices) : 0
   }
 
@@ -183,6 +196,36 @@ export function getInitialColorIndex(product) {
   return 0
 }
 
+/** Первая доступная комбинация (приоритет — позиции в наличии на складе) */
+export function getInitialSelection(product) {
+  const simTypes = product.simTypes?.length ? product.simTypes : [null]
+  const storageLabels = product.sizes?.length > 1
+    ? product.sizes.map((s) => s.label)
+    : getDisplayStorage(product).map((s) => s.label).length
+      ? getDisplayStorage(product).map((s) => s.label)
+      : product.storage?.map((s) => s.label) || ['Стандарт']
+
+  const tryPick = (preferStock) => {
+    for (let ci = 0; ci < (product.colors?.length || 0); ci++) {
+      const colorId = product.colors[ci].id
+      for (let si = 0; si < storageLabels.length; si++) {
+        const storage = storageLabels[si]
+        for (let ti = 0; ti < simTypes.length; ti++) {
+          const sim = simTypes[ti]
+          const inStock = hasPhysicalStock(product, colorId, storage, sim)
+          const orderable = isComboOrderable(product, colorId, storage, sim)
+          if (!orderable) continue
+          if (preferStock && !inStock) continue
+          return { colorIdx: ci, storageIdx: si, simIdx: ti, sizeIdx: si }
+        }
+      }
+    }
+    return null
+  }
+
+  return tryPick(true) || tryPick(false) || { colorIdx: getInitialColorIndex(product), storageIdx: 0, simIdx: 0, sizeIdx: 0 }
+}
+
 /** Фото для карточки товара: сначала выбранный цвет, затем остальная галерея */
 export function getProductImages(product, colorIdx = 0) {
   const all = getAllProductImages(product)
@@ -207,15 +250,7 @@ export function getProductImage(product, colorIdx = 0) {
   return getAllProductImages(product)[0]
 }
 
-export function getStockForVariant(product, colorId, simType, storageLabel) {
-  if (!product.stock?.length) return null
-  return product.stock.find((s) => {
-    if (s.colorId !== colorId || s.qty <= 0) return false
-    if (simType && s.simType && s.simType !== simType) return false
-    if (storageLabel && s.storageLabel && s.storageLabel !== storageLabel) return false
-    return true
-  }) || null
-}
+export { getStockForVariant, hasPhysicalStock, getStockFallbackPrice } from './pricing.js'
 
 export function getInStockItems(product) {
   if (!product.stock?.length) return []

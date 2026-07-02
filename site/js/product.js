@@ -1,8 +1,9 @@
 import {
   loadStore, getProductById, calcPrice, formatPrice, makeCartKey,
-  getProductImages, getInitialColorIndex, getStockForVariant,
+  getProductImages, getInitialSelection, getStockForVariant,
   usesSupplierPricing, isComboOrderable, isOptionUnavailable,
 } from './store.js'
+import { getDisplayStorage, shouldShowStorageOptions, shouldShowSizesOptions } from './product-options.js'
 import { renderHeader, renderFooter } from './layout.js'
 import { initCartUI, addItem, openCart, showToast } from './cart-ui.js'
 import { mountProductInstallmentCalc } from './installment-calc.js'
@@ -102,14 +103,23 @@ function ensureValidSelection() {
   )
   if (orderable) return
 
+  const storages = product.sizes?.length > 1
+    ? product.sizes.map((s) => s.label)
+    : getDisplayStorage(product).map((s) => s.label)
+
   for (const ci of product.colors.keys()) {
-    for (const si of product.storage.keys()) {
-      for (const simi of (product.simTypes?.length ? product.simTypes.keys() : [0])) {
-        const sim = product.simTypes?.[simi] ?? null
-        if (isComboOrderable(product, product.colors[ci].id, product.storage[si].label, sim)) {
+    for (const storageLabel of storages) {
+      for (const sim of (product.simTypes?.length ? product.simTypes : [null])) {
+        if (isComboOrderable(product, product.colors[ci].id, storageLabel, sim)) {
           selectedColor = ci
-          selectedStorage = si
-          if (product.simTypes?.length) selectedSim = simi
+          if (product.sizes?.length > 1) {
+            selectedSize = product.sizes.findIndex((s) => s.label === storageLabel)
+          } else {
+            const visible = getDisplayStorage(product)
+            selectedStorage = visible.findIndex((s) => s.label === storageLabel)
+            if (selectedStorage < 0) selectedStorage = 0
+          }
+          if (product.simTypes?.length) selectedSim = product.simTypes.indexOf(sim)
           return
         }
       }
@@ -124,7 +134,10 @@ function isOptionGrayed(type, value) {
 
 function getCurrentStorageLabel() {
   if (product.sizes?.length > 1) return product.sizes[selectedSize]?.label || ''
-  return product.storage[selectedStorage]?.label || ''
+  const visible = getDisplayStorage(product)
+  if (!visible.length) return product.storage[selectedStorage]?.label || ''
+  const idx = Math.min(selectedStorage, visible.length - 1)
+  return visible[idx]?.label || ''
 }
 
 function getBasePrice() {
@@ -151,8 +164,9 @@ function getVariantLabel() {
   if (sim) parts.push(sim)
   if (product.sizes?.length > 1) {
     parts.push(product.sizes[selectedSize].label)
-  } else if (product.storage[selectedStorage]?.label !== 'Стандарт') {
-    parts.push(product.storage[selectedStorage].label)
+  } else {
+    const label = getCurrentStorageLabel()
+    if (label) parts.push(label)
   }
   const warranty = getWarrantyOption()
   parts.push(`Гарантия ${warranty.months} мес.`)
@@ -353,8 +367,9 @@ function renderOptions() {
     els.simGroup.style.display = 'none'
   }
 
-  const hasSizes = product.sizes?.length > 1
-  const hasMultipleStorage = product.storage.length > 1 || product.storage[0].label !== 'Стандарт'
+  const visibleStorage = getDisplayStorage(product)
+  const hasSizes = shouldShowSizesOptions(product)
+  const hasMultipleStorage = shouldShowStorageOptions(product)
 
   if (hasSizes) {
     els.sizesGroup.style.display = 'block'
@@ -371,7 +386,7 @@ function renderOptions() {
   } else if (hasMultipleStorage) {
     els.sizesGroup.style.display = 'none'
     els.storageGroup.style.display = 'block'
-    els.storage.innerHTML = product.storage.map((s, i) => `
+    els.storage.innerHTML = visibleStorage.map((s, i) => `
       <button type="button" class="option-btn" data-idx="${i}">${s.label}</button>
     `).join('')
     els.storage.querySelectorAll('.option-btn').forEach((btn) => {
@@ -386,7 +401,11 @@ function renderOptions() {
   }
 
   els.warrantyGroup.style.display = 'block'
-  selectedColor = getInitialColorIndex(product)
+  const initial = getInitialSelection(product)
+  selectedColor = initial.colorIdx
+  selectedStorage = initial.storageIdx
+  selectedSize = initial.sizeIdx
+  selectedSim = initial.simIdx
   ensureValidSelection()
   updateUI(true)
 }
