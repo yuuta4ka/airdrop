@@ -12,13 +12,22 @@ const REVEAL_SELECTOR = [
 
 let motionReady = false
 
+function prefersReducedMotion() {
+  return window.matchMedia('(prefers-reduced-motion: reduce)').matches
+}
+
+/** Анимированный ambient — только на телефонах; на ноутбуках жрёт GPU */
+function shouldUseAmbientLayer() {
+  if (prefersReducedMotion()) return false
+  return window.matchMedia('(max-width: 768px)').matches
+}
+
 export function initMotion() {
   if (motionReady) return
   motionReady = true
 
-  injectAmbient()
+  if (shouldUseAmbientLayer()) injectAmbient()
   setupReveal()
-  setupHeroParallax()
   observeCartBadge()
 }
 
@@ -66,13 +75,12 @@ function injectAmbient() {
     <div class="ambient__orb ambient__orb--2"></div>
     <div class="ambient__orb ambient__orb--3"></div>
     <div class="ambient__grid"></div>
-    <div class="ambient__grain"></div>
   `
   document.body.prepend(layer)
 }
 
 function setupReveal() {
-  const reduceMotion = window.matchMedia('(prefers-reduced-motion: reduce)').matches
+  const reduceMotion = prefersReducedMotion()
 
   const applyReveal = () => {
     document.querySelectorAll(REVEAL_SELECTOR).forEach((el, i) => {
@@ -110,23 +118,6 @@ function setupReveal() {
   window.addEventListener('catalog-rendered', applyReveal)
   window.addEventListener('catalog-rendered', watch)
   window.addEventListener('products-rendered', watch)
-}
-
-function setupHeroParallax() {
-  const hero = document.querySelector('.hero:not(.hero--compact) .hero__content')
-  if (!hero || window.matchMedia('(prefers-reduced-motion: reduce)').matches) return
-  if (window.matchMedia('(pointer: coarse)').matches) return
-
-  let raf = 0
-  document.addEventListener('mousemove', (e) => {
-    if (raf) return
-    raf = requestAnimationFrame(() => {
-      raf = 0
-      const x = (e.clientX / window.innerWidth - 0.5) * 10
-      const y = (e.clientY / window.innerHeight - 0.5) * 8
-      hero.style.transform = `perspective(1200px) rotateY(${x * 0.15}deg) rotateX(${-y * 0.12}deg) translateZ(0)`
-    })
-  })
 }
 
 function observeCartBadge() {

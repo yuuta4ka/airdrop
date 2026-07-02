@@ -8,10 +8,12 @@ import {
 } from './product-options.js'
 
 const AUTH_KEY = 'airdrop_admin_token'
+const DRAFT_KEY = 'airdrop_admin_draft'
 let storeData = null
 let productsData = null
 let activeTab = 'general'
 let editingProductIdx = null
+let draftSaveTimer = null
 
 const TITLES = {
   general: 'Основное',
@@ -36,6 +38,48 @@ const num = (id) => Number(val(id)) || 0
 function getToken() { return sessionStorage.getItem(AUTH_KEY) }
 function setToken(t) { sessionStorage.setItem(AUTH_KEY, t) }
 function clearToken() { sessionStorage.removeItem(AUTH_KEY) }
+
+function clearDraft() { sessionStorage.removeItem(DRAFT_KEY) }
+
+function persistDraft() {
+  if (!storeData || $('admin-app')?.hidden) return
+  try {
+    collectTab()
+    sessionStorage.setItem(DRAFT_KEY, JSON.stringify({
+      storeData,
+      productsData,
+      activeTab,
+      editingProductIdx,
+      savedAt: Date.now(),
+    }))
+  } catch { /* quota */ }
+}
+
+function scheduleDraftSave() {
+  clearTimeout(draftSaveTimer)
+  draftSaveTimer = setTimeout(persistDraft, 500)
+}
+
+function flushDraft() {
+  clearTimeout(draftSaveTimer)
+  persistDraft()
+}
+
+function restoreDraft() {
+  try {
+    const raw = sessionStorage.getItem(DRAFT_KEY)
+    if (!raw) return false
+    const draft = JSON.parse(raw)
+    if (!draft.storeData || !draft.productsData) return false
+    storeData = draft.storeData
+    productsData = draft.productsData
+    if (draft.activeTab) activeTab = draft.activeTab
+    editingProductIdx = draft.editingProductIdx ?? null
+    return true
+  } catch {
+    return false
+  }
+}
 
 function loginError(msg) {
   const el = $('login-error')
@@ -85,6 +129,7 @@ async function saveStore() {
   })
   if (!res.ok) throw new Error((await res.json()).error || 'Ошибка сохранения')
   invalidateStore()
+  clearDraft()
   status('Настройки сохранены!', 'success')
 }
 
@@ -96,6 +141,7 @@ async function saveProducts() {
   })
   if (!res.ok) throw new Error((await res.json()).error || 'Ошибка сохранения товаров')
   invalidateStore()
+  clearDraft()
   status('Товары сохранены!', 'success')
 }
 
@@ -110,12 +156,16 @@ function scrollAdminToTop() {
   })
 }
 
-function showLogin() {
+function showLoginScreen(clearSession = false) {
+  if (clearSession) {
+    flushDraft()
+    clearDraft()
+    clearToken()
+  }
   $('login-screen').hidden = false
   $('admin-app').hidden = true
   document.documentElement.classList.remove('admin-locked')
   document.body.classList.remove('admin-locked')
-  clearToken()
   showLoginForm()
   $('login-password')?.focus()
 }
@@ -125,6 +175,11 @@ function showApp() {
   $('admin-app').hidden = false
   document.documentElement.classList.add('admin-locked')
   document.body.classList.add('admin-locked')
+  document.querySelectorAll('.admin-nav__btn').forEach((b) => {
+    b.classList.toggle('admin-nav__btn--active', b.dataset.tab === activeTab)
+  })
+  $('tab-title').textContent = TITLES[activeTab] || TITLES.general
+  $('btn-save').style.display = activeTab === 'config' ? 'none' : ''
   renderTab()
   scrollAdminToTop()
 }
@@ -300,11 +355,46 @@ $('login-form').addEventListener('submit', async (e) => {
   }
 })
 
-showLogin()
 bindPasswordToggles()
 
+document.addEventListener('input', (e) => {
+  if (e.target.closest('#admin-content')) scheduleDraftSave()
+}, true)
+document.addEventListener('change', (e) => {
+  if (e.target.closest('#admin-content')) scheduleDraftSave()
+}, true)
+document.addEventListener('visibilitychange', () => {
+  if (document.hidden) flushDraft()
+})
+window.addEventListener('pagehide', flushDraft)
+document.addEventListener('pageshow', (e) => {
+  if (e.persisted && getToken() && storeData) {
+    restoreDraft()
+    renderTab()
+    status('Черновик восстановлен', 'info')
+  }
+})
+
+async function initAdmin() {
+  if (getToken()) {
+    try {
+      await loadData()
+      const hadDraft = restoreDraft()
+      showApp()
+      if (hadDraft) status('Восстановлен несохранённый черновик', 'info')
+      return
+    } catch {
+      clearToken()
+      clearDraft()
+    }
+  }
+  showLoginScreen()
+}
+
+initAdmin()
+
 $('btn-logout')?.addEventListener('click', () => {
-  showLogin()
+  showLoginScreen(true)
   $('login-password').value = ''
 })
 
@@ -333,6 +423,7 @@ document.querySelectorAll('.admin-nav__btn').forEach((btn) => {
 // ─── Render tabs ───
 function renderTab() {
   const c = $('admin-content')
+  if (storeData && c?.childElementCount > 0) collectTab()
   if (activeTab === 'general') renderGeneral(c)
   else if (activeTab === 'contacts') renderContacts(c)
   else if (activeTab === 'content') renderContent(c)
@@ -420,6 +511,7 @@ function renderContacts(c) {
 }
 
 function renderAddressList() {
+  if ($('addr-list')?.childElementCount) collectContacts()
   const wrap = $('addr-list')
   wrap.innerHTML = storeData.settings.addresses.map((a, i) => `
     <div class="admin-card">
@@ -447,6 +539,7 @@ function renderContent(c) {
 }
 
 function renderWhyList() {
+  if ($('why-list')?.childElementCount) collectContent()
   const wrap = $('why-list')
   wrap.innerHTML = storeData.settings.whyUs.map((item, i) => `
     <div class="admin-row">
@@ -493,7 +586,7 @@ function renderNavigation(c) {
     }
   })
   wrap.querySelectorAll('[data-del-nav]').forEach((b) => {
-    b.onclick = () => { storeData.navigation.splice(Number(b.dataset.delNav), 1); renderNavigation(c) }
+    b.onclick = () => { collectNavigation(); storeData.navigation.splice(Number(b.dataset.delNav), 1); renderNavigation(c) }
   })
   $('add-nav').onclick = () => { storeData.navigation.push({ id: 'new', label: 'Новый', href: '#' }); renderNavigation(c) }
 }
@@ -748,6 +841,9 @@ function renderProductEditor(c) {
   }
 
   const renderGallery = () => {
+    if ($('gallery-list')?.childElementCount) {
+      p.images = (p.images || []).map((_, i) => val(`gal-url-${i}`) || p.images[i]).filter(Boolean)
+    }
     if (!p.coverImage) p.coverImage = p.image || p.images?.[0] || ''
     $('gallery-list').innerHTML = p.images.map((src, i) => {
       const isCover = p.coverImage && src === p.coverImage
@@ -816,6 +912,7 @@ function renderProductEditor(c) {
   }
 
   const renderColors = () => {
+    if ($('color-list')?.childElementCount) collectProductColorsStorageSim(p)
     $('color-list').innerHTML = p.colors.map((col, i) => `
       <div class="admin-card admin-card--compact">
         <div class="admin-grid admin-grid--4">
@@ -890,6 +987,7 @@ function renderProductEditor(c) {
   })
 
   const renderVariants = () => {
+    if ($('variant-list')?.childElementCount) collectProductVariants(p)
     const markup = getMarkup()
     const storageLabels = (p.sizes?.length > 1 ? p.sizes.map((s) => s.label) : getDisplayStorage(p).map((s) => s.label))
       .filter((l) => l && (isPhoneCategory(p.category) ? isMeaningfulStorageLabel(l) : true))
@@ -1346,6 +1444,18 @@ function collectTab() {
   else if (activeTab === 'theme') collectTheme()
   else if (activeTab === 'installment') collectInstallment()
   else if (activeTab === 'reviews') collectReviews()
+  else if (activeTab === 'price-import') collectPriceImport()
+}
+
+function collectPriceImport() {
+  if (!storeData || !$('pi-markup')) return
+  storeData.priceImport = storeData.priceImport || {}
+  storeData.priceImport.markupPercent = num('pi-markup')
+  storeData.priceImport.markupFixed = num('pi-markup-fixed')
+  const sections = [...document.querySelectorAll('.pdf-import-section')]
+    .filter((el) => el.checked)
+    .map((el) => el.value)
+  if (sections.length) storeData.priceImport.lastSections = sections
 }
 
 function collectGeneral() {

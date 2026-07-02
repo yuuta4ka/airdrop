@@ -91,11 +91,11 @@ export function linkPriceInputs(inputs, onUpdates = []) {
   })
 }
 
-function animateAmount(el, nextValue, duration = 420) {
+function setAmount(el, nextValue, { animate = true, duration = 420 } = {}) {
   if (!el) return
-  const from = Number(el.dataset.value || 0)
   const to = Math.round(nextValue)
-  if (from === to) {
+  const from = Number(el.dataset.value || 0)
+  if (!animate || from === to) {
     el.textContent = formatPrice(to)
     el.dataset.value = String(to)
     return
@@ -115,12 +115,14 @@ function animateAmount(el, nextValue, duration = 420) {
       el.textContent = formatPrice(to)
       el.dataset.value = String(to)
       el.classList.remove('amount-animate')
-      el.classList.add('amount-pop')
-      setTimeout(() => el.classList.remove('amount-pop'), 320)
     }
   }
 
   requestAnimationFrame(tick)
+}
+
+function animateAmount(el, nextValue, duration = 420) {
+  setAmount(el, nextValue, { animate: true, duration })
 }
 
 export function renderInstallmentCalcHtml(price, installment, { compact = false } = {}) {
@@ -343,11 +345,11 @@ export function mountProductInstallmentCalc(container, price, installment) {
   }
 
   container.querySelectorAll('.installment-calc__card--slide .installment-calc__amount').forEach((el, i) => {
-    if (rows[i]) animateAmount(el, rows[i].monthly)
+    if (rows[i]) setAmount(el, rows[i].monthly, { animate: false })
   })
 
-  animateAmount(container.querySelector('.dolyami-widget__total'), dolyami.total)
+  setAmount(container.querySelector('.dolyami-widget__total'), dolyami.total, { animate: false })
   container.querySelectorAll('.dolyami-widget__amount').forEach((el) => {
-    animateAmount(el, dolyami.payment)
+    setAmount(el, dolyami.payment, { animate: false })
   })
 }

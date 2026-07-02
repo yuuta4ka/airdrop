@@ -1,8 +1,36 @@
 # АирДроп — как запустить сайт
 
-## Быстрый запуск (рекомендуется)
+## В один клик (macOS)
 
-Откройте **Терминал** и выполните:
+В папке **`click/`** лежат файлы для двойного клика в Finder:
+
+| Файл | Действие |
+|------|----------|
+| `Start.command` | Запустить localhost |
+| `Stop.command` | Остановить localhost |
+| `Restart.command` | Перезапустить localhost |
+| `Deploy.command` | Закоммитить и отправить на GitHub (Render обновится сам) |
+| `Status.command` | Проверить, запущен ли сервер |
+
+При первом запуске macOS может спросить разрешение — «Открыть» в настройках безопасности.
+
+---
+
+## Терминал
+
+```bash
+cd /Users/yuuta/airdrop
+bash scripts/start-local.sh   # запуск
+bash scripts/stop-local.sh    # стоп
+bash scripts/restart-local.sh # перезапуск
+bash scripts/deploy.sh        # деплой на прод
+```
+
+Старые команды тоже работают: `bash start.sh`, `bash dev.sh`.
+
+---
+
+## Быстрый запуск
 
 ```bash
 cd /Users/yuuta/airdrop
@@ -13,9 +41,19 @@ bash start.sh
 
 После запуска откройте в браузере: **http://localhost:8080**
 
-Остановить сервер: `Ctrl + C`
+Остановить сервер: `Ctrl + C` в окне терминала или `bash scripts/stop-local.sh`
 
 ---
+
+## Деплой на прод
+
+```bash
+bash scripts/deploy.sh "Краткое описание изменений"
+```
+
+Или двойной клик по `click/Deploy.command`. Render подхватывает push с GitHub за 1–3 минуты.
+
+Прод: **https://airdrop-hxpo.onrender.com**
 
 ## Если `npm: command not found`
 

@@ -891,7 +891,7 @@ img {
   z-index: 200;
   opacity: 0;
   visibility: hidden;
-  transition: opacity 0.45s ease, visibility 0.45s ease, backdrop-filter 0.45s ease;
+  transition: opacity 0.45s ease, visibility 0.45s ease;
 }
 
 .cart-overlay--open {

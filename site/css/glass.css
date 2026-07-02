@@ -1,9 +1,9 @@
 /* Apple Liquid Glass design system */
 
 :root {
-  --glass-blur: 64px;
-  --glass-blur-sm: 32px;
-  --glass-saturate: 200%;
+  --glass-blur: 20px;
+  --glass-blur-sm: 12px;
+  --glass-saturate: 140%;
   --glass-bg: rgba(255, 255, 255, 0.08);
   --glass-bg-strong: rgba(255, 255, 255, 0.14);
   --glass-bg-deep: rgba(255, 255, 255, 0.04);
@@ -765,6 +765,50 @@ body[data-theme="light-gray"] .catalog-top::before {
 
 .toast:empty {
   display: none !important;
+}
+
+/* Laptops / tablets — меньше blur и без shimmer */
+@media (max-width: 1280px) {
+  :root {
+    --glass-blur: 14px;
+    --glass-blur-sm: 8px;
+    --glass-saturate: 125%;
+  }
+
+  .liquid-glass::before,
+  .liquid-glass::after,
+  .hero__content::after,
+  .product-card::after,
+  .product-detail__info::after,
+  .info-card::after,
+  .review-card::after {
+    animation: none !important;
+  }
+
+  .header,
+  .footer,
+  .cart,
+  .product-card,
+  .category-btn,
+  .why-us li,
+  .product-detail__gallery,
+  .product-detail__info,
+  .option-btn {
+    backdrop-filter: blur(10px) saturate(125%) !important;
+    -webkit-backdrop-filter: blur(10px) saturate(125%) !important;
+  }
+
+  .products__grid .product-card,
+  .product-page .product-detail__gallery,
+  .product-page .product-detail__image,
+  .product-page .product-detail__info,
+  .product-page .option-btn,
+  .product-page .dolyami-widget--product,
+  .product-page .installment-calc__card--slide {
+    backdrop-filter: none !important;
+    -webkit-backdrop-filter: none !important;
+    box-shadow: var(--shadow-card);
+  }
 }
 
 /* Mobile: меньше blur и без shimmer — плавнее на телефонах */
