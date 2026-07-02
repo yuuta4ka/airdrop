@@ -20,7 +20,7 @@ goto :pause_fail
 :fail
 echo.
 echo Failed to start server.
-echo Run Diagnose.bat to check Node.js and paths.
+echo Run Diagnose.bat or Fix-Dependencies.bat
 goto :pause_fail
 
 :pause_fail

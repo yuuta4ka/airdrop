@@ -29,8 +29,20 @@ UPDATE PROJECT (after changes on Mac):
 
   Manual update:
      git pull
-     npm install
+     click-win\Fix-Dependencies.bat
      click-win\Start.bat
+
+TROUBLESHOOT npm install:
+
+  EPERM (operation not permitted):
+     - Run Stop.bat, close all cmd windows
+     - Run Fix-Dependencies.bat (installs only adm-zip + pdf-parse)
+     - Pause antivirus on the airdrop folder if needed
+
+  ECONNRESET (network):
+     - Check internet or try phone hotspot
+     - Run Fix-Dependencies.bat again (auto-retries 3 times)
+     - Or in cmd: npm install adm-zip@0.5.18 pdf-parse@2.4.5
 
 IF YOU MUST USE USB:
   - Copy the whole airdrop folder (not only click-win)

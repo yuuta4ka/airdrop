@@ -18,7 +18,7 @@ if exist "server.mjs" (echo server.mjs: OK) else (echo [ERROR] server.mjs not fo
 if exist "node_modules\adm-zip\" (
   echo node_modules: OK (adm-zip found)
 ) else if exist "node_modules\" (
-  echo [WARN] node_modules incomplete - run: npm install
+  echo [WARN] node_modules incomplete - run: click-win\Fix-Dependencies.bat
 ) else (
   echo node_modules: missing - Start.bat will run npm install
 )
@@ -53,6 +53,11 @@ if errorlevel 1 (
 )
 
 echo.
+echo --- Server packages ---
+if exist "node_modules\adm-zip\" (echo adm-zip: OK) else (echo adm-zip: MISSING)
+if exist "node_modules\pdf-parse\" (echo pdf-parse: OK) else (echo pdf-parse: MISSING)
+
+echo.
 echo --- Port 8080 ---
 call "%ROOT%\scripts\win\status-server.cmd"
 
@@ -64,6 +69,7 @@ if errorlevel 1 (echo PowerShell not found) else (echo PowerShell: OK)
 :end
 echo.
 echo If node is missing, reboot after installing Node.js.
+echo If adm-zip or pdf-parse missing: click-win\Fix-Dependencies.bat
 echo Do NOT copy project via Telegram ZIP - use git clone (see SETUP-WINDOWS.txt).
 echo.
 pause
