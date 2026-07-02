@@ -1,0 +1,34 @@
+AIRDROP ON WINDOWS - HOW TO GET FILES WITHOUT BREAKING THEM
+==========================================================
+
+PROBLEM: ZIP / Telegram / USB can break .bat files (encoding, line endings).
+         You may see errors like: 'ho' is not recognized, 'agnose.bat' ...
+
+BEST WAY: git clone (fast, correct files)
+
+  1. Install Git: https://git-scm.com/download/win
+  2. Install Node.js: https://nodejs.org (then REBOOT PC)
+  3. Open cmd and run:
+
+     cd %USERPROFILE%\Desktop
+     git clone https://github.com/yuuta4ka/airdrop.git
+     cd airdrop
+     click-win\Diagnose.bat
+     click-win\Start.bat
+
+  4. Open http://localhost:8080
+
+UPDATE PROJECT (after changes on Mac):
+
+     cd path\to\airdrop
+     git pull
+     click-win\Start.bat
+
+IF YOU MUST USE USB:
+  - Copy the whole airdrop folder (not only click-win)
+  - Do NOT re-zip on Mac with special encodings
+  - After copy, run Diagnose.bat first
+
+DO NOT:
+  - Send .bat files through Telegram (they get corrupted)
+  - Open site as file:///.../index.html (need Start.bat running)

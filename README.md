@@ -30,7 +30,9 @@
 | `Diagnose.bat` | Проверка Node.js, Git и путей (если Start не работает) |
 
 Нужны **Node.js** (https://nodejs.org) и **Git** (https://git-scm.com).  
-**После установки Node.js перезагрузите компьютер** — иначе `node` не попадёт в PATH и окно будет мигать.
+**После установки Node.js перезагрузите компьютер** — иначе `node` не попадёт в PATH.
+
+**Не переносите проект через Telegram/ZIP** — `.bat` файлы ломаются. Используйте `git clone` или `click-win/Get-Project.bat`. Подробно: `click-win/SETUP-WINDOWS.txt`.
 
 При первом запуске `Start.bat` автоматически выполнит `npm install`.
 

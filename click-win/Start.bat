@@ -1,7 +1,6 @@
 @echo off
 setlocal EnableExtensions EnableDelayedExpansion
 title Airdrop - Start
-chcp 65001 >nul 2>&1
 
 set "ROOT=%~dp0.."
 cd /d "%ROOT%" || goto :fail_cd
@@ -14,14 +13,14 @@ endlocal
 exit /b 0
 
 :fail_cd
-echo [ОШИБКА] Не удалось открыть папку проекта:
+echo [ERROR] Cannot open project folder:
 echo %ROOT%
 goto :pause_fail
 
 :fail
 echo.
-echo Не удалось запустить сервер.
-echo Запустите Diagnose.bat для проверки Node.js и путей.
+echo Failed to start server.
+echo Run Diagnose.bat to check Node.js and paths.
 goto :pause_fail
 
 :pause_fail
