@@ -80,6 +80,6 @@ open_site_hint() {
   echo ""
   echo "  Сайт:    http://localhost:$port"
   echo "  Админка: http://localhost:$port/admin"
-  echo "  Стоп:    bash scripts/stop-local.sh  или  click/Stop.command"
+  echo "  Стоп:    bash scripts/stop-local.sh  или  click/Stop.command  (Windows: click-win\\Stop.bat)"
   echo ""
 }

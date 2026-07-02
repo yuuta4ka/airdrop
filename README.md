@@ -16,6 +16,31 @@
 
 ---
 
+## В один клик (Windows)
+
+В папке **`click-win/`** — двойной клик в Проводнике:
+
+| Файл | Действие |
+|------|----------|
+| `Start.bat` | Запустить localhost |
+| `Stop.bat` | Остановить localhost |
+| `Restart.bat` | Перезапустить localhost |
+| `Deploy.bat` | Закоммитить и отправить на GitHub |
+| `Status.bat` | Проверить, запущен ли сервер |
+
+Нужны **Node.js** (https://nodejs.org) и **Git** (https://git-scm.com).  
+При первом запуске PowerShell может спросить разрешение — разрешите выполнение для этой папки.
+
+Из командной строки (в папке проекта):
+
+```bat
+powershell -ExecutionPolicy Bypass -File scripts\win\start-local.ps1
+powershell -ExecutionPolicy Bypass -File scripts\win\stop-local.ps1
+powershell -ExecutionPolicy Bypass -File scripts\win\deploy.ps1 "описание изменений"
+```
+
+---
+
 ## Терминал
 
 ```bash
