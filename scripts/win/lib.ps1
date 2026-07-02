@@ -1,4 +1,4 @@
-# Общие функции для скриптов АирДроп (Windows)
+# Airdrop Windows helpers (PowerShell)
 $ErrorActionPreference = 'Continue'
 
 function Get-AirdropRoot {
@@ -52,8 +52,8 @@ function Ensure-Node {
         }
     }
 
-    Write-Host 'Node.js не найден.' -ForegroundColor Red
-    Write-Host 'Установите: https://nodejs.org'
+    Write-Host 'Node.js not found.' -ForegroundColor Red
+    Write-Host 'Install: https://nodejs.org'
     exit 1
 }
 
@@ -72,7 +72,7 @@ function Get-PortListenerPids {
         $lines = netstat -ano | Select-String ":$Port\s"
         foreach ($line in $lines) {
             $text = $line.ToString()
-            if ($text -notmatch 'LISTENING' -and $text -notmatch 'ПРОСЛУШИВАНИЕ') { continue }
+            if ($text -notmatch 'LISTENING') { continue }
             $parts = ($text -replace '\s+', ' ').Trim().Split(' ')
             $procId = [int]$parts[-1]
             if ($procId -gt 0) { $pids += $procId }
@@ -87,19 +87,19 @@ function Stop-AirdropServer {
     $port = Get-AirdropPort
     $pids = Get-PortListenerPids -Port $port
     if (-not $pids) {
-        Write-Host "Сервер не запущен (порт $port свободен)."
+        Write-Host "Server not running (port $port is free)."
         return
     }
-    Write-Host "Останавливаем сервер на порту $port..."
+    Write-Host "Stopping server on port $port..."
     foreach ($procId in $pids) {
         Stop-Process -Id $procId -Force -ErrorAction SilentlyContinue
     }
     Start-Sleep -Milliseconds 500
     if (Get-PortListenerPids -Port $port) {
-        Write-Host 'Не удалось остановить процесс.' -ForegroundColor Red
+        Write-Host 'Failed to stop process.' -ForegroundColor Red
         exit 1
     }
-    Write-Host 'Сервер остановлен.' -ForegroundColor Green
+    Write-Host 'Server stopped.' -ForegroundColor Green
 }
 
 function Show-AirdropStatus {
@@ -107,17 +107,17 @@ function Show-AirdropStatus {
     $pids = Get-PortListenerPids -Port $port
     if ($pids) {
         $pidList = ($pids -join ', ')
-        Write-Host "Сервер запущен: http://localhost:$port  (PID: $pidList)" -ForegroundColor Green
+        Write-Host "Server running: http://localhost:$port  (PID: $pidList)" -ForegroundColor Green
         return
     }
-    Write-Host "Сервер не запущен (порт $port)"
+    Write-Host "Server not running (port $port)"
 }
 
 function Show-SiteHint {
     $port = Get-AirdropPort
     Write-Host ''
-    Write-Host "  Сайт:    http://localhost:$port"
-    Write-Host "  Админка: http://localhost:$port/admin"
-    Write-Host '  Стоп:    click-win\Stop.bat'
+    Write-Host "  Site:  http://localhost:$port"
+    Write-Host "  Admin: http://localhost:$port/admin"
+    Write-Host '  Stop:  click-win\Stop.bat'
     Write-Host ''
 }

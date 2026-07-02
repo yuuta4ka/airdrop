@@ -1,6 +1,6 @@
-# Перезапуск локального сервера (Windows)
+# Restart local server (Windows)
 . "$PSScriptRoot\lib.ps1"
 Set-AirdropLocation
 Stop-AirdropServer
-& "$PSScriptRoot\start-local.ps1"
+& (Join-Path $PSScriptRoot 'run-server.cmd')
 exit $LASTEXITCODE
