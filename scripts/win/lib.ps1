@@ -1,5 +1,5 @@
 # Общие функции для скриптов АирДроп (Windows)
-$ErrorActionPreference = 'Stop'
+$ErrorActionPreference = 'Continue'
 
 function Get-AirdropRoot {
     if ($script:AirdropRoot) { return $script:AirdropRoot }
@@ -69,11 +69,13 @@ function Get-PortListenerPids {
     }
 
     if (-not $pids) {
-        $lines = netstat -ano | Select-String ":$Port\s" | Select-String 'LISTENING'
+        $lines = netstat -ano | Select-String ":$Port\s"
         foreach ($line in $lines) {
-            $parts = ($line -replace '\s+', ' ').ToString().Trim().Split(' ')
-            $pid = [int]$parts[-1]
-            if ($pid -gt 0) { $pids += $pid }
+            $text = $line.ToString()
+            if ($text -notmatch 'LISTENING' -and $text -notmatch 'ПРОСЛУШИВАНИЕ') { continue }
+            $parts = ($text -replace '\s+', ' ').Trim().Split(' ')
+            $procId = [int]$parts[-1]
+            if ($procId -gt 0) { $pids += $procId }
         }
         $pids = $pids | Select-Object -Unique
     }

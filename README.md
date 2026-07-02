@@ -27,16 +27,17 @@
 | `Restart.bat` | Перезапустить localhost |
 | `Deploy.bat` | Закоммитить и отправить на GitHub |
 | `Status.bat` | Проверить, запущен ли сервер |
+| `Diagnose.bat` | Проверка Node.js, Git и путей (если Start не работает) |
 
 Нужны **Node.js** (https://nodejs.org) и **Git** (https://git-scm.com).  
-При первом запуске PowerShell может спросить разрешение — разрешите выполнение для этой папки.
+**После установки Node.js перезагрузите компьютер** — иначе `node` не попадёт в PATH и окно будет мигать.
 
-Из командной строки (в папке проекта):
+При первом запуске `Start.bat` автоматически выполнит `npm install`.
 
 ```bat
-powershell -ExecutionPolicy Bypass -File scripts\win\start-local.ps1
-powershell -ExecutionPolicy Bypass -File scripts\win\stop-local.ps1
-powershell -ExecutionPolicy Bypass -File scripts\win\deploy.ps1 "описание изменений"
+scripts\win\run-server.cmd
+scripts\win\stop-server.cmd
+scripts\win\deploy.cmd "описание изменений"
 ```
 
 ---

@@ -1,4 +1,5 @@
-# Остановка локального сервера (Windows)
+# Остановка локального сервера (PowerShell → CMD-обёртка)
 . "$PSScriptRoot\lib.ps1"
 Set-AirdropLocation
-Stop-AirdropServer
+& (Join-Path $PSScriptRoot 'stop-server.cmd')
+exit $LASTEXITCODE

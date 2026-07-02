@@ -1,5 +1,23 @@
 @echo off
-chcp 65001 >nul
-cd /d "%~dp0.."
-powershell -NoProfile -ExecutionPolicy Bypass -File "scripts\win\restart-local.ps1"
-if errorlevel 1 pause
+setlocal EnableExtensions
+title Airdrop - Restart
+chcp 65001 >nul 2>&1
+
+set "ROOT=%~dp0.."
+cd /d "%ROOT%" || (
+  echo [ОШИБКА] Не удалось открыть папку проекта
+  goto :end
+)
+
+call "%ROOT%\scripts\win\stop-server.cmd"
+echo.
+call "%ROOT%\scripts\win\run-server.cmd"
+if errorlevel 1 goto :end
+
+endlocal
+exit /b 0
+
+:end
+echo.
+pause
+endlocal
