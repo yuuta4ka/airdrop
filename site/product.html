@@ -9,6 +9,7 @@
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
   <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet" />
   <link rel="stylesheet" href="css/style.css" />
+  <link rel="stylesheet" href="css/product-mobile.css" />
 </head>
 <body data-show-catalog-toggle="true" data-cart="true">
   <header class="header" id="site-header"></header>
@@ -38,9 +39,11 @@
           <h1 class="product-detail__title" id="product-title"></h1>
           <p class="product-detail__desc" id="product-description"></p>
 
-          <div class="product-detail__buy-row">
-            <div class="product-detail__price-block">
-              <div class="product-detail__price" id="product-price"></div>
+          <div id="buy-bar-slot" class="product-buy-panel">
+            <div class="product-buy-panel__top">
+              <div class="product-detail__price-block">
+                <div class="product-detail__price" id="product-price"></div>
+              </div>
               <div id="stock-info"></div>
             </div>
             <button type="button" class="product-detail__buy" id="add-to-cart">Купить</button>
@@ -96,6 +99,7 @@
 
   <div class="color-cursor-tip" id="color-cursor-tip" hidden></div>
   <div class="toast" id="toast"></div>
+
   <script type="module" src="js/product.js"></script>
 </body>
 </html>

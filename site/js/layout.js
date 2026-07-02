@@ -91,6 +91,15 @@ export async function renderHeader(activeId = '') {
   initMotion()
 }
 
+const MOBILE_NAV_LABELS = {
+  home: 'Главная',
+  catalog: 'Каталог',
+  installment: 'Расср.',
+  reviews: 'Отзывы',
+  contacts: 'Контакты',
+  about: 'О нас',
+}
+
 export async function renderMobileNav(activeId = '') {
   const store = await loadStore()
   const { navigation } = store
@@ -107,9 +116,9 @@ export async function renderMobileNav(activeId = '') {
   nav.innerHTML = `
     <div class="mobile-nav__glass">
       ${navigation.map((item) => `
-        <a href="${item.href}" class="mobile-nav__link${activeId === item.id ? ' mobile-nav__link--active' : ''}">
+        <a href="${item.href}" class="mobile-nav__link${activeId === item.id ? ' mobile-nav__link--active' : ''}" title="${item.label}">
           <span class="mobile-nav__icon">${NAV_ICONS[item.id] || NAV_ICONS.about}</span>
-          <span class="mobile-nav__label">${item.label}</span>
+          <span class="mobile-nav__label">${MOBILE_NAV_LABELS[item.id] || item.label}</span>
         </a>
       `).join('')}
     </div>

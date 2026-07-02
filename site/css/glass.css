@@ -789,6 +789,21 @@ body[data-theme="light-gray"] .catalog-top::before {
     backdrop-filter: blur(12px) saturate(130%) !important;
     -webkit-backdrop-filter: blur(12px) saturate(130%) !important;
   }
+
+  .product-page .product-detail__gallery,
+  .product-page .product-detail__image,
+  .product-page .product-detail__info {
+    backdrop-filter: none !important;
+    -webkit-backdrop-filter: none !important;
+    box-shadow: none;
+  }
+
+  .product-page .option-btn,
+  .product-page .dolyami-widget--product,
+  .product-page .installment-calc__card--slide {
+    backdrop-filter: none !important;
+    -webkit-backdrop-filter: none !important;
+  }
 }
 
 @media (prefers-reduced-motion: reduce) {
