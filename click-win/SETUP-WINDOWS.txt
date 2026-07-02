@@ -37,8 +37,9 @@ TROUBLESHOOT npm install:
 
   EPERM (operation not permitted):
      - Run Stop.bat, close all cmd windows
-     - Run Fix-Dependencies.bat (installs only adm-zip + pdf-parse)
+     - Run Fix-Dependencies.bat (removes broken folders, reinstalls)
      - Pause antivirus on the airdrop folder if needed
+     - Last resort: delete node_modules\adm-zip and run Fix-Dependencies.bat
 
   ECONNRESET (network):
      - Check internet or try phone hotspot

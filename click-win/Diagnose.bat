@@ -15,8 +15,10 @@ cd /d "%ROOT%" && (
 )
 
 if exist "server.mjs" (echo server.mjs: OK) else (echo [ERROR] server.mjs not found)
-if exist "node_modules\adm-zip\" (
-  echo node_modules: OK (adm-zip found)
+if exist "node_modules\adm-zip\adm-zip.js" (
+  echo node_modules: OK
+) else if exist "node_modules\adm-zip\" (
+  echo [WARN] node_modules broken - run: click-win\Fix-Dependencies.bat
 ) else if exist "node_modules\" (
   echo [WARN] node_modules incomplete - run: click-win\Fix-Dependencies.bat
 ) else (
@@ -54,8 +56,30 @@ if errorlevel 1 (
 
 echo.
 echo --- Server packages ---
-if exist "node_modules\adm-zip\" (echo adm-zip: OK) else (echo adm-zip: MISSING)
-if exist "node_modules\pdf-parse\" (echo pdf-parse: OK) else (echo pdf-parse: MISSING)
+if exist "node_modules\adm-zip\adm-zip.js" (
+  echo adm-zip: OK
+) else if exist "node_modules\adm-zip\" (
+  echo adm-zip: BROKEN ^(folder exists, files missing^) - run Fix-Dependencies.bat
+) else (
+  echo adm-zip: MISSING
+)
+if exist "node_modules\pdf-parse\dist\pdf-parse\esm\index.js" (
+  echo pdf-parse: OK
+) else if exist "node_modules\pdf-parse\" (
+  echo pdf-parse: BROKEN - run Fix-Dependencies.bat
+) else (
+  echo pdf-parse: MISSING
+)
+
+where node >nul 2>&1
+if not errorlevel 1 (
+  node "%ROOT%\scripts\verify-server-deps.mjs" >nul 2>&1
+  if errorlevel 1 (
+    echo node import test: FAILED
+  ) else (
+    echo node import test: OK
+  )
+)
 
 echo.
 echo --- Port 8080 ---
