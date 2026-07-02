@@ -3,6 +3,13 @@ import fs from 'node:fs'
 import path from 'node:path'
 import { fileURLToPath } from 'node:url'
 import { buildCatalogFromPdfText, extractTextFromPdfBuffer } from './price-pdf-catalog.mjs'
+import {
+  buildBackupPayload,
+  mergeProducts,
+  validateBackupData,
+  validateProductsData,
+} from './catalog-package.mjs'
+import { applyCatalogZip, buildCatalogZip } from './catalog-zip.mjs'
 
 const __dirname = path.dirname(fileURLToPath(import.meta.url))
 const SITE_DIR = path.join(__dirname, 'site')
@@ -554,6 +561,94 @@ const server = http.createServer(async (req, res) => {
     } catch (err) {
       console.error('PDF import error:', err)
       return sendJson(res, 500, { error: err.message || 'Ошибка импорта PDF' })
+    }
+  }
+
+  if (p === '/api/admin/export-backup' && req.method === 'GET') {
+    if (!checkAuth(req)) return sendJson(res, 401, { error: 'Неверный пароль' })
+    try {
+      const payload = buildBackupPayload(readStore(), readProducts())
+      const body = JSON.stringify(payload, null, 2)
+      const filename = `airdrop-backup-${new Date().toISOString().slice(0, 10)}.json`
+      res.writeHead(200, {
+        'Content-Type': 'application/json; charset=utf-8',
+        'Content-Disposition': `attachment; filename="${filename}"`,
+      })
+      return res.end(body)
+    } catch (err) {
+      return sendJson(res, 400, { error: err.message || 'Ошибка экспорта' })
+    }
+  }
+
+  if (p === '/api/admin/export-catalog' && req.method === 'GET') {
+    if (!checkAuth(req)) return sendJson(res, 401, { error: 'Неверный пароль' })
+    try {
+      const zipBuffer = buildCatalogZip(SITE_DIR, readProducts())
+      const filename = `airdrop-catalog-${new Date().toISOString().slice(0, 10)}.zip`
+      res.writeHead(200, {
+        'Content-Type': 'application/zip',
+        'Content-Disposition': `attachment; filename="${filename}"`,
+      })
+      return res.end(zipBuffer)
+    } catch (err) {
+      return sendJson(res, 400, { error: err.message || 'Ошибка экспорта каталога' })
+    }
+  }
+
+  if (p === '/api/admin/import-backup' && req.method === 'POST') {
+    if (!checkAuth(req)) return sendJson(res, 401, { error: 'Неверный пароль' })
+    try {
+      const body = JSON.parse(await readBody(req))
+      const backup = validateBackupData(body)
+      const current = readStore()
+      const store = { ...backup.store, adminPassword: current.adminPassword }
+      writeStore(store)
+      writeProducts(backup.products)
+      return sendJson(res, 200, {
+        ok: true,
+        stats: { products: backup.products.products.length },
+      })
+    } catch (err) {
+      return sendJson(res, 400, { error: err.message || 'Ошибка импорта' })
+    }
+  }
+
+  if (p === '/api/admin/import-products' && req.method === 'POST') {
+    if (!checkAuth(req)) return sendJson(res, 401, { error: 'Неверный пароль' })
+    try {
+      const body = JSON.parse(await readBody(req))
+      if (!Array.isArray(body.products)) return sendJson(res, 400, { error: 'Нет поля products' })
+      const mode = body.mode === 'replace' ? 'replace' : 'merge'
+      const merged = mergeProducts(readProducts(), { products: body.products }, mode)
+      writeProducts(merged)
+      return sendJson(res, 200, {
+        ok: true,
+        stats: { count: merged.products.length, mode },
+      })
+    } catch (err) {
+      return sendJson(res, 400, { error: err.message || 'Ошибка импорта товаров' })
+    }
+  }
+
+  if (p === '/api/admin/import-catalog' && req.method === 'POST') {
+    if (!checkAuth(req)) return sendJson(res, 401, { error: 'Неверный пароль' })
+    try {
+      const body = JSON.parse(await readBody(req))
+      const raw = String(body.data ?? '')
+      const base64 = raw.replace(/^data:[^;]+;base64,/, '')
+      if (!base64) return sendJson(res, 400, { error: 'Файл не передан' })
+      const mode = body.mode === 'replace' ? 'replace' : 'merge'
+      const result = applyCatalogZip(
+        SITE_DIR,
+        Buffer.from(base64, 'base64'),
+        readProducts(),
+        mode,
+      )
+      writeProducts(result.products)
+      return sendJson(res, 200, { ok: true, stats: result.stats })
+    } catch (err) {
+      console.error('Catalog import error:', err)
+      return sendJson(res, 400, { error: err.message || 'Ошибка импорта каталога' })
     }
   }
 

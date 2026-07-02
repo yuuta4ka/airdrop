@@ -28,7 +28,7 @@ const TITLES = {
   installment: 'Рассрочка',
   orders: 'Заказы',
   reviews: 'Отзывы',
-  config: 'Конфиги',
+  config: 'Экспорт / импорт',
 }
 
 const $ = (id) => document.getElementById(id)
@@ -263,11 +263,34 @@ function categorySelect(id, selected) {
 
 function downloadJson(filename, data) {
   const blob = new Blob([JSON.stringify(data, null, 2)], { type: 'application/json' })
+  downloadBlob(filename, blob)
+}
+
+function downloadBlob(filename, blob) {
   const a = document.createElement('a')
   a.href = URL.createObjectURL(blob)
   a.download = filename
   a.click()
   URL.revokeObjectURL(a.href)
+}
+
+async function downloadFromApi(url, filename) {
+  const res = await fetch(url, { headers: { Authorization: `Bearer ${getToken()}` } })
+  if (!res.ok) {
+    const data = await res.json().catch(() => ({}))
+    throw new Error(data.error || `Ошибка ${res.status}`)
+  }
+  const blob = await res.blob()
+  downloadBlob(filename, blob)
+}
+
+function readFileAsBase64(file) {
+  return new Promise((resolve, reject) => {
+    const reader = new FileReader()
+    reader.onload = () => resolve(String(reader.result))
+    reader.onerror = () => reject(new Error('Не удалось прочитать файл'))
+    reader.readAsDataURL(file)
+  })
 }
 
 // ─── Login ───
@@ -1385,24 +1408,135 @@ function renderPriceImport(c) {
 }
 
 function renderConfig(c) {
+  const stamp = new Date().toISOString().slice(0, 10)
   c.innerHTML = `
-    ${section('Настройки сайта (store.json)', `
-      <p class="admin-hint">Меню, контакты, темы, категории, рассрочка, отзывы. Импорт прайса — в разделе «Импорт прайса» в меню слева.</p>
+    ${section('Каталог для коллеги (товары + фото)', `
+      <p class="admin-hint">Скачайте ZIP и передайте человеку, который наполняет карточки и загружает фото. Он работает в своей локальной админке, потом отдаёт ZIP обратно — вы импортируете сюда.</p>
+      <p class="admin-hint"><strong>Слияние</strong> — обновить существующие товары по id/slug и добавить новые. <strong>Заменить всё</strong> — полностью перезаписать каталог.</p>
       <div class="admin-row admin-row--actions">
-        <button type="button" class="btn btn--primary" id="export-store">Скачать store.json</button>
-        <label class="btn btn--secondary admin-upload-btn">Импорт store.json<input type="file" id="import-store" accept=".json" hidden /></label>
+        <button type="button" class="btn btn--primary" id="export-catalog-zip">Скачать каталог (.zip)</button>
+        <label class="btn btn--secondary admin-upload-btn">Импорт каталога (.zip)
+          <input type="file" id="import-catalog-zip" accept=".zip,application/zip" hidden />
+        </label>
+      </div>
+      <div class="admin-row">
+        <label class="field"><span>Режим импорта каталога</span>
+          <select id="import-catalog-mode">
+            <option value="merge" selected>Слияние (рекомендуется)</option>
+            <option value="replace">Заменить весь каталог</option>
+          </select>
+        </label>
+      </div>
+      <p class="admin-hint" id="import-catalog-result"></p>
+    `)}
+    ${section('Полная резервная копия сайта', `
+      <p class="admin-hint">Настройки магазина + товары в одном JSON. Пароль админки не экспортируется.</p>
+      <div class="admin-row admin-row--actions">
+        <button type="button" class="btn btn--primary" id="export-backup">Скачать backup (.json)</button>
+        <label class="btn btn--secondary admin-upload-btn">Импорт backup (.json)
+          <input type="file" id="import-backup" accept=".json,application/json" hidden />
+        </label>
       </div>
     `)}
-    ${section('Товары (products.json)', `
-      <p class="admin-hint">Каталог товаров — отдельный файл</p>
-      <div class="admin-row admin-row--actions">
-        <button type="button" class="btn btn--primary" id="export-products">Скачать products.json</button>
-        <label class="btn btn--secondary admin-upload-btn">Импорт products.json<input type="file" id="import-products" accept=".json" hidden /></label>
+    ${section('По отдельности (продвинутый режим)', `
+      <p class="admin-hint">Только JSON без фотографий — фото придётся загрузить заново на сервере.</p>
+      <div class="admin-grid admin-grid--2">
+        <div>
+          <h4 class="admin-subtitle">store.json</h4>
+          <div class="admin-row admin-row--actions">
+            <button type="button" class="btn btn--secondary" id="export-store">Скачать</button>
+            <label class="btn btn--ghost admin-upload-btn">Импорт<input type="file" id="import-store" accept=".json" hidden /></label>
+          </div>
+        </div>
+        <div>
+          <h4 class="admin-subtitle">products.json</h4>
+          <div class="admin-row admin-row--actions">
+            <button type="button" class="btn btn--secondary" id="export-products">Скачать</button>
+            <label class="btn btn--ghost admin-upload-btn">Импорт<input type="file" id="import-products" accept=".json" hidden /></label>
+          </div>
+          <label class="field" style="margin-top:10px"><span>Режим</span>
+            <select id="import-products-mode">
+              <option value="merge" selected>Слияние</option>
+              <option value="replace">Заменить всё</option>
+            </select>
+          </label>
+        </div>
       </div>
     `)}
   `
 
-  $('export-store').onclick = () => downloadJson('store.json', storeData)
+  $('export-catalog-zip').onclick = async () => {
+    try {
+      await downloadFromApi('/api/admin/export-catalog', `airdrop-catalog-${stamp}.zip`)
+      status('Каталог экспортирован', 'success')
+    } catch (err) { status(err.message, 'error') }
+  }
+
+  $('export-backup').onclick = async () => {
+    try {
+      await downloadFromApi('/api/admin/export-backup', `airdrop-backup-${stamp}.json`)
+      status('Backup экспортирован', 'success')
+    } catch (err) { status(err.message, 'error') }
+  }
+
+  $('import-catalog-zip').onchange = async (e) => {
+    const file = e.target.files[0]
+    const resultEl = $('import-catalog-result')
+    if (!file) return
+    resultEl.textContent = 'Импорт…'
+    try {
+      const data = await readFileAsBase64(file)
+      const mode = $('import-catalog-mode').value
+      const res = await fetch('/api/admin/import-catalog', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${getToken()}` },
+        body: JSON.stringify({ data, mode }),
+      })
+      const payload = await res.json().catch(() => ({}))
+      if (!res.ok) throw new Error(payload.error || 'Ошибка импорта')
+      productsData = await (await fetch('/api/products')).json()
+      invalidateStore()
+      clearDraft()
+      const s = payload.stats || {}
+      resultEl.textContent = `Готово: ${s.count} товаров, фото скопировано: ${s.assetsCopied ?? '—'}, режим: ${s.mode || mode}`
+      status('Каталог импортирован', 'success')
+      renderTab()
+    } catch (err) {
+      resultEl.textContent = err.message
+      status(err.message, 'error')
+    }
+    e.target.value = ''
+  }
+
+  $('import-backup').onchange = async (e) => {
+    const file = e.target.files[0]
+    if (!file) return
+    if (!confirm('Заменить настройки и товары из backup? Пароль админки останется прежним.')) {
+      e.target.value = ''
+      return
+    }
+    try {
+      const backup = JSON.parse(await file.text())
+      const res = await fetch('/api/admin/import-backup', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${getToken()}` },
+        body: JSON.stringify(backup),
+      })
+      const payload = await res.json().catch(() => ({}))
+      if (!res.ok) throw new Error(payload.error || 'Ошибка импорта')
+      await loadData()
+      clearDraft()
+      status(`Backup импортирован (${payload.stats?.products ?? '—'} товаров)`, 'success')
+      renderTab()
+    } catch (err) { status(err.message || 'Некорректный backup', 'error') }
+    e.target.value = ''
+  }
+
+  $('export-store').onclick = () => {
+    const copy = structuredClone(storeData)
+    delete copy.adminPassword
+    downloadJson('store.json', copy)
+  }
   $('export-products').onclick = () => downloadJson('products.json', productsData)
 
   $('import-store').onchange = async (e) => {
@@ -1410,21 +1544,38 @@ function renderConfig(c) {
     if (!file) return
     try {
       const data = JSON.parse(await file.text())
-      storeData = data
+      if (!data.settings) throw new Error('Нет поля settings')
+      const password = storeData.adminPassword
+      storeData = { ...data, adminPassword: password }
       await saveStore()
+      clearDraft()
       renderTab()
-    } catch { status('Некорректный JSON', 'error') }
+    } catch (err) { status(err.message || 'Некорректный JSON', 'error') }
     e.target.value = ''
   }
 
   $('import-products').onchange = async (e) => {
     const file = e.target.files[0]
     if (!file) return
+    const mode = $('import-products-mode').value
+    if (mode === 'replace' && !confirm('Заменить весь каталог товаров?')) {
+      e.target.value = ''
+      return
+    }
     try {
-      const data = JSON.parse(await file.text())
-      if (!data.products) throw new Error('Нет поля products')
-      productsData = data
-      await saveProducts()
+      const incoming = JSON.parse(await file.text())
+      if (!incoming.products) throw new Error('Нет поля products')
+      const res = await fetch('/api/admin/import-products', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${getToken()}` },
+        body: JSON.stringify({ products: incoming.products, mode }),
+      })
+      const payload = await res.json().catch(() => ({}))
+      if (!res.ok) throw new Error(payload.error || 'Ошибка импорта')
+      productsData = await (await fetch('/api/products')).json()
+      invalidateStore()
+      clearDraft()
+      status(`Товары импортированы (${payload.stats?.count ?? '—'})`, 'success')
       renderTab()
     } catch (err) { status(err.message || 'Некорректный JSON', 'error') }
     e.target.value = ''
