@@ -34,7 +34,7 @@
 
 **Не переносите проект через Telegram/ZIP** — `.bat` файлы ломаются. Используйте `git clone` или `click-win/Get-Project.bat`. Подробно: `click-win/SETUP-WINDOWS.txt`.
 
-При первом запуске `Start.bat` автоматически выполнит `npm install`.
+Для запуска сайта нужен только **Node.js** — зависимости сервера уже лежат в `vendor/` (npm install не нужен).
 
 ```bat
 scripts\win\run-server.cmd

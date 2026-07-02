@@ -20,7 +20,7 @@ goto :pause_fail
 :fail
 echo.
 echo Failed to start server.
-echo Run Diagnose.bat or Fix-Dependencies.bat
+echo Run Diagnose.bat
 goto :pause_fail
 
 :pause_fail

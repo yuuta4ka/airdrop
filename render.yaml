@@ -3,7 +3,7 @@ services:
     name: airdrop
     runtime: node
     plan: free
-    buildCommand: npm install --omit=dev
+    buildCommand: node scripts/setup-runtime-deps.mjs
     startCommand: node server.mjs
     healthCheckPath: /
     envVars:

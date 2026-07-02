@@ -15,6 +15,8 @@ if [ -n "$(port_pids)" ]; then
   stop_server
 fi
 
+node scripts/setup-runtime-deps.mjs
+
 echo "Node.js: $(node --version)"
 echo "Запуск сервера..."
 open_site_hint

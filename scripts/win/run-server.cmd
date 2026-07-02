@@ -21,7 +21,12 @@ if errorlevel 1 (
 
 call "%~dp0kill-port.cmd" %PORT%
 
-call "%~dp0npm-install.cmd"
+call "%~dp0check-vendor.cmd"
+if errorlevel 1 (
+  endlocal & exit /b 1
+)
+
+node "%~dp0..\setup-runtime-deps.mjs"
 if errorlevel 1 (
   endlocal & exit /b 1
 )
