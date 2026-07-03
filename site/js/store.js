@@ -1,5 +1,5 @@
 import {
-  usesSupplierPricing, findVariant, getOrderableVariants,
+  usesSupplierPricing, findVariant, getOrderableVariants, hasAnyPurchasePrice,
   calcRetailFromPurchase, recalcAllVariants, getStockFallbackPrice,
   getStockForVariant, hasPhysicalStock, isComboOrderable,
 } from './pricing.js'
@@ -141,7 +141,7 @@ export function getMinPrice(product) {
   return min === Infinity ? 0 : min
 }
 
-export { usesSupplierPricing, findVariant, getOrderableVariants, calcRetailFromPurchase, recalcAllVariants } from './pricing.js'
+export { usesSupplierPricing, findVariant, getOrderableVariants, hasAnyPurchasePrice, calcRetailFromPurchase, recalcAllVariants } from './pricing.js'
 export { isComboOrderable, isComboUnavailable, isOptionUnavailable, getAvailableOptions, roundPriceTo900, recalcVariantPrice, getMarkupSettings } from './pricing.js'
 
 export function formatPrice(price) {
@@ -261,11 +261,13 @@ export function hasAnyStock(product) {
   return product.stock?.some((s) => s.qty > 0)
 }
 
-/** Нет на складе и нельзя оформить под заказ (прайс поставщика пуст) */
+/** Нет на складе и нельзя оформить под заказ (нет закупочных / розничных цен) */
 export function isProductFullyUnavailable(product) {
-  if (!usesSupplierPricing(product)) return false
   if (hasAnyStock(product)) return false
-  return getOrderableVariants(product).length === 0
+  if (hasAnyPurchasePrice(product)) {
+    return getOrderableVariants(product).length === 0
+  }
+  return getMinPrice(product) <= 0
 }
 
 export const CATALOG_MODE_KEY = 'airdrop_catalog_mode'

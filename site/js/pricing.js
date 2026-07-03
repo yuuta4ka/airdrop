@@ -88,6 +88,10 @@ export function getOrderableVariants(product) {
   return product.variants.filter((v) => Number(v.purchasePrice) > 0 && Number(v.price) > 0)
 }
 
+export function hasAnyPurchasePrice(product) {
+  return (product?.variants || []).some((v) => Number(v.purchasePrice) > 0)
+}
+
 export function isComboOrderable(product, colorId, storageLabel, simType = null) {
   if (!usesSupplierPricing(product)) return true
   if (findVariant(product, colorId, storageLabel, simType)) return true
