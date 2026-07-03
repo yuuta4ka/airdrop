@@ -134,6 +134,7 @@ async function saveStore() {
 }
 
 async function saveProducts() {
+  for (const p of productsData.products) cleanupProductForSave(p)
   const res = await fetch('/api/products', {
     method: 'PUT',
     headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${getToken()}` },
@@ -274,14 +275,91 @@ function downloadBlob(filename, blob) {
   URL.revokeObjectURL(a.href)
 }
 
-async function downloadFromApi(url, filename) {
+async function downloadFromApi(url, filename, onProgress) {
   const res = await fetch(url, { headers: { Authorization: `Bearer ${getToken()}` } })
   if (!res.ok) {
     const data = await res.json().catch(() => ({}))
     throw new Error(data.error || `Ошибка ${res.status}`)
   }
-  const blob = await res.blob()
-  downloadBlob(filename, blob)
+  const total = Number(res.headers.get('content-length')) || 0
+  if (!res.body || !onProgress) {
+    const blob = await res.blob()
+    downloadBlob(filename, blob)
+    return
+  }
+  const reader = res.body.getReader()
+  const chunks = []
+  let received = 0
+  while (true) {
+    const { done, value } = await reader.read()
+    if (done) break
+    chunks.push(value)
+    received += value.length
+    if (total > 0) onProgress(Math.min(received / total, 1))
+    else onProgress(-1)
+  }
+  onProgress(1)
+  downloadBlob(filename, new Blob(chunks))
+}
+
+function syncStorageFromEditor(p) {
+  if (!$('storage-list')) return
+  const prev = [...(p.storage || [])]
+  p.storage = prev.map((_, i) => ({ label: $(`stor-label-${i}`)?.value ?? prev[i]?.label ?? '' }))
+  p.storage.forEach((s, i) => {
+    const oldLabel = prev[i]?.label
+    const newLabel = s.label
+    if (oldLabel && newLabel && oldLabel !== newLabel) {
+      for (const v of p.variants || []) {
+        if (v.storage === oldLabel) v.storage = newLabel
+      }
+    }
+  })
+}
+
+function cleanupProductForSave(p) {
+  if (p.storage) {
+    p.storage = p.storage.map((s) => ({ label: String(s.label || '').trim() })).filter((s) => s.label)
+    if (isPhoneCategory(p.category)) {
+      p.storage = p.storage.filter((s) => isMeaningfulStorageLabel(s.label))
+      p.variants = (p.variants || []).filter((v) => isMeaningfulStorageLabel(v.storage))
+    }
+  }
+}
+
+function formatPdfImportStats(s) {
+  const lines = []
+  if (s.productsCreated) lines.push(`Добавлено товаров: ${s.productsCreated}`)
+  if (s.productsUpdated) lines.push(`Обновлено товаров: ${s.productsUpdated}`)
+  if (s.variantsAdded) lines.push(`Добавлено конфигураций: ${s.variantsAdded}`)
+  if (s.variantsUpdated) lines.push(`Обновлено конфигураций: ${s.variantsUpdated}`)
+  if (s.variantsRemoved) lines.push(`Удалено конфигураций: ${s.variantsRemoved}`)
+  if (s.skippedVariants) lines.push(`Пропущено строк прайса: ${s.skippedVariants}`)
+  if (s.skipped) lines.push(`Не найдено в каталоге: ${s.skipped}`)
+  if (!lines.length) lines.push(`Обработано строк: ${s.entries ?? 0}`)
+  return lines
+}
+
+function validateProductStorage(p) {
+  const labels = new Set(
+    (p.storage || []).map((s) => String(s.label || '').trim()).filter(Boolean),
+  )
+  if (!labels.size) return null
+  for (const v of p.variants || []) {
+    if (v.storage && !labels.has(v.storage)) {
+      return `В прайсе есть «${v.storage}», но такого объёма нет в блоке «Память». Добавьте или переименуйте.`
+    }
+  }
+  return null
+}
+
+function getStorageLabelsFromEditor(p) {
+  const labels = (p.storage || []).map((s, i) => {
+    const inp = $(`stor-label-${i}`)
+    return (inp ? inp.value : s.label || '').trim()
+  }).filter((l) => l && (isPhoneCategory(p.category) ? isMeaningfulStorageLabel(l) : true))
+  const fromVariants = (p.variants || []).map((v) => v.storage).filter(Boolean)
+  return [...new Set([...labels, ...fromVariants])]
 }
 
 function readFileAsBase64(file) {
@@ -736,14 +814,16 @@ function renderProducts(c) {
   if (editingProductIdx !== null) { renderProductEditor(c); return }
   const products = productsData.products
   c.innerHTML = `<div class="admin-toolbar"><span>${products.length} товаров</span><button type="button" class="btn btn--primary" id="add-product">+ Добавить товар</button></div><div id="product-list"></div>`
-  $('product-list').innerHTML = products.map((p, i) => `
+  $('product-list').innerHTML = products.map((p, i) => {
+    const markup = `${p.markupPercent ?? 15}%${p.markupFixed ? ` + ${p.markupFixed} ₽` : ''}`
+    return `
     <div class="admin-product-row">
       <img src="${p.image || 'assets/logo.png'}" alt="" />
-      <div><strong>${p.name}</strong><span>${p.brand} · ${categoryLabel(p.category)}</span></div>
+      <div><strong>${p.name}</strong><span>${p.brand} · ${categoryLabel(p.category)} · наценка ${markup}</span></div>
       <button type="button" class="btn btn--secondary btn--sm" data-edit="${i}">Изменить</button>
       <button type="button" class="btn btn--danger btn--sm" data-del="${i}">Удалить</button>
     </div>
-  `).join('')
+  `}).join('')
   $('product-list').querySelectorAll('[data-edit]').forEach((b) => {
     b.onclick = () => { editingProductIdx = Number(b.dataset.edit); renderProducts(c) }
   })
@@ -836,6 +916,8 @@ function renderProductEditor(c) {
 
   $('save-product').onclick = async () => {
     collectProduct()
+    const storageErr = validateProductStorage(productsData.products[editingProductIdx])
+    if (storageErr) { status(storageErr, 'error'); return }
     try {
       await saveProducts()
       status('Товар сохранён', 'success')
@@ -985,22 +1067,28 @@ function renderProductEditor(c) {
 
   const renderStorage = () => {
     if (!$('storage-list')) return
-    if (isPhoneCategory(p.category)) {
-      p.storage = (p.storage || []).filter((s) => isMeaningfulStorageLabel(s.label))
-    }
-    $('storage-list').innerHTML = (p.storage || []).map((s, i) => `
+    if (!p.storage) p.storage = []
+    $('storage-list').innerHTML = p.storage.map((s, i) => `
       <div class="admin-row">
-        <input type="text" id="stor-label-${i}" value="${escAttr(s.label)}" placeholder="256 ГБ" />
+        <input type="text" id="stor-label-${i}" value="${escAttr(s.label)}" placeholder="256 ГБ или 128 ГБ Wi-Fi" />
         <button type="button" class="btn btn--danger btn--sm" data-del-stor="${i}">✕</button>
       </div>
     `).join('')
     $('storage-list').querySelectorAll('[data-del-stor]').forEach((b) => {
-      b.onclick = () => { p.storage.splice(Number(b.dataset.delStor), 1); renderStorage() }
+      b.onclick = () => { p.storage.splice(Number(b.dataset.delStor), 1); renderStorage(); renderVariants() }
+    })
+    $('storage-list').querySelectorAll('input').forEach((inp) => {
+      inp.oninput = () => { syncStorageFromEditor(p); renderVariants() }
     })
   }
   if (showStorage) {
     renderStorage()
-    $('add-storage').onclick = () => { p.storage.push({ label: '' }); renderStorage() }
+    $('add-storage').onclick = () => {
+      if (!p.storage) p.storage = []
+      p.storage.push({ label: '' })
+      renderStorage()
+      renderVariants()
+    }
   }
 
   if (!p.variants) p.variants = []
@@ -1012,8 +1100,7 @@ function renderProductEditor(c) {
   const renderVariants = () => {
     if ($('variant-list')?.childElementCount) collectProductVariants(p)
     const markup = getMarkup()
-    const storageLabels = (p.sizes?.length > 1 ? p.sizes.map((s) => s.label) : getDisplayStorage(p).map((s) => s.label))
-      .filter((l) => l && (isPhoneCategory(p.category) ? isMeaningfulStorageLabel(l) : true))
+    const storageLabels = getStorageLabelsFromEditor(p)
     const simList = p.simTypes?.length ? p.simTypes : ['']
 
     const displayVariants = isPhoneCategory(p.category)
@@ -1062,6 +1149,7 @@ function renderProductEditor(c) {
     if (!text.trim()) { status('Вставьте прайс в текстовое поле', 'error'); return }
     collectProductColorsStorageSim(p)
     const result = applySupplierImport(p, text, getMarkup())
+    const storageErr = validateProductStorage(p)
     const msgs = []
     if (result.merged) msgs.push(`Импортировано: ${result.merged}`)
     if (result.skipped) msgs.push(`Пропущено (другая модель): ${result.skipped}`)
@@ -1069,6 +1157,9 @@ function renderProductEditor(c) {
     $('import-result').textContent = msgs.join(' · ')
     if (result.errors.length) {
       $('import-result').innerHTML = msgs.join(' · ') + '<br>' + result.errors.map((e) => `⚠ ${e.title}: ${e.message}`).join('<br>')
+    }
+    if (storageErr) {
+      $('import-result').innerHTML += `<br><span class="admin-hint--warn">${escAttr(storageErr)}</span>`
     }
     renderVariants()
     status(result.merged ? `Импортировано ${result.merged} позиций` : 'Ничего не импортировано', result.merged ? 'success' : 'error')
@@ -1383,7 +1474,14 @@ function renderPriceImport(c) {
         const data = await parseApiJson(res)
         if (!res.ok) throw new Error(data?.error || 'Ошибка импорта')
         const s = data.stats
-        resultEl.textContent = `Готово: обновлено ${s.pricesUpdated} цен в ${s.productsUpdated} товарах. Пропущено позиций: ${s.skippedVariants}${s.skipped ? `, не найдено в каталоге: ${s.skipped}` : ''}${s.errors?.length ? `, ошибок: ${s.errors.length}` : ''}`
+        const lines = formatPdfImportStats(s)
+        resultEl.innerHTML = `<strong>Импорт завершён</strong><br>${lines.map((l) => escAttr(l)).join('<br>')}`
+        if (s.notFound?.length) {
+          resultEl.innerHTML += `<br><span class="admin-hint--warn">Не найдены: ${escAttr(s.notFound.slice(0, 5).join(', '))}</span>`
+        }
+        if (s.errors?.length) {
+          resultEl.innerHTML += '<br>' + s.errors.slice(0, 5).map((e) => `⚠ ${escAttr(e.name)}: ${escAttr(e.error)}`).join('<br>')
+        }
         storeData.priceImport = {
           markupPercent: num('pi-markup'),
           markupFixed: num('pi-markup-fixed'),
@@ -1419,6 +1517,10 @@ function renderConfig(c) {
           <input type="file" id="import-catalog-zip" accept=".zip,application/zip" hidden />
         </label>
       </div>
+      <div class="admin-progress" id="export-catalog-progress" hidden>
+        <div class="admin-progress__bar" id="export-catalog-progress-bar"></div>
+      </div>
+      <p class="admin-hint" id="export-catalog-status"></p>
       <div class="admin-row">
         <label class="field"><span>Режим импорта каталога</span>
           <select id="import-catalog-mode">
@@ -1466,10 +1568,35 @@ function renderConfig(c) {
   `
 
   $('export-catalog-zip').onclick = async () => {
+    const btn = $('export-catalog-zip')
+    const progress = $('export-catalog-progress')
+    const bar = $('export-catalog-progress-bar')
+    const statusEl = $('export-catalog-status')
+    btn.disabled = true
+    if (progress) progress.hidden = false
+    if (bar) bar.style.width = '0%'
+    if (statusEl) statusEl.textContent = 'Подготовка архива…'
     try {
-      await downloadFromApi('/api/admin/export-catalog', `airdrop-catalog-${stamp}.zip`)
+      await downloadFromApi(`/api/admin/export-catalog`, `airdrop-catalog-${stamp}.zip`, (ratio) => {
+        if (!bar || !statusEl) return
+        if (ratio < 0) {
+          bar.classList.add('admin-progress__bar--pulse')
+          statusEl.textContent = 'Сборка архива…'
+          return
+        }
+        bar.classList.remove('admin-progress__bar--pulse')
+        bar.style.width = `${Math.round(ratio * 100)}%`
+        statusEl.textContent = ratio >= 1 ? 'Сохранение файла…' : `Скачивание: ${Math.round(ratio * 100)}%`
+      })
+      if (statusEl) statusEl.textContent = 'Каталог экспортирован'
       status('Каталог экспортирован', 'success')
-    } catch (err) { status(err.message, 'error') }
+    } catch (err) {
+      if (statusEl) statusEl.textContent = err.message
+      status(err.message, 'error')
+    } finally {
+      btn.disabled = false
+      setTimeout(() => { if (progress) progress.hidden = true }, 1200)
+    }
   }
 
   $('export-backup').onclick = async () => {
@@ -1674,11 +1801,7 @@ function collectProductColorsStorageSim(p) {
     importNames: val(`col-import-${i}`) || '',
   }))
   if ($('storage-list')) {
-    p.storage = p.storage.map((_, i) => ({ label: val(`stor-label-${i}`) })).filter((s) => s.label)
-    if (isPhoneCategory(p.category)) {
-      p.storage = p.storage.filter((s) => isMeaningfulStorageLabel(s.label))
-      p.variants = (p.variants || []).filter((v) => isMeaningfulStorageLabel(v.storage))
-    }
+    syncStorageFromEditor(p)
   }
   if ($('p-hasSim')?.checked) {
     p.simTypes = p.simTypes.map((_, i) => val(`sim-type-${i}`)).filter(Boolean)
@@ -1736,11 +1859,7 @@ function collectProduct() {
   }))
 
   if ($('storage-list')) {
-    p.storage = p.storage.map((_, i) => ({ label: val(`stor-label-${i}`) })).filter((s) => s.label)
-    if (isPhoneCategory(p.category)) {
-      p.storage = p.storage.filter((s) => isMeaningfulStorageLabel(s.label))
-      p.variants = (p.variants || []).filter((v) => isMeaningfulStorageLabel(v.storage))
-    }
+    syncStorageFromEditor(p)
   }
 
   if ($('p-hasSim')?.checked) {

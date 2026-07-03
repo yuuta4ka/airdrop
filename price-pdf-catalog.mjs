@@ -9,6 +9,7 @@ const COLOR_ALIASES = {
   orange: ['orange', 'оранжевый', 'cosmic orange'],
   green: ['green', 'зелёный', 'sage', 'teal', 'бирюзовый'],
   pink: ['pink', 'розовый', 'rose gold', 'light blush', 'lavender', 'lilac', 'purple', 'violet', 'фиолетовый', 'mist purple'],
+  gray: ['gray', 'grey', 'графитовый', 'космический серый', 'space gray', 'graphite'],
   gold: ['gold', 'золотой', 'champagne'],
   natural: ['natural', 'desert', 'titanium', 'titan'],
   yellow: ['yellow', 'жёлтый'],
@@ -128,10 +129,9 @@ function parseVariantForUpdate(name, product, meta) {
 
   if (meta.type === 'ipad') {
     const storageMatch = name.match(/(\d+\s*Gb|\d+\s*ТБ)/i)
-    if (!storageMatch) return null
-    const storage = normalizeStorage(storageMatch[0])
-    const wifi = /cellular|lte/i.test(name.toLowerCase()) ? ' Wi-Fi + Cellular' : ' Wi-Fi'
-    const storageLabel = resolveStorageLabel(`${storage}${wifi}`, product, meta)
+    const storage = storageMatch ? normalizeStorage(storageMatch[0]) : null
+    const wifi = /cellular|lte/i.test(name.toLowerCase()) ? 'Wi-Fi + Cellular' : 'Wi-Fi'
+    const storageLabel = storage ? resolveStorageLabel(`${storage} ${wifi}`, product, meta) : resolveStorageLabel(wifi, product, meta)
     const colorId = findColorId(name, product.colors)
     if (!colorId || !storageLabel) return null
     return { colorId, storage: storageLabel, simType: '' }
@@ -227,9 +227,9 @@ function parseSamsungPhoneVariant(name, product) {
 
 function parseIpadVariant(name, product) {
   const storageMatch = name.match(/(\d+\s*Gb|\d+\s*ТБ)/i)
-  const storage = storageMatch ? normalizeStorage(storageMatch[0]) : 'Стандарт'
-  const wifi = /cellular|lte/i.test(name.toLowerCase()) ? ' Wi-Fi + Cellular' : ' Wi-Fi'
-  const storageLabel = ensureStorage(product, `${storage}${wifi}`)
+  const storage = storageMatch ? normalizeStorage(storageMatch[0]) : null
+  const wifi = /cellular|lte/i.test(name.toLowerCase()) ? 'Wi-Fi + Cellular' : 'Wi-Fi'
+  const storageLabel = ensureStorage(product, storage ? `${storage} ${wifi}` : wifi)
   const colorName = name.split(/\s+/).pop() || 'Стандарт'
   const colorId = findColorId(name, product.colors) || ensureColor(product, colorName)
   product.simTypes = null
@@ -392,17 +392,49 @@ function parseVariant(entry, product, meta) {
   return parseGenericVariant(name, product)
 }
 
+function variantKey(v) {
+  return `${v.colorId}::${v.storage}::${v.simType || ''}`
+}
+
+function normalizeProductName(name) {
+  return String(name).toLowerCase()
+    .replace(/[""«»]/g, '')
+    .replace(/\([^)]*\)/g, '')
+    .replace(/\s+m\d+(\s+max)?/gi, '')
+    .replace(/\s+a\d+(\s+pro)?/gi, '')
+    .replace(/\s+/g, ' ')
+    .trim()
+}
+
+function registerProductKeys(productMap, product) {
+  productMap.set(`${product.category}::${product.name.toLowerCase()}`, product)
+  productMap.set(`${product.category}::${product.slug}`, product)
+  productMap.set(`${product.category}::${normalizeProductName(product.name)}`, product)
+}
+
+function resolveProduct(productName, meta, productMap, products) {
+  const keys = [
+    `${meta.category}::${productName.toLowerCase()}`,
+    `${meta.category}::${normalizeProductName(productName)}`,
+    `${meta.category}::${slugify(productName)}`,
+  ]
+  for (const k of keys) {
+    if (productMap.has(k)) return productMap.get(k)
+  }
+  const norm = normalizeProductName(productName)
+  const matches = products.filter((p) => p.category === meta.category && normalizeProductName(p.name) === norm)
+  if (matches.length === 1) return matches[0]
+  return null
+}
+
 function upsertVariant(product, variant, purchasePrice, markup) {
   if (!Array.isArray(product.variants)) product.variants = []
   const price = calcRetailFromPurchase(purchasePrice, markup)
-  const idx = product.variants.findIndex((v) =>
-    v.colorId === variant.colorId &&
-    v.storage === variant.storage &&
-    (v.simType || '') === (variant.simType || '')
-  )
+  const idx = product.variants.findIndex((v) => variantKey(v) === variantKey(variant))
   const row = { ...variant, purchasePrice, price }
   if (idx >= 0) product.variants[idx] = row
   else product.variants.push(row)
+  return idx >= 0 ? 'updated' : 'added'
 }
 
 export function buildCatalogFromPdfText(text, existingProducts, markup = { percent: 15, fixed: 0 }, options = {}) {
@@ -412,7 +444,7 @@ export function buildCatalogFromPdfText(text, existingProducts, markup = { perce
     entries = entries.filter((e) => allowed.has(e.section))
   }
 
-  const pricesOnly = options.pricesOnly !== false
+  const pricesOnly = options.pricesOnly === true
   const products = existingProducts.map((p) => {
     const copy = structuredClone(p)
     if (!Array.isArray(copy.variants)) copy.variants = []
@@ -421,8 +453,12 @@ export function buildCatalogFromPdfText(text, existingProducts, markup = { perce
 
   const stats = {
     entries: entries.length,
-    pricesUpdated: 0,
+    productsCreated: 0,
     productsUpdated: 0,
+    variantsAdded: 0,
+    variantsUpdated: 0,
+    variantsRemoved: 0,
+    pricesUpdated: 0,
     skipped: 0,
     skippedVariants: 0,
     notFound: [],
@@ -430,76 +466,83 @@ export function buildCatalogFromPdfText(text, existingProducts, markup = { perce
   }
 
   const productMap = new Map()
-  for (const p of products) {
-    const lower = p.name.toLowerCase()
-    productMap.set(`${p.category}::${lower}`, p)
-    productMap.set(`${p.category}::${p.slug}`, p)
-    if (lower.startsWith('samsung ')) {
-      productMap.set(`${p.category}::${lower.slice(8)}`, p)
-    }
-  }
+  for (const p of products) registerProductKeys(productMap, p)
 
-  const touchedProducts = new Set()
-
+  const byProduct = new Map()
   for (const entry of entries) {
     const meta = CATALOG_SECTIONS.get(entry.section)
     if (!meta) continue
+    const productName = productKeyFromEntry(entry, meta)
+    const groupKey = `${meta.category}::${normalizeProductName(productName)}`
+    if (!byProduct.has(groupKey)) {
+      byProduct.set(groupKey, { productName, meta, entries: [] })
+    }
+    byProduct.get(groupKey).entries.push(entry)
+  }
 
-    try {
-      const productName = productKeyFromEntry(entry, meta)
-      const key = `${meta.category}::${productName.toLowerCase()}`
-      let product = productMap.get(key)
-      if (!product && meta.brand === 'Samsung') {
-        product = productMap.get(`${meta.category}::samsung ${productName.toLowerCase()}`)
-      }
+  let nextId = Math.max(0, ...products.map((p) => p.id)) + 1
+  const touchedProducts = new Set()
 
-      if (!product) {
-        stats.skipped += 1
+  for (const { productName, meta, entries: groupEntries } of byProduct.values()) {
+    let product = resolveProduct(productName, meta, productMap, products)
+    if (!product) {
+      if (pricesOnly) {
+        stats.skipped += groupEntries.length
         if (stats.notFound.length < 20) stats.notFound.push(productName)
         continue
       }
+      product = createEmptyProduct(productName, meta, nextId++)
+      products.push(product)
+      registerProductKeys(productMap, product)
+      stats.productsCreated += 1
+    }
 
-      if (pricesOnly) {
-        const variant = parseVariantForUpdate(entry.name, product, meta)
+    const pdfVariantKeys = new Set()
+
+    for (const entry of groupEntries) {
+      try {
+        if (pricesOnly) {
+          const variant = parseVariantForUpdate(entry.name, product, meta)
+          if (!variant) {
+            stats.skippedVariants += 1
+            continue
+          }
+          const idx = product.variants.findIndex((v) => variantKey(v) === variantKey(variant))
+          if (idx < 0) {
+            stats.skippedVariants += 1
+            continue
+          }
+          const price = calcRetailFromPurchase(entry.price, markup)
+          product.variants[idx] = {
+            ...product.variants[idx],
+            purchasePrice: entry.price,
+            price,
+          }
+          stats.pricesUpdated += 1
+          stats.variantsUpdated += 1
+          touchedProducts.add(product.id)
+          continue
+        }
+
+        const variant = parseVariant(entry, product, meta)
         if (!variant) {
           stats.skippedVariants += 1
           continue
         }
-
-        const idx = product.variants.findIndex((v) =>
-          v.colorId === variant.colorId &&
-          v.storage === variant.storage &&
-          (v.simType || '') === (variant.simType || '')
-        )
-
-        if (idx < 0) {
-          stats.skippedVariants += 1
-          continue
-        }
-
-        const price = calcRetailFromPurchase(entry.price, markup)
-        product.variants[idx] = {
-          ...product.variants[idx],
-          purchasePrice: entry.price,
-          price,
-        }
-        stats.pricesUpdated += 1
+        pdfVariantKeys.add(variantKey(variant))
+        const action = upsertVariant(product, variant, entry.price, markup)
+        if (action === 'added') stats.variantsAdded += 1
+        else stats.variantsUpdated += 1
         touchedProducts.add(product.id)
-        continue
+      } catch (err) {
+        stats.errors.push({ name: entry.name, error: err.message })
       }
+    }
 
-      // Режим полного импорта (если явно включён) — не используется по умолчанию
-      let nextId = Math.max(0, ...products.map((p) => p.id)) + 1
-      let target = product
-      if (!target) {
-        target = createEmptyProduct(productName, meta, nextId++)
-        products.push(target)
-        productMap.set(key, target)
-      }
-      const variant = parseVariant(entry, target, meta)
-      if (variant) upsertVariant(target, variant, entry.price, markup)
-    } catch (err) {
-      stats.errors.push({ name: entry.name, error: err.message })
+    if (!pricesOnly && pdfVariantKeys.size) {
+      const before = product.variants.length
+      product.variants = product.variants.filter((v) => pdfVariantKeys.has(variantKey(v)))
+      stats.variantsRemoved += before - product.variants.length
     }
   }
 

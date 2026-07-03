@@ -752,6 +752,31 @@ body::before {
   background: var(--admin-bg);
 }
 
+.admin-progress {
+  margin: 10px 0 4px;
+  height: 8px;
+  background: rgba(255, 255, 255, 0.08);
+  border-radius: 999px;
+  overflow: hidden;
+}
+
+.admin-progress__bar {
+  height: 100%;
+  width: 0;
+  background: linear-gradient(90deg, #3ecf8e, #6ee7b7);
+  transition: width 0.2s ease;
+}
+
+.admin-progress__bar--pulse {
+  width: 40% !important;
+  animation: admin-progress-pulse 1.2s ease-in-out infinite;
+}
+
+@keyframes admin-progress-pulse {
+  0% { transform: translateX(-120%); }
+  100% { transform: translateX(320%); }
+}
+
 .admin-hint--ok {
   color: #7bc99a;
 }
