@@ -66,6 +66,7 @@ async function init() {
   els.addBtn = document.getElementById('add-to-cart')
   els.installmentCalc = document.getElementById('product-installment-calc')
   els.colorTip = document.getElementById('color-cursor-tip')
+  els.colorSelectionStatus = document.getElementById('color-selection-status')
 
   gallery = initProductGallery({
     stage: document.getElementById('product-gallery-stage'),
@@ -214,18 +215,93 @@ function bindColorSwatchTip(btn, name) {
   btn.addEventListener('mouseleave', hideColorTip)
 }
 
-function updateStockInfo() {
+function isColorFullyUnavailable(colorId) {
+  if (!usesSupplierPricing(product)) return false
+  if (product.stock?.some((s) => s.colorId === colorId && s.qty > 0)) return false
+
+  const storages = product.sizes?.length > 1
+    ? product.sizes.map((s) => s.label)
+    : getDisplayStorage(product).map((s) => s.label)
+
+  const sims = product.simTypes?.length ? product.simTypes : [null]
+  if (!storages.length) {
+    return !sims.some((sim) => isComboOrderable(product, colorId, '', sim))
+  }
+
+  for (const storageLabel of storages) {
+    for (const sim of sims) {
+      if (isComboOrderable(product, colorId, storageLabel, sim)) return false
+    }
+  }
+  return true
+}
+
+function getSelectedColorAvailability() {
+  const color = product.colors[selectedColor]
+  if (!color) return { text: '', className: '' }
+
+  const orderable = isComboOrderable(
+    product,
+    color.id,
+    getCurrentStorageLabel(),
+    getSelectedSimType(),
+  )
   const stock = getStockForVariant(
     product,
-    product.colors[selectedColor].id,
+    color.id,
+    getSelectedSimType(),
+    getCurrentStorageLabel(),
+  )
+
+  if (!orderable) {
+    return { text: 'Нет в наличии', className: 'color-selection-status--unavailable' }
+  }
+  if (stock?.qty > 0) {
+    const qty = stock.qty > 1 ? ` · ${stock.qty} шт.` : ''
+    return { text: `В наличии${qty}`, className: 'color-selection-status--instock' }
+  }
+  return {
+    text: `Под заказ · ${store.settings.orderDays}`,
+    className: 'color-selection-status--order',
+  }
+}
+
+function updateColorSelectionStatus() {
+  if (!els.colorSelectionStatus) return
+  const color = product.colors[selectedColor]
+  if (!color) {
+    els.colorSelectionStatus.hidden = true
+    return
+  }
+
+  const { text, className } = getSelectedColorAvailability()
+  els.colorSelectionStatus.hidden = false
+  els.colorSelectionStatus.className = `color-selection-status ${className}`
+  els.colorSelectionStatus.innerHTML = `
+    <span class="color-selection-status__name">${color.name}</span>
+    <span class="color-selection-status__state">${text}</span>
+  `
+}
+
+function updateStockInfo() {
+  const color = product.colors[selectedColor]
+  if (!color) {
+    els.stockInfo.innerHTML = ''
+    return
+  }
+
+  const stock = getStockForVariant(
+    product,
+    color.id,
     getSelectedSimType(),
     getCurrentStorageLabel(),
   )
 
   if (stock?.qty > 0) {
-    els.stockInfo.innerHTML = `<span class="stock-badge stock-badge--in">В наличии</span>`
+    const qty = stock.qty > 1 ? ` · ${stock.qty} шт.` : ''
+    els.stockInfo.innerHTML = `<span class="stock-badge stock-badge--in">В наличии${qty}</span>`
   } else {
-    els.stockInfo.innerHTML = `<span class="stock-badge stock-badge--order">Под заказ · ${store.settings.orderDays}</span>`
+    els.stockInfo.innerHTML = ''
   }
 }
 
@@ -267,16 +343,31 @@ function updateUI(resetGallery = false) {
     els.addBtn.classList.toggle('product-detail__buy--unavailable', !orderable || basePrice <= 0)
   }
   updateStockInfo()
+  updateColorSelectionStatus()
   renderWarrantyOptions()
   mountProductInstallmentCalc(els.installmentCalc, getTotalPrice(), store.settings.installment)
 
   els.colors.querySelectorAll('.color-swatch').forEach((btn, i) => {
     const colorId = product.colors[i].id
-    const unavailable = isOptionGrayed('color', colorId)
+    const unavailable = isColorFullyUnavailable(colorId)
     const hasStock = product.stock?.some((s) => s.colorId === colorId && s.qty > 0)
-    btn.classList.toggle('color-swatch--active', i === selectedColor)
+    const isActive = i === selectedColor
+    const selectedUnavailable = isActive && !isComboOrderable(
+      product,
+      colorId,
+      getCurrentStorageLabel(),
+      getSelectedSimType(),
+    )
+
+    btn.classList.toggle('color-swatch--active', isActive)
     btn.classList.toggle('color-swatch--instock', !!hasStock)
     btn.classList.toggle('color-swatch--unavailable', unavailable)
+    btn.classList.toggle('color-swatch--active-unavailable', selectedUnavailable)
+    btn.setAttribute('aria-pressed', isActive ? 'true' : 'false')
+    btn.setAttribute(
+      'aria-label',
+      `${product.colors[i].name}${unavailable ? ', нет в наличии' : hasStock ? ', в наличии' : ', под заказ'}`,
+    )
   })
 
   els.storage?.querySelectorAll('.option-btn').forEach((btn, i) => {
@@ -339,6 +430,7 @@ function renderOptions() {
   els.colors.innerHTML = product.colors.map((c, i) => `
     <button type="button" class="color-swatch" data-idx="${i}" data-name="${c.name}" aria-label="${c.name}">
       <span class="color-swatch__fill" style="background: ${c.hex}"></span>
+      <span class="color-swatch__status" aria-hidden="true"></span>
     </button>
   `).join('')
 

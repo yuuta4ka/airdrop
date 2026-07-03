@@ -60,22 +60,22 @@
           "colorId": "orange",
           "storage": "512 ГБ",
           "simType": "eSIM only",
-          "purchasePrice": 113300,
-          "price": 126900
+          "purchasePrice": 112500,
+          "price": 125900
         },
         {
           "colorId": "blue",
           "storage": "512 ГБ",
           "simType": "eSIM + SIM",
-          "purchasePrice": 123000,
-          "price": 136900
+          "purchasePrice": 125000,
+          "price": 139900
         },
         {
           "colorId": "blue",
           "storage": "512 ГБ",
           "simType": "eSIM only",
-          "purchasePrice": 113800,
-          "price": 126900
+          "purchasePrice": 112500,
+          "price": 125900
         },
         {
           "colorId": "white",
@@ -102,22 +102,22 @@
           "colorId": "orange",
           "storage": "256 ГБ",
           "simType": "eSIM only",
-          "purchasePrice": 98500,
-          "price": 109900
+          "purchasePrice": 94000,
+          "price": 104900
         },
         {
           "colorId": "blue",
           "storage": "256 ГБ",
           "simType": "eSIM + SIM",
-          "purchasePrice": 106900,
-          "price": 119900
+          "purchasePrice": 106500,
+          "price": 118900
         },
         {
           "colorId": "blue",
           "storage": "256 ГБ",
           "simType": "eSIM only",
-          "purchasePrice": 96400,
-          "price": 107900
+          "purchasePrice": 95000,
+          "price": 105900
         },
         {
           "colorId": "white",
@@ -132,6 +132,34 @@
           "simType": "eSIM only",
           "purchasePrice": 98800,
           "price": 110900
+        },
+        {
+          "colorId": "orange",
+          "storage": "1 ТБ",
+          "simType": "eSIM only",
+          "purchasePrice": 128000,
+          "price": 142900
+        },
+        {
+          "colorId": "blue",
+          "storage": "1 ТБ",
+          "simType": "eSIM + SIM",
+          "purchasePrice": 141000,
+          "price": 157900
+        },
+        {
+          "colorId": "blue",
+          "storage": "1 ТБ",
+          "simType": "eSIM only",
+          "purchasePrice": 128000,
+          "price": 142900
+        },
+        {
+          "colorId": "orange",
+          "storage": "512 ГБ",
+          "simType": "eSIM + SIM",
+          "purchasePrice": 122000,
+          "price": 136900
         }
       ],
       "sizes": [],
@@ -142,7 +170,9 @@
       ],
       "markupPercent": 11.3,
       "markupFixed": 0,
-      "coverImage": "assets/products/bde6fa42703171e6bb6c2c1bd235fec457b6c328ee00729c65b4b2ca9d10fd5a.jpg.webp"
+      "coverImage": "assets/products/bde6fa42703171e6bb6c2c1bd235fec457b6c328ee00729c65b4b2ca9d10fd5a.jpg.webp",
+      "hidden": false,
+      "importNames": ""
     },
     {
       "id": 2,
@@ -225,8 +255,8 @@
           "colorId": "orange",
           "storage": "512 ГБ",
           "simType": "eSIM only",
-          "purchasePrice": 104400,
-          "price": 116900
+          "purchasePrice": 104000,
+          "price": 115900
         },
         {
           "colorId": "orange",
@@ -239,15 +269,15 @@
           "colorId": "blue",
           "storage": "512 ГБ",
           "simType": "eSIM + SIM",
-          "purchasePrice": 111500,
+          "purchasePrice": 112000,
           "price": 124900
         },
         {
           "colorId": "blue",
           "storage": "512 ГБ",
           "simType": "eSIM only",
-          "purchasePrice": 104500,
-          "price": 116900
+          "purchasePrice": 103000,
+          "price": 114900
         },
         {
           "colorId": "white",
@@ -267,29 +297,29 @@
           "colorId": "orange",
           "storage": "256 ГБ",
           "simType": "eSIM + SIM",
-          "purchasePrice": 96000,
+          "purchasePrice": 95800,
           "price": 106900
         },
         {
           "colorId": "orange",
           "storage": "256 ГБ",
           "simType": "eSIM only",
-          "purchasePrice": 87300,
-          "price": 97900
+          "purchasePrice": 84000,
+          "price": 93900
         },
         {
           "colorId": "blue",
           "storage": "256 ГБ",
           "simType": "eSIM + SIM",
-          "purchasePrice": 96000,
-          "price": 106900
+          "purchasePrice": 97000,
+          "price": 108900
         },
         {
           "colorId": "blue",
           "storage": "256 ГБ",
           "simType": "eSIM only",
-          "purchasePrice": 88800,
-          "price": 98900
+          "purchasePrice": 87200,
+          "price": 97900
         },
         {
           "colorId": "white",
@@ -309,8 +339,8 @@
           "colorId": "orange",
           "storage": "1 ТБ",
           "simType": "eSIM + SIM",
-          "purchasePrice": 129000,
-          "price": 143900
+          "purchasePrice": 129500,
+          "price": 144900
         }
       ],
       "sizes": [],
@@ -398,7 +428,7 @@
           "colorId": "black",
           "storage": "256 ГБ",
           "simType": "eSIM + SIM",
-          "purchasePrice": 68000,
+          "purchasePrice": 67500,
           "price": 75900
         },
         {
@@ -428,6 +458,41 @@
           "simType": "eSIM + SIM",
           "purchasePrice": 67500,
           "price": 75900
+        },
+        {
+          "colorId": "black",
+          "storage": "256 ГБ",
+          "simType": "eSIM only",
+          "purchasePrice": 63800,
+          "price": 71900
+        },
+        {
+          "colorId": "lavender",
+          "storage": "256 ГБ",
+          "simType": "eSIM + SIM",
+          "purchasePrice": 67200,
+          "price": 74900
+        },
+        {
+          "colorId": "lavender",
+          "storage": "256 ГБ",
+          "simType": "eSIM only",
+          "purchasePrice": 63800,
+          "price": 71900
+        },
+        {
+          "colorId": "blue",
+          "storage": "256 ГБ",
+          "simType": "eSIM only",
+          "purchasePrice": 63800,
+          "price": 71900
+        },
+        {
+          "colorId": "white",
+          "storage": "256 ГБ",
+          "simType": "eSIM only",
+          "purchasePrice": 70400,
+          "price": 78900
         }
       ],
       "sizes": [],
@@ -530,6 +595,20 @@
           "simType": "",
           "purchasePrice": 53700,
           "price": 59900
+        },
+        {
+          "colorId": "pink",
+          "storage": "128 ГБ",
+          "simType": "eSIM + SIM",
+          "purchasePrice": 61500,
+          "price": 68900
+        },
+        {
+          "colorId": "teal",
+          "storage": "128 ГБ",
+          "simType": "eSIM + SIM",
+          "purchasePrice": 53700,
+          "price": 59900
         }
       ],
       "images": [
@@ -561,14 +640,14 @@
           "name": "Космический чёрный",
           "hex": "#2d2d2d",
           "image": "assets/products/a48b727e0ff6e962a5edd3cd5890d9a3b22c0ea95ab06d8f3ed8a8a4d2e71253.jpg.webp",
-          "importNames": "Black"
+          "importNames": "Gray"
         },
         {
           "id": "silver",
           "name": "Серебристый",
           "hex": "#d8d8d8",
           "image": "assets/products/de17094d593cd0737412578ca472fea2ded95485b132bcb28ad769322cb2f067.jpg.webp",
-          "importNames": "Silver"
+          "importNames": "Starlight"
         }
       ],
       "storage": [
@@ -595,7 +674,9 @@
       "simModifiers": [],
       "showCatalogSpec": false,
       "markupPercent": 15,
-      "markupFixed": 0
+      "markupFixed": 0,
+      "hidden": false,
+      "importNames": ""
     },
     {
       "id": 7,
@@ -640,7 +721,22 @@
       ],
       "sizes": [],
       "stock": [],
-      "variants": [],
+      "variants": [
+        {
+          "colorId": "blue",
+          "storage": "128 ГБ Wi-Fi",
+          "simType": "",
+          "purchasePrice": 56000,
+          "price": 62900
+        },
+        {
+          "colorId": "starlight",
+          "storage": "128 ГБ Wi-Fi",
+          "simType": "",
+          "purchasePrice": 55000,
+          "price": 61900
+        }
+      ],
       "images": [
         "assets/products/250b8d72afb240197368e55e0df086f51ad31c7079b1c3637aece404acad8d5b.jpg.webp",
         "assets/products/a49d2fbda9ab26b3adc9d42d6e82d290894eafce031a6071663abae81666ba88.jpg.webp",
@@ -651,58 +747,91 @@
       "simModifiers": [],
       "showCatalogSpec": false,
       "markupPercent": 15,
-      "markupFixed": 0
+      "markupFixed": 0,
+      "hidden": true
     },
     {
       "id": 8,
       "slug": "macbook-air-15",
-      "name": "MacBook Air 15\" M3",
+      "name": "MacBook Air 13.6\" M5",
       "category": "macbook",
       "brand": "Apple",
       "badge": null,
-      "image": "https://store.storeimages.cdn-apple.com/1/as-images.apple.com/is/mba15-midnight-select-202306?wid=400&hei=400&fmt=jpeg&qlt=90&.v=1684519210000",
-      "description": "Большой MacBook Air с чипом M3.",
+      "image": "assets/products/3d8aa1fc5ab13fc33026235a46f8b322c3ba8c14e5884eb2c758f72216422f3e.png.webp",
+      "description": "MacBook Air с чипом M5.",
       "simTypes": null,
       "colors": [
         {
-          "id": "midnight",
-          "name": "Полночь",
-          "hex": "#2a2a3a",
-          "image": ""
-        },
-        {
-          "id": "starlight",
-          "name": "Сияющая звезда",
-          "hex": "#e8e0d0",
-          "image": ""
-        },
-        {
-          "id": "silver",
+          "id": "c1783086136410",
           "name": "Серебристый",
-          "hex": "#d0d0d0",
-          "image": ""
+          "hex": "#adafb1",
+          "image": "assets/products/a7af149205b63713cb000300552babde1a82c45ea94a597210518ce3410cb09f.png.webp",
+          "importNames": "Silver"
+        },
+        {
+          "id": "c1783086174315",
+          "name": "Черный",
+          "hex": "#4a505c",
+          "image": "assets/products/dc186bf9d86c78ad53464fd8b4adc2e5533a7c3a98746614de79ea8a7f366659.png.webp",
+          "importNames": "Midnight"
+        },
+        {
+          "id": "c1783086179165",
+          "name": "Золотистый",
+          "hex": "#f4ebe2",
+          "image": "assets/products/2c5c5613f524f3f1b5dc32fe88de090b7cd9073bb1108bb27aeae96c0901737b.png.webp",
+          "importNames": "Starlight"
+        },
+        {
+          "id": "c1783086185665",
+          "name": "Голубой",
+          "hex": "#97bfd8",
+          "image": "assets/products/32874dfabcfcea954c8ddf74d0782b93b09ae0aae326ae2be399aecd7ffe10ad.png.webp",
+          "importNames": "Sky Blue"
         }
       ],
       "storage": [
         {
-          "label": "256 ГБ",
-          "price": 149990
+          "label": "16/512 ГБ"
         },
         {
-          "label": "512 ГБ",
-          "price": 169990
+          "label": "16/1000 ГБ"
+        },
+        {
+          "label": "16/2000 ГБ"
         }
       ],
-      "sizes": null,
+      "sizes": [],
       "stock": [],
-      "variants": [],
-      "images": [],
-      "coverImage": "https://store.storeimages.cdn-apple.com/1/as-images.apple.com/is/mba15-midnight-select-202306?wid=400&hei=400&fmt=jpeg&qlt=90&.v=1684519210000"
+      "variants": [
+        {
+          "colorId": "c1783086179165",
+          "storage": "16/512 ГБ",
+          "simType": "",
+          "purchasePrice": 93000,
+          "price": 103900
+        }
+      ],
+      "images": [
+        "assets/products/3d8aa1fc5ab13fc33026235a46f8b322c3ba8c14e5884eb2c758f72216422f3e.png.webp",
+        "assets/products/cb4a2c10da42d1131d35cb1697fb8607b8f795d3ea5ea53c0de393a832d6c617.png.webp",
+        "assets/products/a7af149205b63713cb000300552babde1a82c45ea94a597210518ce3410cb09f.png.webp",
+        "assets/products/b87009bf2fa8da80983e0c04171b7bf0a3e46cbcd60f4d0575e27f6b667ba68e.png.webp",
+        "assets/products/5a3feeb5e7fe3c3b4bd071c35937ae7faa6231dee76eb4e4ff661c6d23e66774.png.webp",
+        "assets/products/c5fc1f8f0edc2adbd015ec5d5136172fee11e3a816c5b2b20dec6ca79696f6b2.png.webp"
+      ],
+      "coverImage": "assets/products/3d8aa1fc5ab13fc33026235a46f8b322c3ba8c14e5884eb2c758f72216422f3e.png.webp",
+      "simModifiers": [],
+      "showCatalogSpec": false,
+      "hidden": false,
+      "importNames": "MacBook Air 13 M5",
+      "markupPercent": 15,
+      "markupFixed": 0
     },
     {
       "id": 9,
       "slug": "apple-watch-series-10",
-      "name": "Apple Watch Series 10",
+      "name": "Watch Series 10",
       "category": "apple-watch",
       "brand": "Apple",
       "badge": null,
@@ -739,12 +868,10 @@
       ],
       "sizes": [
         {
-          "label": "42 мм",
-          "price": 39990
+          "label": "42 мм"
         },
         {
-          "label": "46 мм",
-          "price": 44990
+          "label": "46 мм"
         }
       ],
       "stock": [],
@@ -757,37 +884,45 @@
       "simModifiers": [],
       "showCatalogSpec": false,
       "markupPercent": 15,
-      "markupFixed": 0
+      "markupFixed": 0,
+      "hidden": false,
+      "importNames": ""
     },
     {
       "id": 10,
       "slug": "airpods-pro-2",
-      "name": "AirPods Pro 2",
+      "name": "AirPods Pro 2 Type-C",
       "category": "airpods",
       "brand": "Apple",
       "badge": "Хит",
       "image": "https://store.storeimages.cdn-apple.com/1/as-images.apple.com/is/MQD83?wid=400&hei=400&fmt=jpeg&qlt=90&.v=1660803972361",
-      "description": "AirPods Pro с активным шумоподавлением.",
+      "description": "AirPods Pro 2 с активным шумоподавлением. С разъемом для зарядки Type-C",
       "simTypes": null,
-      "colors": [
-        {
-          "id": "white",
-          "name": "Белый",
-          "hex": "#f5f5f5",
-          "image": ""
-        }
-      ],
+      "colors": [],
       "storage": [
         {
-          "label": "Стандарт",
-          "price": 24990
+          "label": "Стандарт"
         }
       ],
-      "sizes": null,
+      "sizes": [],
       "stock": [],
       "variants": [],
-      "images": [],
-      "coverImage": "https://store.storeimages.cdn-apple.com/1/as-images.apple.com/is/MQD83?wid=400&hei=400&fmt=jpeg&qlt=90&.v=1660803972361"
+      "images": [
+        "https://store.storeimages.cdn-apple.com/1/as-images.apple.com/is/MQD83?wid=400&hei=400&fmt=jpeg&qlt=90&.v=1660803972361",
+        "assets/products/optimize.webp",
+        "assets/products/optimize__2_.webp",
+        "assets/products/optimize__1_.webp",
+        "assets/products/optimize__3_.webp",
+        "assets/products/optimize__4_.webp",
+        "assets/products/optimize__5_.webp"
+      ],
+      "coverImage": "https://store.storeimages.cdn-apple.com/1/as-images.apple.com/is/MQD83?wid=400&hei=400&fmt=jpeg&qlt=90&.v=1660803972361",
+      "simModifiers": [],
+      "showCatalogSpec": false,
+      "hidden": false,
+      "importNames": "AirPods Pro 2 Type-C",
+      "markupPercent": 20,
+      "markupFixed": 0
     },
     {
       "id": 12,
@@ -842,7 +977,36 @@
       ],
       "sizes": [],
       "stock": [],
-      "variants": [],
+      "variants": [
+        {
+          "colorId": "black",
+          "storage": "1 ТБ",
+          "simType": "",
+          "purchasePrice": 70000,
+          "price": 78900
+        },
+        {
+          "colorId": "gray",
+          "storage": "256 ГБ",
+          "simType": "",
+          "purchasePrice": 63500,
+          "price": 70900
+        },
+        {
+          "colorId": "silver",
+          "storage": "256 ГБ",
+          "simType": "",
+          "purchasePrice": 63500,
+          "price": 70900
+        },
+        {
+          "colorId": "black",
+          "storage": "256 ГБ",
+          "simType": "",
+          "purchasePrice": 63500,
+          "price": 70900
+        }
+      ],
       "images": [
         "assets/products/2f23b95eec969a45ebe58b843b715fe30341aeb9f5dbb13ae1408c233a0e373e.jpg.webp",
         "assets/products/03cf262834f3523878247b4f0f621401db5e63e20e7a50e14d3d4ebd851dd352.jpg.webp",
@@ -907,7 +1071,15 @@
       ],
       "sizes": [],
       "stock": [],
-      "variants": [],
+      "variants": [
+        {
+          "colorId": "silver",
+          "storage": "256 ГБ",
+          "simType": "",
+          "purchasePrice": 59000,
+          "price": 65900
+        }
+      ],
       "images": [
         "assets/products/54312ffdebd4e730492f5c0790df2d40fc448aa31ca0a3b33552ecf4913a383d.jpg.webp",
         "assets/products/e34f7053d67246d18a8e943f2f1d8ffe81d0e062709c05929cd67f5705f7db10.jpg.webp",
@@ -925,7 +1097,7 @@
     {
       "id": 14,
       "slug": "samsung-galaxy-s26",
-      "name": "Samsung Galaxy S26",
+      "name": "Galaxy S26",
       "category": "samsung",
       "brand": "Samsung",
       "badge": "Новинка",
@@ -988,7 +1160,8 @@
       "showCatalogSpec": false,
       "markupPercent": 15,
       "markupFixed": 0,
-      "importNames": "Samsung Galaxy S26, Galaxy S26"
+      "importNames": "Samsung Galaxy S26, Galaxy S26",
+      "hidden": false
     },
     {
       "id": 15,
@@ -1054,6 +1227,27 @@
           "simType": "",
           "purchasePrice": 23700,
           "price": 27900
+        },
+        {
+          "colorId": "gray",
+          "storage": "47 мм",
+          "simType": "",
+          "purchasePrice": 25000,
+          "price": 27900
+        },
+        {
+          "colorId": "blue",
+          "storage": "47 мм",
+          "simType": "",
+          "purchasePrice": 24800,
+          "price": 27900
+        },
+        {
+          "colorId": "white",
+          "storage": "47 мм",
+          "simType": "",
+          "purchasePrice": 23700,
+          "price": 26900
         }
       ],
       "images": [
@@ -1070,35 +1264,36 @@
     {
       "id": 16,
       "slug": "samsung-galaxy-watch-8-classic",
-      "name": "Samsung Galaxy Watch 8 Classic",
+      "name": "Galaxy Watch 8",
       "category": "galaxy-watch",
       "brand": "Samsung",
       "badge": null,
-      "image": "https://images.samsung.com/is/image/samsung/assets/ru/watches/galaxy-watch7/images/galaxy-watch7-silver-front.png",
-      "description": "Galaxy Watch 8 Classic · 46 мм · White · LTE. Вращающийся безель и классический дизайн.",
+      "image": "assets/products/397e1c5f70ecc7041b6ef06525732a8fa723e41c48f1c030b7a6d300caa19f4c.jpg.webp",
+      "description": "Galaxy Watch 8 · 46 мм · White · LTE. Вращающийся безель и классический дизайн.",
       "simTypes": null,
       "colors": [
         {
           "id": "white",
-          "name": "White",
+          "name": "Серебристый",
           "hex": "#f2f2f2",
-          "priceAdd": 0,
-          "image": ""
-        }
-      ],
-      "storage": [
-        {
-          "label": "LTE",
-          "price": 44990
+          "image": "assets/products/a572760ee36b93bbfbf8e6e0d7cc9b936f218b55a78ca3368855d329f9167aba.jpg.webp",
+          "importNames": "White"
         },
         {
-          "label": "Стандарт"
+          "id": "c1783087991795",
+          "name": "Серый",
+          "hex": "#000000",
+          "image": "assets/products/46b58488e6c7d91ee51b2e7947a4aee49062d2125d53bcb31d42e91b8c66ac4b.jpg.webp",
+          "importNames": "Graphite"
         }
       ],
+      "storage": [],
       "sizes": [
         {
-          "label": "46 мм",
-          "price": 0
+          "label": "40 мм"
+        },
+        {
+          "label": "44 мм"
         }
       ],
       "stock": [],
@@ -1111,38 +1306,56 @@
           "price": 22900
         }
       ],
-      "images": [],
-      "coverImage": "https://images.samsung.com/is/image/samsung/assets/ru/watches/galaxy-watch7/images/galaxy-watch7-silver-front.png"
+      "images": [
+        "assets/products/397e1c5f70ecc7041b6ef06525732a8fa723e41c48f1c030b7a6d300caa19f4c.jpg.webp",
+        "assets/products/a572760ee36b93bbfbf8e6e0d7cc9b936f218b55a78ca3368855d329f9167aba.jpg.webp",
+        "assets/products/f19999b45e7e26f57d18d57d3e5e47442981bcd0e5f4436813d05f36447da6b7.jpg.webp",
+        "assets/products/1d3f5ff157653bdb53cd186fc28c037ab1ee8858aeb4f67806f17a5370588572.jpg.webp",
+        "assets/products/618088f4a8b1de10b910d60d6467f71cca6697240e11b5b97e5be3575b0c9ebf.jpg.webp",
+        "assets/products/17a131c44b2c5fd609054e32fe6f728ea03288af2f4a35f040fe0d0feb02bf22.jpg.webp",
+        "assets/products/5e8f4dcbe3edfce42a58398bc33e9138d71d82e84bd135128e7c179037b1cb8c.jpg.webp",
+        "assets/products/de5176f495002196a21cc82dc474ce7501241e1b6bc27732c5dec9047ffb2fce.jpg.webp",
+        "assets/products/35f7f056957976500352209843e4e128f04736bf3377c1312c3457553e95d4ce.jpg.webp",
+        "assets/products/87094ea8f4b915e7f4688c4751f7971fb47976d6d0b05930e0c9431cc5741c3d.jpg.webp"
+      ],
+      "coverImage": "assets/products/397e1c5f70ecc7041b6ef06525732a8fa723e41c48f1c030b7a6d300caa19f4c.jpg.webp",
+      "simModifiers": [],
+      "showCatalogSpec": false,
+      "hidden": false,
+      "importNames": "Watch 8",
+      "markupPercent": 15,
+      "markupFixed": 0
     },
     {
       "id": 17,
       "slug": "samsung-galaxy-watch-8",
-      "name": "Samsung Galaxy Watch 8",
+      "name": "Galaxy Watch 8 Classic",
       "category": "galaxy-watch",
       "brand": "Samsung",
       "badge": null,
-      "image": "https://images.samsung.com/is/image/samsung/assets/ru/watches/galaxy-watch7/images/galaxy-watch7-green-front.png",
-      "description": "Galaxy Watch 8 · 40 мм · Graphite. Лёгкие умные часы на каждый день.",
+      "image": "assets/products/051b65b28f4ae158d07f1c5bda78a0b430f9ebc9b82dab251d845d4da7fab26e.jpg.webp",
+      "description": "Galaxy Watch 8 Classic · 40 мм · Graphite. Лёгкие умные часы на каждый день.",
       "simTypes": null,
       "colors": [
         {
           "id": "graphite",
-          "name": "Graphite",
+          "name": "Серебристый",
           "hex": "#3d4248",
-          "priceAdd": 0,
-          "image": ""
-        }
-      ],
-      "storage": [
+          "image": "assets/products/6d7306ff76147d45b306dc108dcc619e656339f791194271fffb31f151ed84a5.jpg.webp",
+          "importNames": "Graphite"
+        },
         {
-          "label": "Стандарт",
-          "price": 34990
+          "id": "c1783087514377",
+          "name": "Белый",
+          "hex": "#ffffff",
+          "image": "assets/products/051b65b28f4ae158d07f1c5bda78a0b430f9ebc9b82dab251d845d4da7fab26e.jpg.webp",
+          "importNames": "White"
         }
       ],
+      "storage": [],
       "sizes": [
         {
-          "label": "40 мм",
-          "price": 0
+          "label": "46 мм"
         }
       ],
       "stock": [],
@@ -1155,8 +1368,21 @@
           "price": 14900
         }
       ],
-      "images": [],
-      "coverImage": "https://images.samsung.com/is/image/samsung/assets/ru/watches/galaxy-watch7/images/galaxy-watch7-green-front.png"
+      "images": [
+        "assets/products/051b65b28f4ae158d07f1c5bda78a0b430f9ebc9b82dab251d845d4da7fab26e.jpg.webp",
+        "assets/products/1ef307c53a69253c99e894224461dbfcd357fdb183c4564d808a97605c8741bd.jpg.webp",
+        "assets/products/112d20651d22ca81a53f1a4a0d4f8fe0142e7e4b298fd8b321147a46eff8559f.jpg.webp",
+        "assets/products/5647706fadf29d6d2e2324cb7456c98d0064c5a98dd8c23b3b3ccce53ae8c3b8.jpg.webp",
+        "assets/products/6cbff3272452d0010fdb1f428014948881be31193819d058419286cc58b52c24.jpg.webp",
+        "assets/products/f2e1ce0901c38c5743aa48faf5c663acff121a47adb4daee048e3b7c940a74aa.jpg.webp"
+      ],
+      "coverImage": "assets/products/051b65b28f4ae158d07f1c5bda78a0b430f9ebc9b82dab251d845d4da7fab26e.jpg.webp",
+      "simModifiers": [],
+      "showCatalogSpec": false,
+      "hidden": false,
+      "importNames": "Watch 8 Classic",
+      "markupPercent": 20,
+      "markupFixed": 0
     },
     {
       "id": 18,
@@ -1165,7 +1391,7 @@
       "category": "xiaomi",
       "brand": "Xiaomi",
       "badge": "Хит",
-      "image": "assets/logo.png",
+      "image": "assets/products/64f9be7e7281955974fbf646d242cd502f2cf64661e665752d863f4b0845edd1.jpg.webp",
       "description": "Флагман Xiaomi с камерой Leica и процессором Snapdragon 8 Elite.",
       "simTypes": null,
       "colors": [
@@ -1173,49 +1399,40 @@
           "id": "black",
           "name": "Чёрный",
           "hex": "#1a1a1a",
-          "priceAdd": 0,
-          "image": ""
+          "image": "assets/products/3e558d37b2494168c1e3e4d51e8fe393722aab733bc58b5d66a6ee0211bae048.jpg.webp",
+          "importNames": "Black"
         },
         {
           "id": "white",
           "name": "Белый",
-          "hex": "#f5f5f5",
-          "priceAdd": 0,
-          "image": ""
+          "hex": "#f7f7f7",
+          "image": "assets/products/490263dea071fe2b6827767eb86aad5e11d1f1be5678d9b0a27522ff5be88e35.jpg.webp",
+          "importNames": "White"
         },
         {
           "id": "green",
           "name": "Зелёный",
-          "hex": "#5a7a62",
-          "priceAdd": 0,
-          "image": ""
+          "hex": "#a7cea1",
+          "image": "assets/products/64f9be7e7281955974fbf646d242cd502f2cf64661e665752d863f4b0845edd1.jpg.webp",
+          "importNames": "Green"
         },
         {
           "id": "gold",
-          "name": "Золотой",
-          "hex": "#c9a86c",
-          "priceAdd": 1000,
-          "image": ""
+          "name": "Серебристый",
+          "hex": "#c4c1c6",
+          "image": "assets/products/fc89007dd1c0c194a25d91a7f6854e4c549bd816d6ee10aa108d7424a41d49e2.jpg.webp",
+          "importNames": "Silver"
         }
       ],
       "storage": [
         {
-          "label": "256 ГБ",
-          "price": 59990
-        },
-        {
-          "label": "512 ГБ",
-          "price": 64990
-        },
-        {
-          "label": "1 ТБ",
-          "price": 74990
-        },
-        {
           "label": "12/256 ГБ"
+        },
+        {
+          "label": "12/512 ГБ"
         }
       ],
-      "sizes": null,
+      "sizes": [],
       "stock": [],
       "variants": [
         {
@@ -1226,8 +1443,25 @@
           "price": 58900
         }
       ],
-      "images": [],
-      "coverImage": "assets/logo.png"
+      "images": [
+        "assets/products/64f9be7e7281955974fbf646d242cd502f2cf64661e665752d863f4b0845edd1.jpg.webp",
+        "assets/products/1de955bac1feff8911d9aa3af3f7ed5d3833b1d7d2cac41f8005a73940a0e9d0.jpg.webp",
+        "assets/products/986a25361e3e43ad6252981509ca10160de878311f88f68b4d643cc446052890.jpg.webp",
+        "assets/products/fc4ecd304b4d8680aa2239f28b96d942fb66d94bfb6c2462f19346d72e12edaf.jpg.webp",
+        "assets/products/a6d5ba3326760501c781b59a0f51e3f0fbb9403f6f6b76637d4d5d64177bff07.jpg.webp",
+        "assets/products/fa7759a352591fdc7173e2a3233ac8de9225873a0aed9f3307765b95c7b11bfd.jpg.webp",
+        "assets/products/b7f2de0248a1cf4c5b6848ab6457d75b9c5b2dab4ca03053e5a4adfd3187c992.jpg.webp",
+        "assets/products/580823513f1d182a368bd19e43eb55f08377376020919aa727f625ec65162253.jpg.webp",
+        "assets/products/c7426447e459633de5253e163fb0dd0f0ae430b9098ed5d01b9d5f7250e2b761.jpg.webp",
+        "assets/products/d3e235364778e56d0b1dcee283025d783568a96ebbac84b6a92901d76848b83c.jpg.webp"
+      ],
+      "coverImage": "assets/products/64f9be7e7281955974fbf646d242cd502f2cf64661e665752d863f4b0845edd1.jpg.webp",
+      "simModifiers": [],
+      "showCatalogSpec": false,
+      "hidden": false,
+      "importNames": "",
+      "markupPercent": 11.4,
+      "markupFixed": 0
     },
     {
       "id": 45,
@@ -1285,28 +1519,28 @@
           "storage": "12/512 ГБ",
           "simType": "",
           "purchasePrice": 86000,
-          "price": 111900
+          "price": 95900
         },
         {
           "colorId": "sky-blue",
           "storage": "12/512 ГБ",
           "simType": "",
-          "purchasePrice": 88000,
-          "price": 114900
+          "purchasePrice": 85000,
+          "price": 94900
         },
         {
           "colorId": "black",
           "storage": "12/256 ГБ",
           "simType": "",
           "purchasePrice": 70500,
-          "price": 91900
+          "price": 78900
         },
         {
           "colorId": "sky-blue",
           "storage": "12/256 ГБ",
           "simType": "",
           "purchasePrice": 70500,
-          "price": 91900
+          "price": 78900
         },
         {
           "colorId": "default",
@@ -1337,6 +1571,677 @@
       "markupPercent": 30,
       "markupFixed": 0,
       "showCatalogSpec": false
+    },
+    {
+      "id": 46,
+      "slug": "product-46",
+      "name": "iPad Air 11 M4 (2026) Wi-Fi",
+      "category": "ipad",
+      "brand": "Apple",
+      "badge": null,
+      "image": "assets/products/f7b433ecf3686d7c895b860459b17cdc9a51097de53dc48806b8bd717b474149.png.webp",
+      "description": "Планшет Apple iPad Air с чипом M4 сочетает в себе мощность, портативность и инновационные технологии. Он понравится тем пользователям, которые хотят получить максимально универсальное устройство для работы, учебы, творчества и развлечений.",
+      "simTypes": null,
+      "simModifiers": [],
+      "colors": [
+        {
+          "id": "black",
+          "name": "Серый",
+          "hex": "#1a1a1a",
+          "image": "assets/products/40e42f27181a55203af3ce4e5ddb3003d7233ad47f10f642495297b79b7840c2.png.webp",
+          "importNames": "Gray"
+        },
+        {
+          "id": "c1783085280329",
+          "name": "Синий",
+          "hex": "#000000",
+          "image": "assets/products/3e7505b05970151f527b1b1c71d0169a6f27db99aa3bedb53157901fd9d966c4.png.webp",
+          "importNames": "Blue"
+        },
+        {
+          "id": "c1783085291113",
+          "name": "Бежевый",
+          "hex": "#000000",
+          "image": "assets/products/352b9521725c3b41993ba5ebf68c4c190e7b3e46ed5f3a66ca16617ca8f507bf.jpg.webp",
+          "importNames": "Starlight"
+        },
+        {
+          "id": "c1783085562227",
+          "name": "Фиолетовый",
+          "hex": "#000000",
+          "image": "assets/products/f7b433ecf3686d7c895b860459b17cdc9a51097de53dc48806b8bd717b474149.png.webp",
+          "importNames": ""
+        }
+      ],
+      "storage": [
+        {
+          "label": "128 ГБ"
+        },
+        {
+          "label": "256 ГБ"
+        },
+        {
+          "label": "512 ГБ"
+        },
+        {
+          "label": "1024 ГБ"
+        }
+      ],
+      "sizes": [],
+      "stock": [],
+      "images": [
+        "assets/products/f7b433ecf3686d7c895b860459b17cdc9a51097de53dc48806b8bd717b474149.png.webp",
+        "assets/products/b7f312c9564813fed4ef035a65cddcb459d13cea013572a0fc62bfbebfe21a61.png.webp",
+        "assets/products/501c8775fef32c02a44e90dab45f556c7f6c993a93302224f720f5db16085041.png.webp",
+        "assets/products/a0a724fe3b2f113416ee75878f440ae503c898edc89203caa938357ace7f4ef6.png.webp"
+      ],
+      "variants": [
+        {
+          "colorId": "black",
+          "storage": "128 ГБ Wi-Fi",
+          "simType": "",
+          "purchasePrice": 54500,
+          "price": 60900
+        },
+        {
+          "colorId": "c1783085280329",
+          "storage": "128 ГБ Wi-Fi",
+          "simType": "",
+          "purchasePrice": 56000,
+          "price": 62900
+        },
+        {
+          "colorId": "c1783085291113",
+          "storage": "128 ГБ Wi-Fi",
+          "simType": "",
+          "purchasePrice": 55000,
+          "price": 61900
+        }
+      ],
+      "markupPercent": 15,
+      "markupFixed": 0,
+      "showCatalogSpec": false,
+      "hidden": false,
+      "importNames": "iPad Air 11 M4 (2026)",
+      "coverImage": "assets/products/f7b433ecf3686d7c895b860459b17cdc9a51097de53dc48806b8bd717b474149.png.webp"
+    },
+    {
+      "id": 47,
+      "slug": "product-47",
+      "name": "iPad 11 (2025) Wi-FI",
+      "category": "ipad",
+      "brand": "Apple",
+      "badge": null,
+      "image": "assets/products/7d0b6c1deca9cfd4d43fd5055d0a05e2496a5fa91e9e9de90d05aa9bcd506176.jpg.webp",
+      "description": "Теперь с супербыстрым чипом A16 и большим объемом встроенной памяти Apple iPad (11th Gen) стал еще более функциональным, чем когда-либо. Выполняйте задания, самовыражайтесь и оставайтесь погруженными в любимые занятия — все это на потрясающем 11-дюймовом дисплее Liquid Retina.",
+      "simTypes": null,
+      "simModifiers": [],
+      "colors": [
+        {
+          "id": "c1783085351679",
+          "name": "Желтый",
+          "hex": "#f4ef57",
+          "image": "assets/products/c8de1288c6f17c846082cd9ef333dd564dfa1ab48bbc86b4facc3b976e43f676.jpg.webp",
+          "importNames": "Yellow"
+        },
+        {
+          "id": "c1783085360429",
+          "name": "Розовый",
+          "hex": "#fd8197",
+          "image": "assets/products/0f34320499fd55046f4822350223b874d505d500e0d89a1e085930872efb4382.jpg.webp",
+          "importNames": "Pink"
+        },
+        {
+          "id": "c1783085366362",
+          "name": "Синий",
+          "hex": "#8daed0",
+          "image": "assets/products/e24bfe9c6224056bafeeab958c89892612a77158180c57ec78aa95e69d507ddc.jpg.webp",
+          "importNames": "Blue"
+        },
+        {
+          "id": "c1783085371712",
+          "name": "Серебристый",
+          "hex": "#e3e3e4",
+          "image": "assets/products/7d0b6c1deca9cfd4d43fd5055d0a05e2496a5fa91e9e9de90d05aa9bcd506176.jpg.webp",
+          "importNames": "Silver"
+        }
+      ],
+      "storage": [
+        {
+          "label": "128 ГБ"
+        },
+        {
+          "label": "256 ГБ"
+        },
+        {
+          "label": "512 ГБ"
+        }
+      ],
+      "sizes": [],
+      "stock": [],
+      "images": [
+        "assets/products/7d0b6c1deca9cfd4d43fd5055d0a05e2496a5fa91e9e9de90d05aa9bcd506176.jpg.webp",
+        "assets/products/518bc1eac2ce0526898f292c238f15c3554da8920b27bfc96d1ae5ba2027ce06.jpg.webp",
+        "assets/products/9ad4472c1a9bc5514c8aed684862ebdeaa1ab6f234f3bc56298fa86e112b2b66.jpg.webp",
+        "assets/products/f9ca0de7c3c3f740d8d8896e69e9392a43be5c72f207206f688839b5c83916d7.jpg.webp"
+      ],
+      "variants": [
+        {
+          "colorId": "c1783085351679",
+          "storage": "256 ГБ Wi-Fi",
+          "simType": "",
+          "purchasePrice": 39000,
+          "price": 43900
+        },
+        {
+          "colorId": "c1783085360429",
+          "storage": "256 ГБ Wi-Fi",
+          "simType": "",
+          "purchasePrice": 39000,
+          "price": 43900
+        },
+        {
+          "colorId": "c1783085366362",
+          "storage": "256 ГБ Wi-Fi",
+          "simType": "",
+          "purchasePrice": 39000,
+          "price": 43900
+        },
+        {
+          "colorId": "c1783085366362",
+          "storage": "128 ГБ Wi-Fi",
+          "simType": "",
+          "purchasePrice": 30900,
+          "price": 34900
+        },
+        {
+          "colorId": "c1783085360429",
+          "storage": "128 ГБ Wi-Fi",
+          "simType": "",
+          "purchasePrice": 31900,
+          "price": 35900
+        },
+        {
+          "colorId": "c1783085371712",
+          "storage": "128 ГБ Wi-Fi",
+          "simType": "",
+          "purchasePrice": 31400,
+          "price": 35900
+        },
+        {
+          "colorId": "c1783085351679",
+          "storage": "128 ГБ Wi-Fi",
+          "simType": "",
+          "purchasePrice": 29900,
+          "price": 33900
+        }
+      ],
+      "markupPercent": 15,
+      "markupFixed": 0,
+      "showCatalogSpec": false,
+      "hidden": false,
+      "importNames": "iPad 11 (2025)",
+      "coverImage": "assets/products/7d0b6c1deca9cfd4d43fd5055d0a05e2496a5fa91e9e9de90d05aa9bcd506176.jpg.webp"
+    },
+    {
+      "id": 48,
+      "slug": "product-48",
+      "name": "MacBook Neo 13\" A18 Pro",
+      "category": "macbook",
+      "brand": "Apple",
+      "badge": null,
+      "image": "assets/products/af8d42f73eb70f5dac8c932709cb09fa8b2445e17eeabb4e8d63834c7391376b.png.webp",
+      "description": "Ноутбук Apple MacBook Neo A18 Pro с SSD-накопителем оснащен установленной операционной системой macOS. Нейронный процессор Apple A18 Pro 6-Core и ОЗУ 8 ГБ не дают компьютеру зависать при запуске приложений для работы, учебы и общения. Модель дополнена пассивной системой охлаждения.",
+      "simTypes": null,
+      "simModifiers": [],
+      "colors": [
+        {
+          "id": "c1783086684913",
+          "name": "Желтый",
+          "hex": "#fcff52",
+          "image": "assets/products/e016a29297cd1b0c045766cb42d9d68ead559a44767e64d6a6e4856217a58607.png.webp",
+          "importNames": "Citrus"
+        },
+        {
+          "id": "c1783086713096",
+          "name": "Розовый",
+          "hex": "#e6b5b2",
+          "image": "assets/products/ae183148fe81a207ccc6736f756463a0abc1dbc1f9e801baef6a9ae17e3e75d2.png.webp",
+          "importNames": "Blush"
+        },
+        {
+          "id": "c1783086765412",
+          "name": "Серебристый",
+          "hex": "#dddee0",
+          "image": "assets/products/36311f37ef9abea0931e23bc617ec0cf8245d80e9d1f69f6be4cbcc2c679a7cb.png.webp",
+          "importNames": "Silver"
+        },
+        {
+          "id": "c1783086815762",
+          "name": "Синий",
+          "hex": "#3b455b",
+          "image": "assets/products/ea77bab7c47cd0877eb491958a3d5a100f7f80c3823d18473247b3d924a7c029.png.webp",
+          "importNames": "Indigo"
+        }
+      ],
+      "storage": [
+        {
+          "label": "8/256 ГБ"
+        },
+        {
+          "label": "8/512 ГБ с Touch ID"
+        }
+      ],
+      "sizes": [],
+      "stock": [],
+      "images": [
+        "assets/products/af8d42f73eb70f5dac8c932709cb09fa8b2445e17eeabb4e8d63834c7391376b.png.webp",
+        "assets/products/4295c227232257aa65e61325097cda0f54e7c7e0464a060c7431fa61774f7420.png.webp",
+        "assets/products/e016a29297cd1b0c045766cb42d9d68ead559a44767e64d6a6e4856217a58607.png.webp",
+        "assets/products/2f31123ea33caee5ae964a7d684f526c507e2625680ccd7c29fb3e3ac8e8e73c.png.webp"
+      ],
+      "variants": [
+        {
+          "colorId": "c1783086815762",
+          "storage": "8/512 ГБ",
+          "simType": "",
+          "purchasePrice": 66000,
+          "price": 73900
+        },
+        {
+          "colorId": "c1783086684913",
+          "storage": "8/512 ГБ",
+          "simType": "",
+          "purchasePrice": 66000,
+          "price": 73900
+        },
+        {
+          "colorId": "c1783086765412",
+          "storage": "8/512 ГБ",
+          "simType": "",
+          "purchasePrice": 66000,
+          "price": 73900
+        },
+        {
+          "colorId": "c1783086684913",
+          "storage": "8/256 ГБ",
+          "simType": "",
+          "purchasePrice": 55500,
+          "price": 61900
+        },
+        {
+          "colorId": "c1783086815762",
+          "storage": "8/256 ГБ",
+          "simType": "",
+          "purchasePrice": 55500,
+          "price": 61900
+        },
+        {
+          "colorId": "c1783086765412",
+          "storage": "8/256 ГБ",
+          "simType": "",
+          "purchasePrice": 55500,
+          "price": 61900
+        }
+      ],
+      "markupPercent": 15,
+      "markupFixed": 0,
+      "showCatalogSpec": false,
+      "hidden": false,
+      "importNames": "MacBook Neo 13\" A18 Pro",
+      "coverImage": "assets/products/af8d42f73eb70f5dac8c932709cb09fa8b2445e17eeabb4e8d63834c7391376b.png.webp"
+    },
+    {
+      "id": 49,
+      "slug": "product-49",
+      "name": "AirPods Max 2 (2026)",
+      "category": "airpods",
+      "brand": "Apple",
+      "badge": null,
+      "image": "assets/products/1ef34c825b701b5079d49c1c98a4593f726abae33045a32dda7a4e62750f4566.jpg.webp",
+      "description": "Благодаря чипу H2, AirPods Max 2 обеспечивают потрясающе детализированное и высококачественное звучание. Усилитель с высоким динамическим диапазоном (HDR) добавляет еще больший запас мощности, используемый специально разработанным драйвером, что позволяет раскрыть более насыщенные басы, более естественный вокал и точную локализацию инструментов на более широкой звуковой сцене.",
+      "simTypes": null,
+      "simModifiers": [],
+      "colors": [
+        {
+          "id": "c1783088640318",
+          "name": "Серый",
+          "hex": "#727881",
+          "image": "assets/products/1ef34c825b701b5079d49c1c98a4593f726abae33045a32dda7a4e62750f4566.jpg.webp",
+          "importNames": "Midnight"
+        },
+        {
+          "id": "c1783088648001",
+          "name": "Синий",
+          "hex": "#cfe1ed",
+          "image": "assets/products/7dd2b92806352c991b042256d4f3f1d6fbddcdea16cb1c98b3876c4e7377794a.jpg.webp",
+          "importNames": "Sky Blue"
+        },
+        {
+          "id": "c1783088850034",
+          "name": "Фиолетовый",
+          "hex": "#cec6e4",
+          "image": "assets/products/3d01e1cb4e1c818efe7759b7bbeef649fbcfe2e3b24abfe5e2c6eaa6a4f3b023.jpg.webp",
+          "importNames": "Purple"
+        },
+        {
+          "id": "c1783088910650",
+          "name": "Оранжевый",
+          "hex": "#e49570",
+          "image": "assets/products/82d209030f47309b5bcd9a21d0eaff96a5e11080a74030dc5dd61fbb04fbc987.jpg.webp",
+          "importNames": "Orange"
+        },
+        {
+          "id": "c1783088962652",
+          "name": "Бежевый",
+          "hex": "#d7c8b9",
+          "image": "assets/products/33a81f956d13018c71f6fff0d46beb770dde00c31e70b5167f07b6fc80158a9d.jpg.webp",
+          "importNames": "Starlight"
+        }
+      ],
+      "storage": [],
+      "sizes": [],
+      "stock": [],
+      "images": [
+        "assets/products/1ef34c825b701b5079d49c1c98a4593f726abae33045a32dda7a4e62750f4566.jpg.webp",
+        "assets/products/93be0c359c3ad5e24687021d3e6f1202ab7a2e7ea51f7165c21cc0196d040b32.jpg.webp",
+        "assets/products/9553694bf64cbfdc72a1f5eb12949684e2e88d518d84c1ac011e348466ebc026.jpg.webp",
+        "assets/products/4b92273c6fdb37d41f52ebeb6807a0ba6f5e5cc5f1d3b9418a0f894df90740e4.jpg.webp",
+        "assets/products/46034a8ead0690dff4b9410494a630e50c330f6d1ef5697b711cd4fc9dc4007e.jpg.webp",
+        "assets/products/466999184157029262abceb2d3ef5449ad4cdb7775b9be391710c0ffba2da126.jpg.webp"
+      ],
+      "variants": [],
+      "markupPercent": 15,
+      "markupFixed": 0,
+      "showCatalogSpec": false,
+      "hidden": false,
+      "importNames": "AirPods Max (2026)",
+      "coverImage": "assets/products/1ef34c825b701b5079d49c1c98a4593f726abae33045a32dda7a4e62750f4566.jpg.webp"
+    },
+    {
+      "id": 50,
+      "slug": "product-50",
+      "name": "Airpods Max (2024)",
+      "category": "airpods",
+      "brand": "Apple",
+      "badge": null,
+      "image": "assets/products/b876bde1a8354d3ee78b977a451cd6463aad4feec10c393ab5b4b3a2eff682a4.jpg.webp",
+      "description": "AirPods Max обеспечивают потрясающе детальный, высококачественный звук для непревзойденного прослушивания. Каждая часть специально разработанного драйвера работает над созданием звука с ультранизким искажением во всем слышимом диапазоне — так что вы услышите каждую ноту с чувством ясности.",
+      "simTypes": null,
+      "simModifiers": [],
+      "colors": [
+        {
+          "id": "c1783089106789",
+          "name": "Синий",
+          "hex": "#99adb7",
+          "image": "assets/products/b876bde1a8354d3ee78b977a451cd6463aad4feec10c393ab5b4b3a2eff682a4.jpg.webp",
+          "importNames": "Sky Blue"
+        },
+        {
+          "id": "c1783089148139",
+          "name": "Оранжевый",
+          "hex": "#b76b48",
+          "image": "assets/products/346c2596bad76f467536100deebc14f743bc32010a0d4368de49c2d0188be887.jpg.webp",
+          "importNames": "Orange"
+        },
+        {
+          "id": "c1783089184572",
+          "name": "Бежевый",
+          "hex": "#b5a697",
+          "image": "assets/products/eeba261a0615a1a75f1b96c6090243d522bde827124aa56eb5031b08091dc39c.jpg.webp",
+          "importNames": "Starlight"
+        },
+        {
+          "id": "c1783089216056",
+          "name": "Фиолетовый",
+          "hex": "#b7b0cc",
+          "image": "assets/products/ca4bf5a2f1029187f3f82df463868f562d215a6585b1e9f80ffecbd2586b709e.jpg.webp",
+          "importNames": "Purple"
+        },
+        {
+          "id": "c1783089238656",
+          "name": "Черный",
+          "hex": "#000000",
+          "image": "assets/products/34221a4e778c3e28d5bc498e73822ec9074b0363082809b8688d745f41c3aaf4.jpg.webp",
+          "importNames": "Midnight"
+        }
+      ],
+      "storage": [],
+      "sizes": [],
+      "stock": [],
+      "images": [
+        "assets/products/b876bde1a8354d3ee78b977a451cd6463aad4feec10c393ab5b4b3a2eff682a4.jpg.webp",
+        "assets/products/f2c4f7fcf821ef85e97df098ed0357112fe319df0a41a224fc654e268836a403.jpg.webp",
+        "assets/products/983ff25d5312c5a522a80e5259aaf34130af9bdc30888ac5a0654d134a3bfc5c.jpg.webp"
+      ],
+      "variants": [],
+      "markupPercent": 15,
+      "markupFixed": 0,
+      "showCatalogSpec": false,
+      "hidden": false,
+      "importNames": "Airpods Max (2024)",
+      "coverImage": "assets/products/b876bde1a8354d3ee78b977a451cd6463aad4feec10c393ab5b4b3a2eff682a4.jpg.webp"
+    },
+    {
+      "id": 51,
+      "slug": "product-51",
+      "name": "AirPods Pro 3",
+      "category": "airpods",
+      "brand": "Apple",
+      "badge": null,
+      "image": "assets/products/optimize.webp",
+      "description": "AirPods Pro 3 с улучшенной акустической изоляцией автоматически адаптируются к вашим предпочтениям и окружающей обстановке. А обновленные микрофоны ещё больше устраняют нежелательные звуки. Вы слышите только то, что хотите в беспрецедентном аудио-ощущении.",
+      "simTypes": null,
+      "simModifiers": [],
+      "colors": [],
+      "storage": [],
+      "sizes": [],
+      "stock": [],
+      "images": [
+        "assets/products/optimize.webp",
+        "assets/products/optimize__4_.webp",
+        "assets/products/optimize__3_.webp",
+        "assets/products/optimize__1_.webp",
+        "assets/products/optimize__2_.webp"
+      ],
+      "variants": [],
+      "markupPercent": 15,
+      "markupFixed": 0,
+      "showCatalogSpec": false,
+      "hidden": false,
+      "importNames": "AirPods Pro 3",
+      "coverImage": "assets/products/optimize.webp"
+    },
+    {
+      "id": 52,
+      "slug": "product-52",
+      "name": "Цветные AirPods Pro 3",
+      "category": "airpods",
+      "brand": "Apple",
+      "badge": null,
+      "image": "",
+      "description": "",
+      "simTypes": null,
+      "simModifiers": [],
+      "colors": [
+        {
+          "id": "c1783089564389",
+          "name": "Оранжевый",
+          "hex": "#888888",
+          "image": "",
+          "importNames": "(Orange)"
+        },
+        {
+          "id": "c1783089570305",
+          "name": "Розовое золото",
+          "hex": "#000000",
+          "image": "",
+          "importNames": "(Розовое золото)"
+        },
+        {
+          "id": "c1783089579372",
+          "name": "Тиффани",
+          "hex": "#000000",
+          "image": "",
+          "importNames": "(Тиффани)"
+        },
+        {
+          "id": "c1783089585472",
+          "name": "Красное",
+          "hex": "#000000",
+          "image": "",
+          "importNames": "(Красное)"
+        },
+        {
+          "id": "c1783089591921",
+          "name": "Альпийский зеленый",
+          "hex": "#000000",
+          "image": "",
+          "importNames": "(Альпийский зеленый)"
+        }
+      ],
+      "storage": [
+        {
+          "label": "128 ГБ"
+        }
+      ],
+      "sizes": [],
+      "stock": [],
+      "images": [],
+      "variants": [],
+      "markupPercent": 15,
+      "markupFixed": 0,
+      "showCatalogSpec": false,
+      "hidden": true,
+      "importNames": "Цветные Apple AirPods Pro 3",
+      "coverImage": ""
+    },
+    {
+      "id": 53,
+      "slug": "product-53",
+      "name": "AirPods 4 ANC",
+      "category": "airpods",
+      "brand": "Apple",
+      "badge": null,
+      "image": "assets/products/7fa1971c830c849593dfd2293d7d3479944f5a827c477ad9292ede4a2f0b7663.jpg.webp",
+      "description": "Наушники TWS Apple Airpods 4 ANC имеют защищенную конструкцию по стандарту IP54. Они не боятся воздействия пыли, влаги, брызг воды и атмосферных осадков. Эргономичная форма вкладышей обеспечивает комфорт в использовании.",
+      "simTypes": null,
+      "simModifiers": [],
+      "colors": [],
+      "storage": [],
+      "sizes": [],
+      "stock": [],
+      "images": [
+        "assets/products/7fa1971c830c849593dfd2293d7d3479944f5a827c477ad9292ede4a2f0b7663.jpg.webp",
+        "assets/products/6fad4fca357b7f5a1235c34ee6595981a4ade3b51393fe6c760eba4897ffdbd3.jpg.webp",
+        "assets/products/6a4a2d395a30614418940f41b245f457806add3c917c3c2afbcfe24f3c01a531.jpg.webp",
+        "assets/products/47e77751c0afea17c7e93c6e35abb5cc82833b3e160059f8e7392ac8eabb744c.jpg.webp",
+        "assets/products/568f2cc4f89abf1d831afaf7b6e8f53e822b3db78cb59f2ffcffc442a41a19b8.jpg.webp"
+      ],
+      "variants": [],
+      "markupPercent": 15,
+      "markupFixed": 0,
+      "showCatalogSpec": false,
+      "hidden": false,
+      "importNames": "Apple AirPods 4 ANC",
+      "coverImage": "assets/products/7fa1971c830c849593dfd2293d7d3479944f5a827c477ad9292ede4a2f0b7663.jpg.webp"
+    },
+    {
+      "id": 54,
+      "slug": "product-54",
+      "name": "AirPods 4",
+      "category": "airpods",
+      "brand": "Apple",
+      "badge": null,
+      "image": "assets/products/7fa1971c830c849593dfd2293d7d3479944f5a827c477ad9292ede4a2f0b7663.jpg.webp",
+      "description": "Наушники TWS Apple Airpods 4 имеют защищенную конструкцию по стандарту IP54. Они не боятся воздействия пыли, влаги, брызг воды и атмосферных осадков. Эргономичная форма вкладышей обеспечивает комфорт в использовании.",
+      "simTypes": null,
+      "simModifiers": [],
+      "colors": [],
+      "storage": [],
+      "sizes": [],
+      "stock": [],
+      "images": [
+        "assets/products/7fa1971c830c849593dfd2293d7d3479944f5a827c477ad9292ede4a2f0b7663.jpg.webp",
+        "assets/products/6a4a2d395a30614418940f41b245f457806add3c917c3c2afbcfe24f3c01a531.jpg.webp",
+        "assets/products/47e77751c0afea17c7e93c6e35abb5cc82833b3e160059f8e7392ac8eabb744c.jpg.webp",
+        "assets/products/6fad4fca357b7f5a1235c34ee6595981a4ade3b51393fe6c760eba4897ffdbd3.jpg.webp",
+        "assets/products/568f2cc4f89abf1d831afaf7b6e8f53e822b3db78cb59f2ffcffc442a41a19b8.jpg.webp"
+      ],
+      "variants": [],
+      "markupPercent": 15,
+      "markupFixed": 0,
+      "showCatalogSpec": false,
+      "hidden": false,
+      "importNames": "Apple AirPods 4",
+      "coverImage": "assets/products/7fa1971c830c849593dfd2293d7d3479944f5a827c477ad9292ede4a2f0b7663.jpg.webp"
+    },
+    {
+      "id": 55,
+      "slug": "product-55",
+      "name": "Watch Series 11",
+      "category": "apple-watch",
+      "brand": "Apple",
+      "badge": null,
+      "image": "assets/products/93d7db5f16639554ac08b80932c14d39d7a54b580a49cd683b2426e92242abc9.jpg.webp",
+      "description": "Смарт-часы Apple Watch Series 11 42mm выполнены в серебристом алюминиевом корпусе. Водонепроницаемость 5 Бар гарантирует устойчивость к повышенной влажности, брызгам воды и атмосферным осадкам. В смарт-часах установлен квадратный сенсорный дисплей диагональю 1.77 дюйма. Панель OLED с яркостью до 2000 Кд/м² обеспечивает контрастное четкое изображение при разных условиях внешней освещенности.",
+      "simTypes": null,
+      "simModifiers": [],
+      "colors": [
+        {
+          "id": "c1783090242748",
+          "name": "Серебристый/фиолетовый",
+          "hex": "#cbcbcd",
+          "image": "assets/products/93d7db5f16639554ac08b80932c14d39d7a54b580a49cd683b2426e92242abc9.jpg.webp",
+          "importNames": "Silver Aluminum Purple Fog"
+        },
+        {
+          "id": "c1783090554849",
+          "name": "Серый/черный",
+          "hex": "#797876",
+          "image": "assets/products/dbc982c2a62a3b76d709f10be04ea41e1acb4dd841505e5e50c16c56ed4ee144.png.webp",
+          "importNames": "Space Gray Aluminum Black, Space Gray"
+        },
+        {
+          "id": "c1783090651883",
+          "name": "Золотистый/бежевый",
+          "hex": "#dabaab",
+          "image": "assets/products/692728ee7c120eb8b7d07fcdac76b26ac5a20a6810e22af2f2f444f0b7662d86.jpg.webp",
+          "importNames": "Rose Gold Aluminum Light Blush"
+        },
+        {
+          "id": "c1783090702702",
+          "name": "Черный",
+          "hex": "#000000",
+          "image": "assets/products/03d7e9952d8babf305f404462707dc317f285d1cde577fa8714f87af804ddbc8.jpg.webp",
+          "importNames": "Jet Black Black Sport Band, Jet Black"
+        }
+      ],
+      "storage": [],
+      "sizes": [
+        {
+          "label": "42 мм"
+        }
+      ],
+      "stock": [],
+      "images": [
+        "assets/products/93d7db5f16639554ac08b80932c14d39d7a54b580a49cd683b2426e92242abc9.jpg.webp",
+        "assets/products/9ef5334da6f428b1892f87cd862daa32773362236065eb49e53fd955ca786e00.jpg.webp",
+        "assets/products/4d0be2fb816190c7dd854b6840983185c8b295e49c2e5ce42c417f373f734ffa.jpg.webp",
+        "assets/products/819e7463fb8d15160285adcb989549de42e456d1f5ee47615b7cbb5e232a3754.jpg.webp",
+        "assets/products/de089163ca55cae690a1f1d0f0b289b24275f40fbb8f95632d0fe6f490998929.jpg.webp",
+        "assets/products/ec21877139688fc2b9f71acf40c3cd1286aa0552ace7ae26baabcb624de9e79a.jpg.webp",
+        "assets/products/f0cfab465c8e8ce02ec356d031f1122fca1e9392367192c63d9453514f0d08ba.jpg.webp",
+        "assets/products/52e41ae038d99b86eb50b3c0343606bd624e3342608bd09093297fc45e97e78b.jpg.webp",
+        "assets/products/c83f65d13771799451cccc4c58da2cdfed21f89e2b610341a1de432c47d6e12d.jpg.webp"
+      ],
+      "variants": [],
+      "markupPercent": 15,
+      "markupFixed": 0,
+      "showCatalogSpec": false,
+      "hidden": false,
+      "importNames": "S11",
+      "coverImage": "assets/products/93d7db5f16639554ac08b80932c14d39d7a54b580a49cd683b2426e92242abc9.jpg.webp"
     }
   ]
 }
