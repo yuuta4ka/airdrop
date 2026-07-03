@@ -1,5 +1,5 @@
 import { calcRetailFromPurchase } from './site/js/pricing.js'
-import { CATALOG_SECTIONS, filterCatalogEntries, extractPriceEntries } from './price-pdf-parser.mjs'
+import { CATALOG_SECTIONS, filterCatalogEntries, extractPriceEntries, resolveCatalogSection } from './price-pdf-parser.mjs'
 
 const COLOR_ALIASES = {
   silver: ['silver', 'серебро', 'серебристый', 'starlight', 'сияющая звезда', 'whitesilver', 'silvershadow'],
@@ -40,20 +40,32 @@ function normalizeSim(raw) {
 }
 
 function findColorId(name, colors) {
-  const t = name.toLowerCase()
+  const t = name.toLowerCase().trim()
+  if (!t) return null
+  let best = null
+  let bestLen = 0
   for (const col of colors) {
     const aliases = [col.name, col.id, ...(col.importNames ? col.importNames.split(/[,;]+/) : [])]
       .map((a) => a.trim().toLowerCase()).filter(Boolean)
     for (const a of aliases) {
-      if (a.length >= 3 && t.includes(a)) return col.id
+      if (a.length < 3) continue
+      const hit = t.includes(a) || (t.length >= 3 && a.includes(t))
+      if (hit && a.length > bestLen) {
+        best = col.id
+        bestLen = a.length
+      }
     }
-  }
-  for (const col of colors) {
     for (const a of COLOR_ALIASES[col.id] || []) {
-      if (t.includes(a)) return col.id
+      const al = a.toLowerCase()
+      if (al.length < 3) continue
+      const hit = t.includes(al) || (t.length >= 3 && al.includes(t))
+      if (hit && al.length > bestLen) {
+        best = col.id
+        bestLen = al.length
+      }
     }
   }
-  return null
+  return best
 }
 
 function ensureColor(product, colorName) {
@@ -237,6 +249,10 @@ function normalizeSizeKey(label) {
 }
 
 function resolveWatchStorageLabel(sizeLabel, product, meta) {
+  const variants = product.variants || []
+  const allStandard = variants.length > 0 && variants.every((v) => !v.storage || v.storage === 'Стандарт')
+  if (allStandard) return 'Стандарт'
+
   const norm = normalizeSizeKey(sizeLabel)
   const fromStorage = product.storage?.find((s) => normalizeSizeKey(s.label) === norm)
   if (fromStorage) return fromStorage.label
@@ -522,11 +538,12 @@ function upsertVariant(product, variant, purchasePrice, markup) {
   return idx >= 0 ? 'updated' : 'added'
 }
 
-export function buildCatalogFromPdfText(text, existingProducts, markup = { percent: 15, fixed: 0 }, options = {}) {
-  let entries = filterCatalogEntries(extractPriceEntries(text))
-  if (Array.isArray(options.sections) && options.sections.length) {
-    const allowed = new Set(options.sections)
-    entries = entries.filter((e) => allowed.has(e.section))
+export function buildCatalogFromEntries(rawEntries, existingProducts, markup = { percent: 15, fixed: 0 }, options = {}) {
+  let entries = rawEntries
+  if (options.filterSections !== false) {
+    entries = entries
+      .map((e) => ({ ...e, section: resolveCatalogSection(e.section) }))
+      .filter((e) => CATALOG_SECTIONS.has(e.section))
   }
 
   const pricesOnly = options.pricesOnly !== false
@@ -557,7 +574,9 @@ export function buildCatalogFromPdfText(text, existingProducts, markup = { perce
   for (const entry of entries) {
     const meta = CATALOG_SECTIONS.get(entry.section)
     if (!meta) continue
-    const productName = productKeyFromEntry(entry, meta)
+    const productName = options.getProductKey
+      ? options.getProductKey(entry, meta)
+      : productKeyFromEntry(entry, meta)
     const groupKey = `${meta.category}::${normalizeProductName(productName)}`
     if (!byProduct.has(groupKey)) {
       byProduct.set(groupKey, { productName, meta, entries: [] })
@@ -573,7 +592,7 @@ export function buildCatalogFromPdfText(text, existingProducts, markup = { perce
     if (!product) {
       if (pricesOnly) {
         stats.skipped += groupEntries.length
-        if (stats.notFound.length < 20) stats.notFound.push(productName)
+        if (stats.notFound.length < 30) stats.notFound.push(productName)
         continue
       }
       product = createEmptyProduct(productName, meta, nextId++)
@@ -586,8 +605,9 @@ export function buildCatalogFromPdfText(text, existingProducts, markup = { perce
 
     for (const entry of groupEntries) {
       try {
+        const variantName = options.getVariantName ? options.getVariantName(entry, meta) : entry.name
         if (pricesOnly) {
-          const variant = parseVariantForUpdate(entry.name, product, meta)
+          const variant = parseVariantForUpdate(variantName, product, meta)
           if (!variant) {
             stats.skippedVariants += 1
             continue
@@ -633,6 +653,16 @@ export function buildCatalogFromPdfText(text, existingProducts, markup = { perce
 
   stats.productsUpdated = touchedProducts.size
   return { products, stats }
+}
+
+export function buildCatalogFromPdfText(text, existingProducts, markup = { percent: 15, fixed: 0 }, options = {}) {
+  let entries = filterCatalogEntries(extractPriceEntries(text))
+  if (Array.isArray(options.sections) && options.sections.length) {
+    const allowed = new Set(options.sections)
+    entries = entries.filter((e) => allowed.has(e.section))
+  }
+
+  return buildCatalogFromEntries(entries, existingProducts, markup, options)
 }
 
 export async function extractTextFromPdfBuffer(buffer) {

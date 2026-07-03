@@ -3,6 +3,7 @@ import fs from 'node:fs'
 import path from 'node:path'
 import { fileURLToPath } from 'node:url'
 import { buildCatalogFromPdfText, extractTextFromPdfBuffer } from './price-pdf-catalog.mjs'
+import { buildCatalogFromPriceText } from './price-text-import.mjs'
 import {
   buildBackupPayload,
   mergeProducts,
@@ -512,6 +513,7 @@ const server = http.createServer(async (req, res) => {
     return sendJson(res, 200, {
       ok: true,
       importPdf: true,
+      importPriceText: true,
       importCatalogZip: true,
       domPolyfill: true,
     })
@@ -565,6 +567,44 @@ const server = http.createServer(async (req, res) => {
     } catch (err) {
       console.error('PDF import error:', err)
       return sendJson(res, 500, { error: err.message || 'Ошибка импорта PDF' })
+    }
+  }
+
+  if (p === '/api/import-price-text' && req.method === 'POST') {
+    if (!checkAuth(req)) return sendJson(res, 401, { error: 'Неверный пароль' })
+    try {
+      const body = JSON.parse(await readBody(req))
+      const text = body.text ?? body.data
+      if (!text || !String(text).trim()) return sendJson(res, 400, { error: 'Текст не передан' })
+
+      const store = readStore()
+      const markup = {
+        percent: Number(body.markupPercent ?? store.priceImport?.markupPercent ?? 15),
+        fixed: Number(body.markupFixed ?? store.priceImport?.markupFixed ?? 0),
+      }
+
+      const existing = readProducts()
+      const { products, stats } = buildCatalogFromPriceText(String(text), existing.products, markup)
+
+      if (!body.dryRun) {
+        writeProducts({ products })
+        store.priceImport = {
+          ...store.priceImport,
+          markupPercent: markup.percent,
+          markupFixed: markup.fixed,
+          lastTextImportAt: new Date().toISOString(),
+        }
+        writeStore(store)
+      }
+
+      return sendJson(res, 200, {
+        ok: true,
+        stats,
+        productCount: products.length,
+      })
+    } catch (err) {
+      console.error('Text price import error:', err)
+      return sendJson(res, 500, { error: err.message || 'Ошибка импорта текста' })
     }
   }
 

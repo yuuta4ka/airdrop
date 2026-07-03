@@ -357,8 +357,10 @@ function formatPdfImportStats(s) {
   const lines = []
   if (s.pricesUpdated) lines.push(`Обновлено цен: ${s.pricesUpdated}`)
   else if (s.variantsUpdated) lines.push(`Обновлено конфигураций: ${s.variantsUpdated}`)
-  if (s.skippedVariants) lines.push(`Пропущено строк (нет в каталоге): ${s.skippedVariants}`)
-  if (s.skipped) lines.push(`Не найдено товаров: ${s.skipped}`)
+  if (s.productsUpdated) lines.push(`Товаров затронуто: ${s.productsUpdated}`)
+  if (s.skippedVariants) lines.push(`Не сопоставлено строк: ${s.skippedVariants}`)
+  if (s.skipped) lines.push(`Товар не найден: ${s.skipped}`)
+  if (s.unrecognized) lines.push(`Нераспознанных строк: ${s.unrecognized}`)
   if (!lines.length) lines.push(`Обработано строк: ${s.entries ?? 0}`)
   return lines
 }
@@ -1441,7 +1443,7 @@ function renderPriceImport(c) {
   `).join('')
 
   c.innerHTML = section('Импорт прайса PDF (THLS)', `
-    <p class="admin-hint">Обновляет только <strong>цены</strong> у уже созданных товаров. Новые карточки не создаются. Сначала создайте товары в разделе «Товары», затем загружайте PDF.</p>
+    <p class="admin-hint admin-hint--muted">Экспериментальный режим — может работать нестабильно. Рекомендуем текстовый импорт ниже.</p>
     <div class="admin-grid">
       <label class="field"><span>Наценка при импорте, %</span><input type="number" id="pi-markup" value="${pi.markupPercent ?? 15}" min="0" step="0.1" /></label>
       <label class="field"><span>Наценка фикс., ₽</span><input type="number" id="pi-markup-fixed" value="${pi.markupFixed ?? 0}" min="0" step="100" /></label>
@@ -1451,10 +1453,21 @@ function renderPriceImport(c) {
       <button type="button" class="btn btn--ghost btn--sm" id="pi-select-none">Снять все</button>
     </div>
     <div class="pdf-import-sections">${sectionChecks}</div>
-    <label class="btn btn--primary admin-upload-btn">Выбрать PDF и импортировать<input type="file" id="import-pdf-file" accept=".pdf,application/pdf" hidden /></label>
+    <label class="btn btn--secondary admin-upload-btn">Выбрать PDF и импортировать<input type="file" id="import-pdf-file" accept=".pdf,application/pdf" hidden /></label>
     <p class="admin-hint" id="pdf-import-status"></p>
-    <p class="admin-hint" id="pdf-import-result">${pi.lastImportAt ? `Последний импорт: ${new Date(pi.lastImportAt).toLocaleString('ru-RU')}` : 'Файл ещё не загружали'}</p>
+    <p class="admin-hint" id="pdf-import-result">${pi.lastImportAt ? `Последний PDF: ${new Date(pi.lastImportAt).toLocaleString('ru-RU')}` : ''}</p>
+  `) + section('Импорт прайса текстом', `
+    <p class="admin-hint">Формат: <code>Название конфигурации = 128 000 ₽</code> — по одной строке. Обновляет только цены у уже созданных товаров.</p>
+    <label class="field"><span>Прайс</span>
+      <textarea id="price-text-import" class="admin-textarea" rows="14" placeholder="iPhone 17 Pro Max 256Gb Orange (eSim+eSim) = 128 000 ₽"></textarea>
+    </label>
+    <button type="button" class="btn btn--primary" id="import-price-text">Импортировать текст</button>
+    <p class="admin-hint" id="text-import-result">${pi.lastTextImportAt ? `Последний текстовый импорт: ${new Date(pi.lastTextImportAt).toLocaleString('ru-RU')}` : ''}</p>
   `)
+
+  if (pi.lastTextImport && $('price-text-import')) {
+    $('price-text-import').value = pi.lastTextImport
+  }
 
   const sectionInputs = () => [...c.querySelectorAll('.pdf-import-section')]
   const getSelectedSections = () => sectionInputs().filter((el) => el.checked).map((el) => el.value)
@@ -1570,6 +1583,48 @@ function renderPriceImport(c) {
       e.target.value = ''
     }
     reader.readAsDataURL(file)
+  }
+
+  $('import-price-text').onclick = async () => {
+    const text = $('price-text-import')?.value || ''
+    const resultEl = $('text-import-result')
+    if (!text.trim()) {
+      status('Вставьте прайс в текстовое поле', 'error')
+      return
+    }
+    resultEl.textContent = 'Импорт…'
+    try {
+      const res = await fetch('/api/import-price-text', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${getToken()}` },
+        body: JSON.stringify({
+          text,
+          markupPercent: num('pi-markup'),
+          markupFixed: num('pi-markup-fixed'),
+        }),
+      })
+      const data = await parseApiJson(res)
+      if (!res.ok) throw new Error(data?.error || 'Ошибка импорта')
+      const s = data.stats
+      const lines = formatPdfImportStats(s)
+      resultEl.innerHTML = `<strong>Импорт завершён</strong><br>${lines.map((l) => escAttr(l)).join('<br>')}`
+      if (s.notFound?.length) {
+        resultEl.innerHTML += `<br><span class="admin-hint--warn">Товары не найдены: ${escAttr(s.notFound.slice(0, 8).join(', '))}</span>`
+      }
+      storeData.priceImport = {
+        ...storeData.priceImport,
+        markupPercent: num('pi-markup'),
+        markupFixed: num('pi-markup-fixed'),
+        lastTextImportAt: new Date().toISOString(),
+        lastTextImport: text,
+      }
+      invalidateStore()
+      productsData = await (await fetch('/api/products')).json()
+      status(`Обновлено цен: ${s.pricesUpdated || 0}`, 'success')
+    } catch (err) {
+      resultEl.textContent = err.message
+      status(err.message, 'error')
+    }
   }
 }
 
@@ -1806,6 +1861,8 @@ function collectPriceImport() {
     .filter((el) => el.checked)
     .map((el) => el.value)
   if (sections.length) storeData.priceImport.lastSections = sections
+  const text = $('price-text-import')?.value
+  if (text !== undefined) storeData.priceImport.lastTextImport = text
 }
 
 function collectGeneral() {

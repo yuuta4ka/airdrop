@@ -319,6 +319,19 @@ body::before {
 .field small { font-size: 0.72rem; color: var(--admin-muted); }
 
 .field input,
+.admin-hint--muted {
+  opacity: 0.75;
+}
+
+.admin-textarea {
+  width: 100%;
+  min-height: 200px;
+  font-family: ui-monospace, SFMono-Regular, Menlo, monospace;
+  font-size: 0.82rem;
+  line-height: 1.45;
+  resize: vertical;
+}
+
 .field textarea,
 .field select,
 .admin-row input,
