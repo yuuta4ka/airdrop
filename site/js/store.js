@@ -5,6 +5,27 @@ import {
 } from './pricing.js'
 import { getDisplayStorage } from './product-options.js'
 
+const DEFAULT_CATEGORY_LABELS = {
+  all: 'Все',
+  iphone: 'iPhone',
+  ipad: 'iPad',
+  macbook: 'MacBook',
+  'apple-watch': 'Apple Watch',
+  airpods: 'AirPods',
+  samsung: 'Samsung',
+  xiaomi: 'Xiaomi',
+  'galaxy-watch': 'Galaxy Watch',
+  huawei: 'Huawei',
+}
+
+function applyCategoryDefaults(store) {
+  store?.categories?.forEach((cat) => {
+    if (!String(cat.label || '').trim() && DEFAULT_CATEGORY_LABELS[cat.id]) {
+      cat.label = DEFAULT_CATEGORY_LABELS[cat.id]
+    }
+  })
+}
+
 let storeCache = null
 let productsCache = null
 
@@ -32,6 +53,7 @@ function mergeStoreData() {
       ? storeCache.products
       : []
   const merged = { ...storeCache, products }
+  applyCategoryDefaults(merged)
   return merged
 }
 

@@ -5,7 +5,30 @@ import { applySupplierImport } from './supplier-import.js'
 import { PDF_IMPORT_SECTIONS, groupPdfImportSections } from './pdf-import-sections.js'
 import {
   getDisplayStorage, isPhoneCategory, isWatchCategory, isAccessoryCategory, isMeaningfulStorageLabel,
+  normalizeWatchSizeLabel,
 } from './product-options.js'
+
+const DEFAULT_CATEGORY_LABELS = {
+  all: 'Все',
+  iphone: 'iPhone',
+  ipad: 'iPad',
+  macbook: 'MacBook',
+  'apple-watch': 'Apple Watch',
+  airpods: 'AirPods',
+  samsung: 'Samsung',
+  xiaomi: 'Xiaomi',
+  'galaxy-watch': 'Galaxy Watch',
+  huawei: 'Huawei',
+}
+
+function ensureStoreDefaults() {
+  if (!storeData) return
+  storeData.categories?.forEach((cat) => {
+    if (!String(cat.label || '').trim() && DEFAULT_CATEGORY_LABELS[cat.id]) {
+      cat.label = DEFAULT_CATEGORY_LABELS[cat.id]
+    }
+  })
+}
 
 const AUTH_KEY = 'airdrop_admin_token'
 const DRAFT_KEY = 'airdrop_admin_draft'
@@ -76,6 +99,7 @@ function restoreDraft() {
     productsData = draft.productsData
     if (draft.activeTab) activeTab = draft.activeTab
     editingProductIdx = draft.editingProductIdx ?? null
+    ensureStoreDefaults()
     return true
   } catch {
     return false
@@ -120,6 +144,7 @@ async function loadData() {
   if (!sRes.ok || !pRes.ok) throw new Error('Сервер недоступен')
   storeData = await sRes.json()
   productsData = await pRes.json()
+  ensureStoreDefaults()
 }
 
 async function saveStore() {
@@ -522,7 +547,6 @@ document.querySelectorAll('.admin-nav__btn').forEach((btn) => {
 // ─── Render tabs ───
 function renderTab() {
   const c = $('admin-content')
-  if (storeData && c?.childElementCount > 0) collectTab()
   if (activeTab === 'general') renderGeneral(c)
   else if (activeTab === 'contacts') renderContacts(c)
   else if (activeTab === 'content') renderContent(c)
@@ -937,7 +961,8 @@ function renderProductEditor(c) {
       <button type="button" class="btn btn--secondary" id="add-variant">+ Позиция вручную</button>
     `)}
 
-    ${showSizes ? section('Размер (часы)', `<div id="size-list"></div><button type="button" class="btn btn--secondary" id="add-size">+ Размер</button>`) : ''}
+    ${showSizes ? section('Размер (часы)', `<div id="size-list"></div><button type="button" class="btn btn--secondary" id="add-size">+ Размер</button>
+    <p class="admin-hint">Введите число (42, 46) — «мм» допишется автоматически. Цены задаются в прайсе ниже.</p>`) : ''}
 
     ${section('Наличие на складе', `<div id="stock-list"></div><button type="button" class="btn btn--secondary" id="add-stock">+ Позиция в наличии</button>
     <p class="admin-hint">Только то, что реально есть у вас в магазине</p>`)}
@@ -1244,17 +1269,26 @@ function renderProductEditor(c) {
     const renderSizes = () => {
       $('size-list').innerHTML = p.sizes.map((s, i) => `
         <div class="admin-row">
-          <input type="text" id="size-label-${i}" value="${escAttr(s.label)}" placeholder="42 мм" />
-          <input type="number" id="size-price-${i}" value="${s.price}" placeholder="Цена ₽" />
+          <input type="text" id="size-label-${i}" value="${escAttr(s.label)}" placeholder="42" />
           <button type="button" class="btn btn--danger btn--sm" data-del-size="${i}">✕</button>
         </div>
       `).join('')
       $('size-list').querySelectorAll('[data-del-size]').forEach((b) => {
         b.onclick = () => { p.sizes.splice(Number(b.dataset.delSize), 1); renderSizes() }
       })
+      $('size-list').querySelectorAll('input').forEach((inp) => {
+        inp.onblur = () => {
+          const i = Number(inp.id.replace('size-label-', ''))
+          const normalized = normalizeWatchSizeLabel(inp.value)
+          if (normalized) {
+            inp.value = normalized
+            p.sizes[i] = { label: normalized }
+          }
+        }
+      })
     }
     renderSizes()
-    $('add-size').onclick = () => { if (!p.sizes) p.sizes = []; p.sizes.push({ label: '', price: 0 }); renderSizes() }
+    $('add-size').onclick = () => { if (!p.sizes) p.sizes = []; p.sizes.push({ label: '' }); renderSizes() }
   }
 
   if (!p.stock) p.stock = []
@@ -1775,21 +1809,26 @@ function collectPriceImport() {
 }
 
 function collectGeneral() {
+  if (!$('g-name')) return
   const s = storeData.settings
   s.name = val('g-name'); s.tagline = val('g-tagline'); s.logo = val('g-logo'); s.reviewBrand = val('g-reviewBrand')
 }
 
 function collectContacts() {
+  if (!$('c-name')) return
   const s = storeData.settings
   s.phoneContactName = val('c-name'); s.phone = val('c-phone'); s.phoneDisplay = val('c-phoneDisplay')
   s.legalName = val('c-legal')
   s.hours.weekdays = val('c-hours-wd'); s.hours.weekends = val('c-hours-we')
   s.addresses.forEach((a, i) => {
-    a.city = val(`a-city-${i}`); a.street = val(`a-street-${i}`); a.note = val(`a-note-${i}`); a.yandexMaps = val(`a-maps-${i}`)
+    const city = val(`a-city-${i}`)
+    if (!$(`a-city-${i}`)) return
+    a.city = city; a.street = val(`a-street-${i}`); a.note = val(`a-note-${i}`); a.yandexMaps = val(`a-maps-${i}`)
   })
 }
 
 function collectContent() {
+  if (!$('t-heroTitle')) return
   const s = storeData.settings
   s.heroTitle = val('t-heroTitle'); s.heroSubtitle = val('t-heroSubtitle'); s.orderDays = val('t-orderDays')
   s.heroText = val('t-heroText'); s.description = val('t-description'); s.aboutText = val('t-about')
@@ -1797,22 +1836,36 @@ function collectContent() {
 }
 
 function collectLinks() {
+  if (!$('l-tg')) return
   const l = storeData.settings.links
   l.telegram = val('l-tg'); l.vk = val('l-vk'); l.vkMarket = val('l-vkMarket'); l.vkReviews = val('l-vkReviews')
   l.avitoKarpinsk = val('l-avitoK'); l.avitoKrasnoturinsk = val('l-avitoKT')
 }
 
 function collectNavigation() {
+  if (!$('nav-list')) return
   storeData.navigation.forEach((item, i) => {
-    item.label = val(`nav-label-${i}`); item.href = val(`nav-href-${i}`)
+    const labelEl = $(`nav-label-${i}`)
+    const hrefEl = $(`nav-href-${i}`)
+    if (!labelEl || !hrefEl) return
+    item.label = labelEl.value.trim() || item.label
+    item.href = hrefEl.value.trim() || item.href
     if (!item.id || item.id === 'new') item.id = item.label.toLowerCase().replace(/\s+/g, '-')
   })
 }
 
 function collectCategories() {
+  if (!$('cat-list')) return
   storeData.categories.forEach((cat, i) => {
-    if (cat.id !== 'all') cat.id = val(`cat-id-${i}`) || cat.id
-    cat.label = val(`cat-label-${i}`)
+    const labelEl = $(`cat-label-${i}`)
+    if (!labelEl) return
+    if (cat.id !== 'all') {
+      const idEl = $(`cat-id-${i}`)
+      if (idEl?.value.trim()) cat.id = idEl.value.trim()
+    }
+    const label = labelEl.value.trim()
+    if (label) cat.label = label
+    else if (!cat.label && DEFAULT_CATEGORY_LABELS[cat.id]) cat.label = DEFAULT_CATEGORY_LABELS[cat.id]
   })
 }
 
@@ -1905,8 +1958,10 @@ function collectProduct() {
   p.simModifiers = []
 
   if (p.sizes?.length) {
-    p.sizes = p.sizes.map((_, i) => ({ label: val(`size-label-${i}`), price: num(`size-price-${i}`) }))
-    if (!p.sizes.some((s) => s.label)) p.sizes = null
+    p.sizes = p.sizes
+      .map((_, i) => ({ label: normalizeWatchSizeLabel(val(`size-label-${i}`)) }))
+      .filter((s) => s.label)
+    if (!p.sizes.length) p.sizes = null
   }
 
   if (p.stock?.length) {
@@ -1923,14 +1978,31 @@ function collectProduct() {
 }
 
 function collectInstallment() {
+  if (!$('i-banks')) return
   const inst = storeData.settings.installment
-  inst.banks = val('i-banks')
-  inst.terms = inst.terms.map((_, i) => ({ months: num(`term-mo-${i}`), commission: val(`term-comm-${i}`) }))
-  inst.dolyami.name = val('i-dol-name'); inst.dolyami.commission = val('i-dol-comm')
-  inst.dolyami.image = val('i-dol-img'); inst.dolyami.description = val('i-dol-desc')
+  const banks = val('i-banks')
+  if (banks) inst.banks = banks
+  inst.terms = inst.terms.map((t, i) => {
+    const moEl = $(`term-mo-${i}`)
+    const commEl = $(`term-comm-${i}`)
+    if (!moEl && !commEl) return t
+    return {
+      months: moEl ? (Number(moEl.value) || t.months) : t.months,
+      commission: commEl?.value.trim() || t.commission,
+    }
+  })
+  const dolName = val('i-dol-name')
+  const dolComm = val('i-dol-comm')
+  const dolImg = val('i-dol-img')
+  const dolDesc = val('i-dol-desc')
+  if (dolName) inst.dolyami.name = dolName
+  if (dolComm) inst.dolyami.commission = dolComm
+  if (dolImg) inst.dolyami.image = dolImg
+  if (dolDesc) inst.dolyami.description = dolDesc
 }
 
 function collectReviews() {
+  if (!$('r-neg-tg')) return
   const r = storeData.settings.reviews
   r.negative.telegram = val('r-neg-tg'); r.negative.vk = val('r-neg-vk'); r.negative.yandexForm = val('r-neg-form')
   r.positive.bonus = val('r-bonus'); r.positive.vk = val('r-vk')

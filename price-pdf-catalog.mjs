@@ -149,21 +149,20 @@ function parseVariantForUpdate(name, product, meta) {
   }
 
   if (meta.type === 'watch' || meta.type === 'watch-ultra' || meta.type === 'samsung-watch') {
-    const colorId = findColorId(name, product.colors)
+    const sizeLabel = parseWatchSizeLabel(name)
+    const colorPart = parseWatchColorPart(name)
+    const colorId = findColorId(colorPart, product.colors) || findColorId(name, product.colors)
     if (!colorId) return null
-    const storageLabel = resolveStorageLabel('Стандарт', product, meta) || product.storage?.[0]?.label
+    const storageLabel = resolveWatchStorageLabel(sizeLabel, product, meta)
     if (!storageLabel) return null
     return { colorId, storage: storageLabel, simType: '' }
   }
 
   if (meta.type === 'airpods') {
-    const colorMatch = name.match(/\(([^)]+)\)\s*$/)
     let colorName = ''
-    if (colorMatch) colorName = colorMatch[1]
-    else {
-      for (const w of ['Purple', 'Orange', 'Midnight', 'Black', 'White', 'Blue', 'Red', 'Green', 'Cream', 'Brown']) {
-        if (name.includes(w)) { colorName = w; break }
-      }
+    for (const w of AIRPODS_COLOR_SUFFIXES) {
+      const re = new RegExp(`\\s+${w.replace(/\s+/g, '\\s+')}\\s*$`, 'i')
+      if (re.test(name)) { colorName = w; break }
     }
     const colorId = colorName ? findColorId(colorName, product.colors) : product.colors?.[0]?.id
     if (!colorId) return null
@@ -188,6 +187,62 @@ function ensureSimTypes(product, simType) {
   if (!product.simTypes) product.simTypes = []
   if (!product.simTypes.includes(simType)) product.simTypes.push(simType)
   return simType
+}
+
+function stripSamsungStorage(name) {
+  return String(name).replace(/\s+\d+\/\d+\s*Gb?.*/i, '').trim()
+}
+
+const AIRPODS_COLOR_SUFFIXES = [
+  'Midnight', 'Purple', 'Starlight', 'Orange', 'Black', 'White', 'Blue', 'Red', 'Green',
+  'Cream', 'Brown', 'Silver', 'Gold', 'Pink', 'Yellow', 'Space Gray', 'Space Grey',
+]
+
+function stripAirpodsColorSuffix(name) {
+  let base = String(name).trim()
+  for (const color of AIRPODS_COLOR_SUFFIXES) {
+    const re = new RegExp(`\\s+${color.replace(/\s+/g, '\\s+')}\\s*$`, 'i')
+    if (re.test(base)) return base.replace(re, '').trim()
+  }
+  return base
+}
+
+function normalizeWatchSizeLabel(label) {
+  const s = String(label || '').trim()
+  if (!s) return ''
+  if (/мм/i.test(s)) return s.replace(/\bmm\b/gi, 'мм').replace(/\s+/g, ' ').trim()
+  const m = s.match(/^(\d{2})$/)
+  if (m) return `${m[1]} мм`
+  const m2 = s.match(/^(\d{2})\s*mm$/i)
+  if (m2) return `${m2[1]} мм`
+  return s
+}
+
+function parseWatchSizeLabel(name) {
+  const m = String(name).match(/\b(\d{2})\s*mm\b/i)
+  return m ? normalizeWatchSizeLabel(m[1]) : 'Стандарт'
+}
+
+function parseWatchColorPart(name) {
+  const sizeColor = String(name).match(/\b(?:S\d+|SE)\s+\d{2}\s*mm\s+(.+)$/i)
+  if (sizeColor) return sizeColor[1].trim()
+  const seColor = String(name).match(/^SE\s+\S+\s+(.+)$/i)
+  if (seColor) return seColor[1].trim()
+  return String(name).split(/\s+/).slice(2).join(' ') || String(name)
+}
+
+function normalizeSizeKey(label) {
+  const m = String(label || '').match(/(\d{2})/)
+  return m ? m[1] : String(label || '').toLowerCase()
+}
+
+function resolveWatchStorageLabel(sizeLabel, product, meta) {
+  const norm = normalizeSizeKey(sizeLabel)
+  const fromStorage = product.storage?.find((s) => normalizeSizeKey(s.label) === norm)
+  if (fromStorage) return fromStorage.label
+  const fromSizes = product.sizes?.find((s) => normalizeSizeKey(s.label) === norm)
+  if (fromSizes) return fromSizes.label
+  return resolveStorageLabel(sizeLabel, product, meta) || sizeLabel
 }
 
 function parseIphoneVariant(line, product) {
@@ -251,20 +306,23 @@ function parseMacbookVariant(name, product) {
 }
 
 function parseWatchVariant(name, product) {
-  const colorId = findColorId(name, product.colors) || ensureColor(product, name.split(/\s+/).slice(2).join(' ') || 'Стандарт')
-  ensureStorage(product, 'Стандарт')
+  const sizeLabel = parseWatchSizeLabel(name)
+  const colorPart = parseWatchColorPart(name)
+  const colorId = findColorId(colorPart, product.colors) || findColorId(name, product.colors) || ensureColor(product, colorPart)
+  ensureStorage(product, sizeLabel)
+  if (!product.sizes) product.sizes = []
+  if (sizeLabel !== 'Стандарт' && !product.sizes.some((s) => normalizeSizeKey(s.label) === normalizeSizeKey(sizeLabel))) {
+    product.sizes.push({ label: sizeLabel })
+  }
   product.simTypes = null
-  return { colorId, storage: 'Стандарт', simType: '' }
+  return { colorId, storage: sizeLabel, simType: '' }
 }
 
 function parseAirpodsVariant(name, product) {
-  const colorMatch = name.match(/\(([^)]+)\)\s*$/)
   let colorName = 'Стандарт'
-  if (colorMatch) colorName = colorMatch[1]
-  else {
-    for (const w of ['Purple', 'Orange', 'Midnight', 'Black', 'White', 'Blue', 'Red', 'Green', 'Cream', 'Brown']) {
-      if (name.includes(w)) { colorName = w; break }
-    }
+  for (const w of AIRPODS_COLOR_SUFFIXES) {
+    const re = new RegExp(`\\s+${w.replace(/\s+/g, '\\s+')}\\s*$`, 'i')
+    if (re.test(name)) { colorName = w; break }
   }
   const colorId = colorName === 'Стандарт'
     ? ensureColor(product, 'Стандарт')
@@ -293,9 +351,15 @@ function productKeyFromEntry(entry, meta) {
   if (meta.type === 'iphone') return meta.productName
   if (meta.type === 'watch-ultra') return 'Apple Watch Ultra 3'
   if (meta.type === 'watch') {
-    if (/^SE\s/i.test(name)) return `Apple Watch ${name.match(/^SE\s+\S+/i)?.[0] || 'SE'}`
-    if (/^S\d+/i.test(name)) return `Apple Watch ${name.match(/^S\d+\s+\d+mm/i)?.[0] || name.split(/\s+/).slice(0, 2).join(' ')}`
-    return `Apple Watch ${name.split(/\s+/).slice(0, 3).join(' ')}`
+    if (/^SE\s/i.test(name)) {
+      const gen = name.match(/^SE\s+(\d+)/i)
+      return gen ? `Apple Watch SE ${gen[1]}` : 'Apple Watch SE'
+    }
+    if (/^S\d+/i.test(name)) {
+      const s = name.match(/^(S\d+)/i)
+      return s ? `Apple Watch ${s[1]}` : `Apple Watch ${name.split(/\s+/)[0]}`
+    }
+    return `Apple Watch ${name.split(/\s+/).slice(0, 2).join(' ')}`
   }
   if (meta.type === 'macbook') {
     const neo = name.match(/^(MacBook Neo\s+\d+"\s+A\d+\s+Pro)/i)
@@ -323,13 +387,15 @@ function productKeyFromEntry(entry, meta) {
   }
   if (meta.type === 'airpods') {
     if (/Marshall/i.test(name)) return name.match(/^Marshall[^\d]+/i)?.[0]?.trim() || name
-    const m = name.match(/AirPods[^(\[]*(?:\(\d+\))?[^(\[]*|Apple AirPods[^(\[]*/i)
-    if (m) return m[0].replace(/Цветные\s+/i, '').trim()
-    return name.split(/\(/)[0].trim()
+    const base = stripAirpodsColorSuffix(name)
+    const m = base.match(/^(AirPods(?:\s+Pro)?(?:\s+Max)?(?:\s+USB-C)?(?:\s*\(\d{4}\))?|Apple AirPods[^\d]*)/i)
+    return m ? m[1].replace(/Цветные\s+/i, '').trim() : base.split(/\s+\d/)[0].trim()
   }
   if (meta.type === 'samsung-phone') {
-    const m = name.match(/Galaxy\s+[A-Z]\w+\s*(?:FE|Ultra|Plus|Fold|Flip)?\s*\d*/i)
-    return m ? m[0].trim() : name.split(/\d+\/\d+/)[0].trim()
+    const withoutStorage = stripSamsungStorage(name)
+    const m = withoutStorage.match(/Galaxy\s+S\d+\s*(?:FE|Ultra|Plus|Fold|Flip)?/i)
+      || withoutStorage.match(/Galaxy\s+[A-Z]\w+\s*(?:FE|Ultra|Plus|Fold|Flip)?/i)
+    return m ? m[0].trim() : withoutStorage
   }
   if (meta.type === 'samsung-watch') {
     const m = name.match(/^Watch\s+(\d+)\s+(Ultra|Classic)(?:\s+\d{4})?/i)
@@ -409,7 +475,14 @@ function normalizeProductName(name) {
 function registerProductKeys(productMap, product) {
   productMap.set(`${product.category}::${product.name.toLowerCase()}`, product)
   productMap.set(`${product.category}::${product.slug}`, product)
-  productMap.set(`${product.category}::${normalizeProductName(product.name)}`, product)
+  const norm = normalizeProductName(product.name)
+  productMap.set(`${product.category}::${norm}`, product)
+  if (norm.startsWith('apple ')) {
+    productMap.set(`${product.category}::${norm.slice(6)}`, product)
+  }
+  if (!norm.startsWith('apple ') && (product.category === 'apple-watch' || product.category === 'airpods')) {
+    productMap.set(`${product.category}::apple ${norm}`, product)
+  }
 }
 
 function resolveProduct(productName, meta, productMap, products) {
@@ -418,11 +491,23 @@ function resolveProduct(productName, meta, productMap, products) {
     `${meta.category}::${normalizeProductName(productName)}`,
     `${meta.category}::${slugify(productName)}`,
   ]
+  const norm = normalizeProductName(productName)
+  if (norm.startsWith('apple ')) {
+    keys.push(`${meta.category}::${norm.slice(6)}`)
+  } else if (meta.category === 'apple-watch' || meta.category === 'airpods') {
+    keys.push(`${meta.category}::apple ${norm}`)
+  }
   for (const k of keys) {
     if (productMap.has(k)) return productMap.get(k)
   }
-  const norm = normalizeProductName(productName)
-  const matches = products.filter((p) => p.category === meta.category && normalizeProductName(p.name) === norm)
+  let matches = products.filter((p) => p.category === meta.category && normalizeProductName(p.name) === norm)
+  if (matches.length === 1) return matches[0]
+  const normShort = norm.replace(/^apple\s+/, '')
+  matches = products.filter((p) => {
+    if (p.category !== meta.category) return false
+    const pn = normalizeProductName(p.name)
+    return pn === normShort || pn.endsWith(` ${normShort}`) || normShort.endsWith(` ${pn}`) || pn === norm
+  })
   if (matches.length === 1) return matches[0]
   return null
 }

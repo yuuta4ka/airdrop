@@ -44,6 +44,11 @@ export function shouldShowSizesOptions(product) {
   return product.sizes?.length > 1
 }
 
-export function shouldShowSimOptions(product) {
-  return product.simTypes?.length > 0
+export function normalizeWatchSizeLabel(label) {
+  const s = String(label || '').trim()
+  if (!s) return ''
+  if (/мм/i.test(s)) return s.replace(/\bmm\b/gi, 'мм').replace(/\s+/g, ' ').trim()
+  const m = s.match(/^(\d{2})$/) || s.match(/^(\d{2})\s*mm$/i)
+  if (m) return `${m[1]} мм`
+  return s
 }
