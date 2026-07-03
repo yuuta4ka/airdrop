@@ -2709,85 +2709,6 @@
       "hidden": true
     },
     {
-      "id": 60,
-      "slug": "marshall-major-5",
-      "name": "Marshall Major 5",
-      "category": "airpods",
-      "brand": "Apple",
-      "badge": null,
-      "image": "",
-      "coverImage": "",
-      "description": "Marshall Major 5 — оригинальная техника, под заказ от 3–5 дней.",
-      "simTypes": null,
-      "simModifiers": [],
-      "colors": [
-        {
-          "id": "default",
-          "name": "Стандарт",
-          "hex": "#888888",
-          "image": "",
-          "importNames": ""
-        },
-        {
-          "id": "black",
-          "name": "Black",
-          "hex": "#888888",
-          "image": "",
-          "importNames": "Black"
-        },
-        {
-          "id": "brown",
-          "name": "Brown",
-          "hex": "#888888",
-          "image": "",
-          "importNames": "Brown"
-        },
-        {
-          "id": "blue",
-          "name": "Blue",
-          "hex": "#888888",
-          "image": "",
-          "importNames": "Blue"
-        }
-      ],
-      "storage": [
-        {
-          "label": "Стандарт"
-        }
-      ],
-      "variants": [
-        {
-          "colorId": "black",
-          "storage": "Стандарт",
-          "simType": "",
-          "purchasePrice": 5000,
-          "price": 5900
-        },
-        {
-          "colorId": "brown",
-          "storage": "Стандарт",
-          "simType": "",
-          "purchasePrice": 5000,
-          "price": 5900
-        },
-        {
-          "colorId": "blue",
-          "storage": "Стандарт",
-          "simType": "",
-          "purchasePrice": 4500,
-          "price": 5900
-        }
-      ],
-      "sizes": null,
-      "stock": [],
-      "images": [],
-      "markupPercent": 15,
-      "markupFixed": 0,
-      "showCatalogSpec": false,
-      "importNames": "Marshall Major 5",
-      "hidden": true
-    },
-    {
       "id": 61,
       "slug": "galaxy-z-fold-7",
       "name": "Galaxy Z Fold 7",
@@ -2850,50 +2771,6 @@
       "markupFixed": 0,
       "showCatalogSpec": false,
       "importNames": "Galaxy Z Fold 7",
-      "hidden": true
-    },
-    {
-      "id": 62,
-      "slug": "samsung-buds-4-pro",
-      "name": "Samsung Buds 4 Pro",
-      "category": "airpods",
-      "brand": "Samsung",
-      "badge": null,
-      "image": "",
-      "coverImage": "",
-      "description": "Samsung Buds 4 Pro — оригинальная техника, под заказ от 3–5 дней.",
-      "simTypes": null,
-      "simModifiers": [],
-      "colors": [
-        {
-          "id": "default",
-          "name": "Стандарт",
-          "hex": "#888888",
-          "image": "",
-          "importNames": ""
-        }
-      ],
-      "storage": [
-        {
-          "label": "Стандарт"
-        }
-      ],
-      "variants": [
-        {
-          "colorId": "default",
-          "storage": "Стандарт",
-          "simType": "",
-          "purchasePrice": 12800,
-          "price": 14900
-        }
-      ],
-      "sizes": null,
-      "stock": [],
-      "images": [],
-      "markupPercent": 15,
-      "markupFixed": 0,
-      "showCatalogSpec": false,
-      "importNames": "Samsung Buds 4 Pro",
       "hidden": true
     },
     {
@@ -3637,6 +3514,20 @@
           "hex": "#888888",
           "image": "",
           "importNames": ""
+        },
+        {
+          "id": "white",
+          "name": "White",
+          "hex": "#888888",
+          "image": "",
+          "importNames": "White"
+        },
+        {
+          "id": "black",
+          "name": "Black",
+          "hex": "#888888",
+          "image": "",
+          "importNames": "Black"
         }
       ],
       "storage": [],
@@ -3647,6 +3538,20 @@
           "simType": "",
           "purchasePrice": 12300,
           "price": 13900
+        },
+        {
+          "colorId": "white",
+          "storage": "Стандарт",
+          "simType": "",
+          "purchasePrice": 12300,
+          "price": 13900
+        },
+        {
+          "colorId": "black",
+          "storage": "Стандарт",
+          "simType": "",
+          "purchasePrice": 18300,
+          "price": 20900
         }
       ],
       "sizes": null,
@@ -3842,145 +3747,6 @@
       "hidden": true
     },
     {
-      "id": 77,
-      "slug": "ray-ban-meta-headliner-gen-2",
-      "name": "Ray Ban Meta Headliner (Gen 2)",
-      "category": "airpods",
-      "brand": "Ray-Ban",
-      "badge": null,
-      "image": "",
-      "coverImage": "",
-      "description": "Ray Ban Meta Headliner (Gen 2) — оригинальная техника, под заказ от 3–5 дней.",
-      "simTypes": null,
-      "simModifiers": [],
-      "colors": [
-        {
-          "id": "default",
-          "name": "Стандарт",
-          "hex": "#888888",
-          "image": "",
-          "importNames": ""
-        }
-      ],
-      "storage": [
-        {
-          "label": "Стандарт"
-        }
-      ],
-      "variants": [
-        {
-          "colorId": "default",
-          "storage": "S50",
-          "simType": "",
-          "purchasePrice": 32500,
-          "price": 36900
-        }
-      ],
-      "sizes": null,
-      "stock": [],
-      "images": [],
-      "markupPercent": 15,
-      "markupFixed": 0,
-      "showCatalogSpec": false,
-      "importNames": "Ray Ban Meta Headliner (Gen 2)",
-      "hidden": true
-    },
-    {
-      "id": 78,
-      "slug": "ray-ban-meta-wayfarer-gen-2",
-      "name": "Ray Ban Meta Wayfarer (Gen 2)",
-      "category": "airpods",
-      "brand": "Ray-Ban",
-      "badge": null,
-      "image": "",
-      "coverImage": "",
-      "description": "Ray Ban Meta Wayfarer (Gen 2) — оригинальная техника, под заказ от 3–5 дней.",
-      "simTypes": null,
-      "simModifiers": [],
-      "colors": [
-        {
-          "id": "default",
-          "name": "Стандарт",
-          "hex": "#888888",
-          "image": "",
-          "importNames": ""
-        }
-      ],
-      "storage": [
-        {
-          "label": "Стандарт"
-        }
-      ],
-      "variants": [
-        {
-          "colorId": "default",
-          "storage": "S50",
-          "simType": "",
-          "purchasePrice": 31000,
-          "price": 34900
-        },
-        {
-          "colorId": "default",
-          "storage": "S53",
-          "simType": "",
-          "purchasePrice": 31500,
-          "price": 35900
-        }
-      ],
-      "sizes": null,
-      "stock": [],
-      "images": [],
-      "markupPercent": 15,
-      "markupFixed": 0,
-      "showCatalogSpec": false,
-      "importNames": "Ray Ban Meta Wayfarer (Gen 2)",
-      "hidden": true
-    },
-    {
-      "id": 79,
-      "slug": "google-fitbit-air",
-      "name": "Google Fitbit Air",
-      "category": "airpods",
-      "brand": "Google",
-      "badge": null,
-      "image": "",
-      "coverImage": "",
-      "description": "Google Fitbit Air — оригинальная техника, под заказ от 3–5 дней.",
-      "simTypes": null,
-      "simModifiers": [],
-      "colors": [
-        {
-          "id": "default",
-          "name": "Стандарт",
-          "hex": "#888888",
-          "image": "",
-          "importNames": ""
-        }
-      ],
-      "storage": [
-        {
-          "label": "Стандарт"
-        }
-      ],
-      "variants": [
-        {
-          "colorId": "default",
-          "storage": "Стандарт",
-          "simType": "",
-          "purchasePrice": 14000,
-          "price": 15900
-        }
-      ],
-      "sizes": null,
-      "stock": [],
-      "images": [],
-      "markupPercent": 15,
-      "markupFixed": 0,
-      "showCatalogSpec": false,
-      "importNames": "Google Fitbit Air",
-      "hidden": true
-    },
-    {
       "id": 80,
       "slug": "redmi-note-15-pro",
       "name": "Redmi Note 15 Pro",
@@ -4050,6 +3816,384 @@
       "markupFixed": 0,
       "showCatalogSpec": false,
       "importNames": "Redmi Note 15 Pro"
+    },
+    {
+      "id": 81,
+      "slug": "marshall-major-5",
+      "name": "Marshall Major 5",
+      "category": "airpods",
+      "brand": "Apple",
+      "badge": null,
+      "image": "",
+      "coverImage": "",
+      "description": "Marshall Major 5 — оригинальная техника, под заказ от 3–5 дней.",
+      "simTypes": null,
+      "simModifiers": [],
+      "colors": [
+        {
+          "id": "black",
+          "name": "Black",
+          "hex": "#888888",
+          "image": "",
+          "importNames": "Black"
+        },
+        {
+          "id": "brown",
+          "name": "Brown",
+          "hex": "#888888",
+          "image": "",
+          "importNames": "Brown"
+        },
+        {
+          "id": "cream",
+          "name": "Cream",
+          "hex": "#888888",
+          "image": "",
+          "importNames": "Cream"
+        },
+        {
+          "id": "midnight-blue",
+          "name": "Midnight Blue",
+          "hex": "#888888",
+          "image": "",
+          "importNames": "Midnight Blue"
+        }
+      ],
+      "storage": [
+        {
+          "label": "Стандарт"
+        }
+      ],
+      "variants": [
+        {
+          "colorId": "black",
+          "storage": "Стандарт",
+          "simType": "",
+          "purchasePrice": 5000,
+          "price": 5900
+        },
+        {
+          "colorId": "brown",
+          "storage": "Стандарт",
+          "simType": "",
+          "purchasePrice": 5000,
+          "price": 5900
+        },
+        {
+          "colorId": "cream",
+          "storage": "Стандарт",
+          "simType": "",
+          "purchasePrice": 5000,
+          "price": 5900
+        },
+        {
+          "colorId": "midnight-blue",
+          "storage": "Стандарт",
+          "simType": "",
+          "purchasePrice": 4500,
+          "price": 5900
+        }
+      ],
+      "sizes": null,
+      "stock": [],
+      "images": [],
+      "markupPercent": 15,
+      "markupFixed": 0,
+      "showCatalogSpec": false,
+      "importNames": "Marshall Major 5"
+    },
+    {
+      "id": 82,
+      "slug": "samsung-buds-4-pro",
+      "name": "Samsung Buds 4 Pro",
+      "category": "airpods",
+      "brand": "Samsung",
+      "badge": null,
+      "image": "",
+      "coverImage": "",
+      "description": "Samsung Buds 4 Pro — оригинальная техника, под заказ от 3–5 дней.",
+      "simTypes": null,
+      "simModifiers": [],
+      "colors": [
+        {
+          "id": "black",
+          "name": "Black",
+          "hex": "#888888",
+          "image": "",
+          "importNames": "Black"
+        }
+      ],
+      "storage": [
+        {
+          "label": "Стандарт"
+        }
+      ],
+      "variants": [
+        {
+          "colorId": "black",
+          "storage": "Стандарт",
+          "simType": "",
+          "purchasePrice": 12800,
+          "price": 14900
+        }
+      ],
+      "sizes": null,
+      "stock": [],
+      "images": [],
+      "markupPercent": 15,
+      "markupFixed": 0,
+      "showCatalogSpec": false,
+      "importNames": "Samsung Buds 4 Pro"
+    },
+    {
+      "id": 83,
+      "slug": "ray-ban-meta-headliner-gen-2",
+      "name": "Ray Ban Meta Headliner (Gen 2)",
+      "category": "airpods",
+      "brand": "Ray-Ban",
+      "badge": null,
+      "image": "",
+      "coverImage": "",
+      "description": "Ray Ban Meta Headliner (Gen 2) — оригинальная техника, под заказ от 3–5 дней.",
+      "simTypes": null,
+      "simModifiers": [],
+      "colors": [
+        {
+          "id": "matte-black-polar-gradie",
+          "name": "Matte Black/Polar Gradient Graphite",
+          "hex": "#888888",
+          "image": "",
+          "importNames": "Matte Black/Polar Gradient Graphite"
+        }
+      ],
+      "storage": [
+        {
+          "label": "Стандарт"
+        },
+        {
+          "label": "S50"
+        }
+      ],
+      "variants": [
+        {
+          "colorId": "matte-black-polar-gradie",
+          "storage": "S50",
+          "simType": "",
+          "purchasePrice": 32500,
+          "price": 36900
+        }
+      ],
+      "sizes": null,
+      "stock": [],
+      "images": [],
+      "markupPercent": 15,
+      "markupFixed": 0,
+      "showCatalogSpec": false,
+      "importNames": "Ray Ban Meta Headliner (Gen 2)"
+    },
+    {
+      "id": 84,
+      "slug": "ray-ban-meta-wayfarer-gen-2",
+      "name": "Ray Ban Meta Wayfarer (Gen 2)",
+      "category": "airpods",
+      "brand": "Ray-Ban",
+      "badge": null,
+      "image": "",
+      "coverImage": "",
+      "description": "Ray Ban Meta Wayfarer (Gen 2) — оригинальная техника, под заказ от 3–5 дней.",
+      "simTypes": null,
+      "simModifiers": [],
+      "colors": [
+        {
+          "id": "matte-black-transition-g",
+          "name": "Matte Black/Transition Gray",
+          "hex": "#888888",
+          "image": "",
+          "importNames": "Matte Black/Transition Gray"
+        },
+        {
+          "id": "shiny-black-transitions-",
+          "name": "Shiny Black/Transitions Graphite Green",
+          "hex": "#888888",
+          "image": "",
+          "importNames": "Shiny Black/Transitions Graphite Green"
+        },
+        {
+          "id": "shiny-cosmic-blue-transi",
+          "name": "Shiny Cosmic Blue/Transitions Sapphire",
+          "hex": "#888888",
+          "image": "",
+          "importNames": "Shiny Cosmic Blue/Transitions Sapphire"
+        },
+        {
+          "id": "matte-black-clear",
+          "name": "Matte Black/Clear",
+          "hex": "#888888",
+          "image": "",
+          "importNames": "Matte Black/Clear"
+        },
+        {
+          "id": "matte-black-polar-gradie",
+          "name": "Matte Black/Polar Gradient Graphite",
+          "hex": "#888888",
+          "image": "",
+          "importNames": "Matte Black/Polar Gradient Graphite"
+        },
+        {
+          "id": "shiny-black-g15-green",
+          "name": "Shiny Black/G15 Green",
+          "hex": "#888888",
+          "image": "",
+          "importNames": "Shiny Black/G15 Green"
+        }
+      ],
+      "storage": [
+        {
+          "label": "Стандарт"
+        },
+        {
+          "label": "S50"
+        },
+        {
+          "label": "S53"
+        }
+      ],
+      "variants": [
+        {
+          "colorId": "matte-black-transition-g",
+          "storage": "S50",
+          "simType": "",
+          "purchasePrice": 37500,
+          "price": 41900
+        },
+        {
+          "colorId": "shiny-black-transitions-",
+          "storage": "S53",
+          "simType": "",
+          "purchasePrice": 35500,
+          "price": 39900
+        },
+        {
+          "colorId": "shiny-cosmic-blue-transi",
+          "storage": "S50",
+          "simType": "",
+          "purchasePrice": 42000,
+          "price": 46900
+        },
+        {
+          "colorId": "shiny-cosmic-blue-transi",
+          "storage": "S53",
+          "simType": "",
+          "purchasePrice": 42000,
+          "price": 46900
+        },
+        {
+          "colorId": "matte-black-clear",
+          "storage": "S50",
+          "simType": "",
+          "purchasePrice": 33000,
+          "price": 36900
+        },
+        {
+          "colorId": "matte-black-clear",
+          "storage": "S53",
+          "simType": "",
+          "purchasePrice": 32500,
+          "price": 36900
+        },
+        {
+          "colorId": "matte-black-polar-gradie",
+          "storage": "S50",
+          "simType": "",
+          "purchasePrice": 34000,
+          "price": 37900
+        },
+        {
+          "colorId": "matte-black-polar-gradie",
+          "storage": "S53",
+          "simType": "",
+          "purchasePrice": 34500,
+          "price": 38900
+        },
+        {
+          "colorId": "shiny-black-g15-green",
+          "storage": "S50",
+          "simType": "",
+          "purchasePrice": 31000,
+          "price": 34900
+        },
+        {
+          "colorId": "shiny-black-g15-green",
+          "storage": "S53",
+          "simType": "",
+          "purchasePrice": 31500,
+          "price": 35900
+        }
+      ],
+      "sizes": null,
+      "stock": [],
+      "images": [],
+      "markupPercent": 15,
+      "markupFixed": 0,
+      "showCatalogSpec": false,
+      "importNames": "Ray Ban Meta Wayfarer (Gen 2)"
+    },
+    {
+      "id": 85,
+      "slug": "google-fitbit-air",
+      "name": "Google Fitbit Air",
+      "category": "airpods",
+      "brand": "Google",
+      "badge": null,
+      "image": "",
+      "coverImage": "",
+      "description": "Google Fitbit Air — оригинальная техника, под заказ от 3–5 дней.",
+      "simTypes": null,
+      "simModifiers": [],
+      "colors": [
+        {
+          "id": "obsidian",
+          "name": "Obsidian",
+          "hex": "#888888",
+          "image": "",
+          "importNames": "Obsidian"
+        },
+        {
+          "id": "berry",
+          "name": "Berry",
+          "hex": "#888888",
+          "image": "",
+          "importNames": "Berry"
+        }
+      ],
+      "storage": [
+        {
+          "label": "Стандарт"
+        }
+      ],
+      "variants": [
+        {
+          "colorId": "obsidian",
+          "storage": "Стандарт",
+          "simType": "",
+          "purchasePrice": 17000,
+          "price": 19900
+        },
+        {
+          "colorId": "berry",
+          "storage": "Стандарт",
+          "simType": "",
+          "purchasePrice": 14000,
+          "price": 15900
+        }
+      ],
+      "sizes": null,
+      "stock": [],
+      "images": [],
+      "markupPercent": 15,
+      "markupFixed": 0,
+      "showCatalogSpec": false,
+      "importNames": "Google Fitbit Air"
     }
   ]
 }

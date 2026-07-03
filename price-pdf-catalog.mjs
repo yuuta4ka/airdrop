@@ -14,7 +14,7 @@ const COLOR_ALIASES = {
   natural: ['natural', 'desert', 'titanium', 'titan'],
   yellow: ['yellow', 'жёлтый'],
   red: ['red', 'красный', 'crimson'],
-  brown: ['brown', 'коричневый', 'cream'],
+  brown: ['brown', 'коричневый'],
   navy: ['navy', 'тёмно-синий'],
 }
 
@@ -37,6 +37,18 @@ function normalizeSim(raw) {
   if (/esim\+esim|esimesim|dualesim/i.test(s)) return 'eSIM only'
   if (/sim\+esim|esim\+sim|simesim|dual\s*sim/i.test(s)) return 'eSIM + SIM'
   return ''
+}
+
+/** Точное совпадение имени/id/importNames цвета (без фаззи-алиасов COLOR_ALIASES) */
+function findExactColorId(name, colors) {
+  const t = String(name).trim().toLowerCase()
+  if (!t) return null
+  for (const col of colors) {
+    const aliases = [col.name, col.id, ...(col.importNames ? col.importNames.split(/[,;]+/) : [])]
+      .map((a) => a.trim().toLowerCase()).filter(Boolean)
+    if (aliases.includes(t)) return col.id
+  }
+  return null
 }
 
 function findColorId(name, colors) {
@@ -216,13 +228,9 @@ function parseVariantForUpdate(name, product, meta) {
     if (/^Ray\s+Ban\s+Meta/i.test(name)) return parseRayBanVariant(name, product, false)
     if (/^Samsung\s+(?:Galaxy\s+)?Buds/i.test(name)) return parseSamsungBudsVariant(name, product, false)
     if (/^Google\s+Fitbit/i.test(name)) return parseFitbitVariant(name, product, false)
-    let colorName = ''
-    for (const w of AIRPODS_COLOR_SUFFIXES) {
-      const re = new RegExp(`\\s+${w.replace(/\s+/g, '\\s+')}\\s*$`, 'i')
-      if (re.test(name)) { colorName = w; break }
-    }
+    const colorName = matchAirpodsColorSuffix(name)
     const colorId = colorName
-      ? (findColorId(colorName, product.colors) || ensureColor(product, colorName))
+      ? (findExactColorId(colorName, product.colors) || ensureColor(product, colorName))
       : (product.colors?.[0]?.id || ensureColor(product, 'Стандарт'))
     const storageLabel = resolveStorageLabel('Стандарт', product, meta)
       || product.storage?.[0]?.label
@@ -260,9 +268,20 @@ function stripSamsungStorage(name) {
 }
 
 const AIRPODS_COLOR_SUFFIXES = [
+  'Midnight Blue', 'Space Gray', 'Space Grey',
   'Midnight', 'Purple', 'Starlight', 'Orange', 'Black', 'White', 'Blue', 'Red', 'Green',
-  'Cream', 'Brown', 'Silver', 'Gold', 'Pink', 'Yellow', 'Space Gray', 'Space Grey',
+  'Cream', 'Brown', 'Silver', 'Gold', 'Pink', 'Yellow',
 ]
+
+/** Ищет самый длинный (наиболее специфичный) суффикс-цвет в конце названия */
+function matchAirpodsColorSuffix(name) {
+  let best = ''
+  for (const color of AIRPODS_COLOR_SUFFIXES) {
+    const re = new RegExp(`\\s+${color.replace(/\s+/g, '\\s+')}\\s*$`, 'i')
+    if (re.test(name) && color.length > best.length) best = color
+  }
+  return best
+}
 
 function stripAirpodsColorSuffix(name) {
   let base = String(name).trim()
@@ -424,7 +443,6 @@ function parseRayBanVariant(name, product, mutate = true) {
   const colorName = frameM?.[1]?.trim() || 'Стандарт'
   const colorId = findColorId(colorName, product.colors)
     || (mutate ? ensureColor(product, colorName) : null)
-    || product.colors?.[0]?.id
   if (!colorId) return null
   if (mutate) ensureStorage(product, storage)
   return { colorId, storage, simType: '' }
@@ -435,7 +453,6 @@ function parseSamsungBudsVariant(name, product, mutate = true) {
   const colorName = m?.[1]?.trim() || 'Стандарт'
   const colorId = findColorId(colorName, product.colors)
     || (mutate ? ensureColor(product, colorName) : null)
-    || product.colors?.[0]?.id
   if (!colorId) return null
   if (mutate) ensureStorage(product, 'Стандарт')
   return { colorId, storage: 'Стандарт', simType: '' }
@@ -446,7 +463,6 @@ function parseFitbitVariant(name, product, mutate = true) {
   const colorName = m?.[1]?.trim() || 'Стандарт'
   const colorId = findColorId(colorName, product.colors)
     || (mutate ? ensureColor(product, colorName) : null)
-    || product.colors?.[0]?.id
   if (!colorId) return null
   if (mutate) ensureStorage(product, 'Стандарт')
   return { colorId, storage: 'Стандарт', simType: '' }
@@ -457,7 +473,6 @@ function parseHuaweiWatchVariant(name, product, mutate = true) {
   const colorName = paren?.[1]?.trim() || 'Стандарт'
   const colorId = findColorId(colorName, product.colors)
     || (mutate ? ensureColor(product, colorName) : null)
-    || product.colors?.[0]?.id
   if (!colorId) return null
   if (mutate) ensureStorage(product, 'Стандарт')
   return { colorId, storage: 'Стандарт', simType: '' }
@@ -495,14 +510,10 @@ function parseAirpodsVariant(name, product) {
   if (/^Ray\s+Ban\s+Meta/i.test(name)) return parseRayBanVariant(name, product)
   if (/^Samsung\s+(?:Galaxy\s+)?Buds/i.test(name)) return parseSamsungBudsVariant(name, product)
   if (/^Google\s+Fitbit/i.test(name)) return parseFitbitVariant(name, product)
-  let colorName = 'Стандарт'
-  for (const w of AIRPODS_COLOR_SUFFIXES) {
-    const re = new RegExp(`\\s+${w.replace(/\s+/g, '\\s+')}\\s*$`, 'i')
-    if (re.test(name)) { colorName = w; break }
-  }
+  const colorName = matchAirpodsColorSuffix(name) || 'Стандарт'
   const colorId = colorName === 'Стандарт'
     ? ensureColor(product, 'Стандарт')
-    : (findColorId(colorName, product.colors) || ensureColor(product, colorName))
+    : (findExactColorId(colorName, product.colors) || ensureColor(product, colorName))
   ensureStorage(product, 'Стандарт')
   product.simTypes = null
   return { colorId, storage: 'Стандарт', simType: '' }
@@ -611,7 +622,9 @@ function createEmptyProduct(name, meta, id) {
         { id: 'white', name: 'Белый', hex: '#f0f0f0', image: '', importNames: 'Silver, White, Starlight' },
         { id: 'orange', name: 'Оранжевый', hex: '#e88a40', image: '', importNames: 'Orange, Cosmic Orange' },
       ]
-      : [{ id: 'default', name: 'Стандарт', hex: '#888888', image: '', importNames: '' }],
+      : meta.type === 'airpods'
+        ? []
+        : [{ id: 'default', name: 'Стандарт', hex: '#888888', image: '', importNames: '' }],
     storage: isWatch || isIpad ? [] : [{ label: 'Стандарт' }],
     variants: [],
     sizes: isWatch ? [] : null,

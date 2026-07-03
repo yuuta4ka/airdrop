@@ -3,7 +3,7 @@ import {
   getProductImages, getInitialSelection, getStockForVariant,
   usesSupplierPricing, isComboOrderable, isOptionUnavailable,
 } from './store.js'
-import { getDisplayStorage, getProductSizeLabels, resolveVariantStorageLabel, shouldShowStorageOptions, shouldShowSizesOptions } from './product-options.js'
+import { getDisplayStorage, getProductSizeLabels, resolveVariantStorageLabel, shouldShowStorageOptions, shouldShowSizesOptions, shouldShowColorOptions } from './product-options.js'
 import { renderHeader, renderFooter } from './layout.js'
 import { initCartUI, addItem, openCart, showToast } from './cart-ui.js'
 import { mountProductInstallmentCalc } from './installment-calc.js'
@@ -59,6 +59,7 @@ async function init() {
   els.sizes = document.getElementById('option-sizes')
   els.simTypes = document.getElementById('option-sim')
   els.warranty = document.getElementById('option-warranty')
+  els.colorsGroup = document.getElementById('group-colors')
   els.storageGroup = document.getElementById('group-storage')
   els.sizesGroup = document.getElementById('group-sizes')
   els.simGroup = document.getElementById('group-sim')
@@ -431,6 +432,10 @@ function renderOptions() {
     els.badge.style.display = 'inline-block'
   } else {
     els.badge.style.display = 'none'
+  }
+
+  if (els.colorsGroup) {
+    els.colorsGroup.style.display = shouldShowColorOptions(product) ? '' : 'none'
   }
 
   els.colors.innerHTML = product.colors.map((c, i) => `

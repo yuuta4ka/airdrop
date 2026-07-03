@@ -34,6 +34,14 @@ export function getDisplayStorage(product) {
   return list.filter((s) => s.label)
 }
 
+/** Скрывать выбор цвета, если у товара только один безымянный «Стандарт»-цвет */
+export function shouldShowColorOptions(product) {
+  const colors = product.colors || []
+  if (colors.length > 1) return true
+  if (colors.length === 1) return colors[0].name !== 'Стандарт'
+  return false
+}
+
 export function shouldShowStorageOptions(product) {
   if (shouldShowSizesOptions(product)) return false
   const visible = getDisplayStorage(product)
@@ -51,7 +59,8 @@ export function resolveVariantStorageLabel(product, storageIdx = 0, sizeIdx = 0)
   }
   const visible = getDisplayStorage(product)
   if (visible.length) return visible[storageIdx]?.label || visible[0]?.label || ''
-  return product.storage?.[storageIdx]?.label || product.storage?.[0]?.label || ''
+  if (product.storage?.length) return product.storage[storageIdx]?.label || product.storage[0]?.label || ''
+  return 'Стандарт'
 }
 
 export function normalizeWatchSizeLabel(label) {
