@@ -509,7 +509,12 @@ const server = http.createServer(async (req, res) => {
   }
 
   if (p === '/api/ping' && req.method === 'GET') {
-    return sendJson(res, 200, { ok: true, importPdf: true })
+    return sendJson(res, 200, {
+      ok: true,
+      importPdf: true,
+      importCatalogZip: true,
+      domPolyfill: true,
+    })
   }
 
   if (p === '/api/import-price-pdf' && req.method === 'POST') {
@@ -776,7 +781,7 @@ server.on('error', (err) => {
 server.listen(PORT, '0.0.0.0', () => {
   console.log(`АирДроп: http://0.0.0.0:${PORT}`)
   console.log(`Админка: http://localhost:${PORT}/admin`)
-  console.log(`Импорт PDF: http://localhost:${PORT}/admin → Импорт прайса`)
+  console.log(`Импорт PDF + ZIP каталога: /admin → Экспорт / импорт`)
   const tg = getTelegramStatus()
   if (tg.configured) {
     console.log(`Telegram-уведомления: включены (${tg.chatCount} получателей)`)

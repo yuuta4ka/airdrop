@@ -103,7 +103,7 @@ async function parseApiJson(res) {
   } catch {
     if (res.status === 404) {
       throw new Error(
-        'Сервер не поддерживает импорт PDF (404). Остановите старый процесс и перезапустите: bash start.sh',
+        'Сервер устарел (404). Остановите и перезапустите: click-win\\Start.bat или click/Start.command',
       )
     }
     throw new Error(`Ошибка сервера (${res.status}): ${text.slice(0, 160)}`)
@@ -1485,6 +1485,10 @@ function renderConfig(c) {
     if (!file) return
     resultEl.textContent = 'Импорт…'
     try {
+      const ping = await fetch('/api/ping').then((r) => parseApiJson(r)).catch(() => null)
+      if (!ping?.importCatalogZip) {
+        throw new Error('Сервер устарел. Перезапустите Start.bat / Start.command и обновите страницу (Ctrl+F5).')
+      }
       const data = await readFileAsBase64(file)
       const mode = $('import-catalog-mode').value
       const res = await fetch('/api/admin/import-catalog', {
@@ -1492,8 +1496,8 @@ function renderConfig(c) {
         headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${getToken()}` },
         body: JSON.stringify({ data, mode }),
       })
-      const payload = await res.json().catch(() => ({}))
-      if (!res.ok) throw new Error(payload.error || 'Ошибка импорта')
+      const payload = await parseApiJson(res)
+      if (!res.ok) throw new Error(payload?.error || `Ошибка импорта (${res.status})`)
       productsData = await (await fetch('/api/products')).json()
       invalidateStore()
       clearDraft()
