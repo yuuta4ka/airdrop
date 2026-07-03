@@ -8,9 +8,9 @@ const COLOR_ALIASES = {
   blue: ['blue', 'синий', 'deep blue', 'ultramarine', 'sky blue', 'mist blue', 'cobalt violet', 'silverblue', 'indigo'],
   orange: ['orange', 'оранжевый', 'cosmic orange'],
   green: ['green', 'зелёный', 'sage', 'teal', 'бирюзовый'],
-  pink: ['pink', 'розовый', 'rose gold', 'light blush', 'lavender', 'lilac', 'purple', 'violet', 'фиолетовый', 'mist purple'],
+  pink: ['pink', 'розовый', 'rose gold', 'light blush', 'lavender', 'lilac', 'purple', 'violet', 'фиолетовый', 'mist purple', 'cobalt violet'],
   gray: ['gray', 'grey', 'графитовый', 'космический серый', 'space gray', 'graphite'],
-  gold: ['gold', 'золотой', 'champagne'],
+  gold: ['gold', 'золотой', 'champagne', 'light gold'],
   natural: ['natural', 'desert', 'titanium', 'titan'],
   yellow: ['yellow', 'жёлтый'],
   red: ['red', 'красный', 'crimson'],
@@ -91,9 +91,22 @@ function resolveColorId(name, product) {
   return findColorId(name, product.colors || [])
 }
 
-function normalizeSamsungPhoneStorage(raw) {
+function normalizeSamsungPhoneStorage(raw, product = null) {
   const slash = String(raw).match(/(\d+)\s*\/\s*(\d+)\s*(Gb|GB|ГБ)?/i)
-  if (slash) return `${slash[2]} ГБ`
+  if (slash) {
+    const ram = slash[1]
+    const rom = slash[2]
+    const usesCombined = product?.storage?.some((s) => /\d+\s*\/\s*\d+/.test(s.label))
+    if (usesCombined) {
+      const inProduct = product.storage.find((s) => {
+        const n = s.label.replace(/\s/g, '').toLowerCase()
+        return n === `${ram}/${rom}гб` || n.startsWith(`${ram}/${rom}`)
+      })
+      if (inProduct) return inProduct.label
+      return `${ram}/${rom} ГБ`
+    }
+    return `${rom} ГБ`
+  }
   let storage = String(raw).replace(/\s*Gb/i, ' ГБ').replace(/GB/i, ' ГБ').trim()
   if (!/ГБ|ТБ/.test(storage)) storage += ' ГБ'
   return storage
@@ -101,6 +114,7 @@ function normalizeSamsungPhoneStorage(raw) {
 
 function resolveStorageLabel(label, product, meta) {
   if (!label || label === 'Стандарт') {
+    if (meta.type === 'airpods' && !product.storage?.length) return 'Стандарт'
     if (['watch', 'watch-ultra', 'airpods', 'samsung-watch'].includes(meta.type)) {
       return product.storage?.some((s) => s.label === 'Стандарт') ? 'Стандарт' : null
     }
@@ -114,6 +128,12 @@ function resolveStorageLabel(label, product, meta) {
   if (['samsung-phone', 'xiaomi', 'huawei'].includes(meta.type)) {
     const slash = String(label).match(/(\d+)\s*\/\s*(\d+)/)
     if (slash) {
+      const combined = `${slash[1]}/${slash[2]}`
+      const byCombined = product.storage?.find((s) => {
+        const n = s.label.replace(/\s/g, '').toLowerCase()
+        return n.startsWith(combined.toLowerCase())
+      })
+      if (byCombined) return byCombined.label
       const romNum = slash[2]
       const byRom = product.storage?.find((s) => new RegExp(`\\b${romNum}\\s*(ГБ|ТБ)`, 'i').test(s.label))
       if (byRom) return byRom.label
@@ -152,7 +172,7 @@ function parseVariantForUpdate(name, product, meta) {
   if (meta.type === 'samsung-phone') {
     const m = name.match(/(\d+\/\d+\s*Gb?|\d+\s*Gb|\d+\/\d+)\s*(.+)$/i)
     if (!m) return null
-    const storage = normalizeSamsungPhoneStorage(m[1])
+    const storage = normalizeSamsungPhoneStorage(m[1], product)
     const colorId = findColorId(m[2].trim(), product.colors)
     if (!colorId) return null
     const storageLabel = resolveStorageLabel(storage, product, meta)
@@ -199,8 +219,9 @@ function parseVariantForUpdate(name, product, meta) {
     }
     const colorId = colorName ? findColorId(colorName, product.colors) : product.colors?.[0]?.id
     if (!colorId) return null
-    const storageLabel = resolveStorageLabel('Стандарт', product, meta) || product.storage?.[0]?.label
-    if (!storageLabel) return null
+    const storageLabel = resolveStorageLabel('Стандарт', product, meta)
+      || product.storage?.[0]?.label
+      || 'Стандарт'
     return { colorId, storage: storageLabel, simType: '' }
   }
 
@@ -307,7 +328,7 @@ function parseSamsungPhoneVariant(name, product) {
   let storage = 'Стандарт'
   let colorPart = name
   if (m) {
-    storage = normalizeSamsungPhoneStorage(m[1])
+    storage = normalizeSamsungPhoneStorage(m[1], product)
     colorPart = m[2]
   }
   const colorId = findColorId(colorPart, product.colors) || ensureColor(product, colorPart.trim())
@@ -676,7 +697,10 @@ export function buildCatalogFromEntries(rawEntries, existingProducts, markup = {
       try {
         const variantName = options.getVariantName ? options.getVariantName(entry, meta) : entry.name
         if (pricesOnly) {
-          const variant = parseVariantForUpdate(variantName, product, meta)
+          let variant = parseVariantForUpdate(variantName, product, meta)
+          if (!variant && options.upsertVariants) {
+            variant = parseVariant({ name: variantName }, product, meta)
+          }
           if (!variant) {
             stats.skippedVariants += 1
             if (stats.skippedVariantSamples.length < 12) stats.skippedVariantSamples.push(entry.name)

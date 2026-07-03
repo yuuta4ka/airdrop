@@ -952,8 +952,6 @@ function renderProductEditor(c) {
 
     ${section('Цвета', `<div id="color-list"></div><button type="button" class="btn btn--secondary" id="add-color">+ Цвет</button>
     <p class="admin-hint">В «Названия в прайсе» — как у поставщика (Silver, Deep Blue…), через запятую.</p>`)}
-
-    ${showStorage ? section('Память', `<div id="storage-list"></div><button type="button" class="btn btn--secondary" id="add-storage">+ Объём</button>
     <p class="admin-hint">256 ГБ, 512 ГБ, 1 ТБ. Цены — в блоке прайса ниже.</p>`) : ''}
 
     ${showSim ? section('Версия SIM', `
@@ -969,8 +967,9 @@ function renderProductEditor(c) {
         <label class="field"><span>Наценка фикс., ₽</span><input type="number" id="p-markup-fixed" value="${p.markupFixed ?? 0}" min="0" step="100" /></label>
       </div>
       <label class="field"><span>Вставить прайс (только этот товар)</span>
-        <textarea id="p-supplier-paste" rows="6" placeholder="17 Pro Max 256Gb Silver (eSim+eSim)&#10;98 800 ₽"></textarea>
+        <textarea id="p-supplier-paste" rows="6" placeholder="17 Pro Max 256Gb Silver (eSim+eSim) = 98 800 ₽"></textarea>
       </label>
+      <p class="admin-hint">Формат: <code>256Gb Silver (eSim+eSim) = 98 800 ₽</code> или название и цена на двух строках.</p>
       <div class="admin-row admin-row--actions">
         <button type="button" class="btn btn--primary" id="import-supplier">Импортировать в этот товар</button>
         <button type="button" class="btn btn--ghost" id="recalc-variants">Пересчитать розницу</button>
@@ -1176,9 +1175,17 @@ function renderProductEditor(c) {
   })
 
   const renderVariants = () => {
-    if ($('variant-list')?.childElementCount) collectProductVariants(p)
+    if ($('variant-list')?.querySelector('.admin-variant-row')) collectProductVariants(p)
     const markup = getMarkup()
-    const storageLabels = getStorageLabelsFromEditor(p)
+    const storageLabels = (() => {
+      const labels = getStorageLabelsFromEditor(p)
+      if (labels.length) return labels
+      if (!isPhoneCategory(p.category)) {
+        const fromVariants = [...new Set((p.variants || []).map((v) => v.storage).filter(Boolean))]
+        return fromVariants.length ? fromVariants : ['Стандарт']
+      }
+      return labels
+    })()
     const simList = p.simTypes?.length ? p.simTypes : ['']
 
     const displayVariants = isPhoneCategory(p.category)
@@ -1245,9 +1252,12 @@ function renderProductEditor(c) {
 
   $('add-variant').onclick = () => {
     const storages = getDisplayStorage(p)
+    const defaultStorage = storages[0]?.label
+      || p.sizes?.[0]?.label
+      || (isPhoneCategory(p.category) ? '' : 'Стандарт')
     p.variants.push({
       colorId: p.colors[0]?.id || '',
-      storage: storages[0]?.label || p.sizes?.[0]?.label || '',
+      storage: defaultStorage,
       simType: p.simTypes?.[0] || '',
       purchasePrice: 0,
       price: 0,
@@ -1970,17 +1980,19 @@ function collectProductVariants(p) {
   p.markupFixed = num('p-markup-fixed') || 0
   const markup = getMarkupSettings(p)
 
-  p.variants = p.variants.map((_, i) => {
+  p.variants = p.variants.map((v, i) => {
+    const colorEl = $(`var-color-${i}`)
+    if (!colorEl) return v
     const purchasePrice = num(`var-purchase-${i}`)
     const price = purchasePrice > 0 ? calcRetailFromPurchase(purchasePrice, markup) : 0
     return {
-      colorId: $(`var-color-${i}`)?.value || '',
-      storage: $(`var-storage-${i}`)?.value || '',
-      simType: $(`var-sim-${i}`)?.value || '',
+      colorId: colorEl.value || v.colorId || '',
+      storage: $(`var-storage-${i}`)?.value ?? v.storage ?? '',
+      simType: $(`var-sim-${i}`)?.value ?? v.simType ?? '',
       purchasePrice,
       price,
     }
-  }).filter((v) => v.colorId && v.storage)
+  }).filter((v) => v.colorId && (v.storage || !isPhoneCategory(p.category)))
 
   recalcAllVariants(p)
 }

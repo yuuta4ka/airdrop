@@ -143,6 +143,21 @@ function lineMatchesProduct(title, productName) {
   return /\d+\s*(gb|tb|гб|тб)/i.test(title)
 }
 
+function normalizeSupplierText(text) {
+  const out = []
+  for (const raw of String(text).split(/\r?\n/)) {
+    const line = normalizeText(raw)
+    if (!line) continue
+    const eq = line.match(/^(.+?)\s*=\s*(.+)$/)
+    if (eq) {
+      out.push(eq[1].trim(), eq[2].trim())
+      continue
+    }
+    out.push(line)
+  }
+  return out
+}
+
 function pairLines(lines) {
   const pairs = []
   let i = 0
@@ -166,7 +181,7 @@ function pairLines(lines) {
 }
 
 export function parseSupplierPriceList(text, product) {
-  const lines = text.split(/\r?\n/).map((l) => normalizeText(l)).filter((l) => l !== '')
+  const lines = normalizeSupplierText(text)
   const pairs = pairLines(lines)
   const storageLabels = product.sizes?.length > 1
     ? product.sizes.map((s) => s.label)
