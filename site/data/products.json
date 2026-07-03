@@ -413,6 +413,13 @@
           "hex": "#b8a8d8",
           "image": "assets/products/aaf891bb9bd2e85d9f42c857050d91c87a1cc49830176911f7c6c261e6294098.jpg.webp",
           "importNames": ""
+        },
+        {
+          "id": "light-gold",
+          "name": "Light Gold",
+          "hex": "#888888",
+          "image": "",
+          "importNames": "Light Gold"
         }
       ],
       "storage": [
@@ -493,6 +500,13 @@
           "simType": "eSIM only",
           "purchasePrice": 70400,
           "price": 78900
+        },
+        {
+          "colorId": "light-gold",
+          "storage": "256 ГБ",
+          "simType": "eSIM only",
+          "purchasePrice": 69600,
+          "price": 77900
         }
       ],
       "sizes": [],
@@ -525,7 +539,9 @@
       "badge": null,
       "image": "assets/products/548a64f7f89c24a7211af7a31f977369c51a00a874f74a6fbd1b97548a5adb85.jpg.webp",
       "description": "iPhone 16 получил прочный алюминиевый корпус с улучшенным охлаждением для игр и защитное стекло Ceramic Shield. Его универсальная камера Fusion на 48 Мп заменяет четыре объектива, позволяя снимать макро, широкие планы и делать фото с двукратным приближением.",
-      "simTypes": null,
+      "simTypes": [
+        "eSIM + SIM"
+      ],
       "colors": [
         {
           "id": "black",
@@ -561,6 +577,13 @@
           "hex": "#888888",
           "image": "assets/products/0dfebbfdb98e7d9d5a716fcc2ae849859267a29a5fca9078bb42c9ad5d6ee9fe.jpg.webp",
           "importNames": "Ultramarine"
+        },
+        {
+          "id": "desert",
+          "name": "Desert",
+          "hex": "#888888",
+          "image": "",
+          "importNames": "Desert"
         }
       ],
       "storage": [
@@ -609,6 +632,13 @@
           "simType": "eSIM + SIM",
           "purchasePrice": 53700,
           "price": 59900
+        },
+        {
+          "colorId": "desert",
+          "storage": "256 ГБ",
+          "simType": "eSIM + SIM",
+          "purchasePrice": 88500,
+          "price": 98900
         }
       ],
       "images": [
@@ -675,7 +705,7 @@
       "showCatalogSpec": false,
       "markupPercent": 15,
       "markupFixed": 0,
-      "hidden": false,
+      "hidden": true,
       "importNames": ""
     },
     {
@@ -886,7 +916,7 @@
       "markupPercent": 15,
       "markupFixed": 0,
       "hidden": false,
-      "importNames": ""
+      "importNames": "Apple Watch S10"
     },
     {
       "id": 10,
@@ -1059,6 +1089,27 @@
           "hex": "#e8a090",
           "image": "",
           "importNames": "Coral"
+        },
+        {
+          "id": "black",
+          "name": "Black",
+          "hex": "#888888",
+          "image": "",
+          "importNames": "Black"
+        },
+        {
+          "id": "cobalt-violet",
+          "name": "Cobalt Violet",
+          "hex": "#888888",
+          "image": "",
+          "importNames": "Cobalt Violet"
+        },
+        {
+          "id": "sky-blue",
+          "name": "Sky Blue",
+          "hex": "#888888",
+          "image": "",
+          "importNames": "Sky Blue"
         }
       ],
       "storage": [
@@ -1077,6 +1128,27 @@
           "storage": "256 ГБ",
           "simType": "",
           "purchasePrice": 59000,
+          "price": 65900
+        },
+        {
+          "colorId": "black",
+          "storage": "256 ГБ",
+          "simType": "",
+          "purchasePrice": 59000,
+          "price": 65900
+        },
+        {
+          "colorId": "cobalt-violet",
+          "storage": "256 ГБ",
+          "simType": "",
+          "purchasePrice": 59000,
+          "price": 65900
+        },
+        {
+          "colorId": "sky-blue",
+          "storage": "256 ГБ",
+          "simType": "",
+          "purchasePrice": 58500,
           "price": 65900
         }
       ],
@@ -1546,8 +1618,15 @@
           "colorId": "default",
           "storage": "12/512 ГБ",
           "simType": "",
+          "purchasePrice": 85500,
+          "price": 95900
+        },
+        {
+          "colorId": "default",
+          "storage": "12/256 ГБ",
+          "simType": "",
           "purchasePrice": 70500,
-          "price": 91900
+          "price": 78900
         }
       ],
       "sizes": [],
@@ -1950,7 +2029,36 @@
         "assets/products/46034a8ead0690dff4b9410494a630e50c330f6d1ef5697b711cd4fc9dc4007e.jpg.webp",
         "assets/products/466999184157029262abceb2d3ef5449ad4cdb7775b9be391710c0ffba2da126.jpg.webp"
       ],
-      "variants": [],
+      "variants": [
+        {
+          "colorId": "c1783088640318",
+          "storage": "Стандарт",
+          "simType": "",
+          "purchasePrice": 36500,
+          "price": 40900
+        },
+        {
+          "colorId": "c1783088850034",
+          "storage": "Стандарт",
+          "simType": "",
+          "purchasePrice": 38900,
+          "price": 43900
+        },
+        {
+          "colorId": "c1783088962652",
+          "storage": "Стандарт",
+          "simType": "",
+          "purchasePrice": 41500,
+          "price": 46900
+        },
+        {
+          "colorId": "c1783088910650",
+          "storage": "Стандарт",
+          "simType": "",
+          "purchasePrice": 40200,
+          "price": 44900
+        }
+      ],
       "markupPercent": 15,
       "markupFixed": 0,
       "showCatalogSpec": false,
@@ -2127,7 +2235,15 @@
       "description": "Наушники TWS Apple Airpods 4 ANC имеют защищенную конструкцию по стандарту IP54. Они не боятся воздействия пыли, влаги, брызг воды и атмосферных осадков. Эргономичная форма вкладышей обеспечивает комфорт в использовании.",
       "simTypes": null,
       "simModifiers": [],
-      "colors": [],
+      "colors": [
+        {
+          "id": "стандарт",
+          "name": "Стандарт",
+          "hex": "#888888",
+          "image": "",
+          "importNames": "Стандарт"
+        }
+      ],
       "storage": [],
       "sizes": [],
       "stock": [],
@@ -2138,7 +2254,15 @@
         "assets/products/47e77751c0afea17c7e93c6e35abb5cc82833b3e160059f8e7392ac8eabb744c.jpg.webp",
         "assets/products/568f2cc4f89abf1d831afaf7b6e8f53e822b3db78cb59f2ffcffc442a41a19b8.jpg.webp"
       ],
-      "variants": [],
+      "variants": [
+        {
+          "colorId": "стандарт",
+          "storage": "Стандарт",
+          "simType": "",
+          "purchasePrice": 9300,
+          "price": 10900
+        }
+      ],
       "markupPercent": 15,
       "markupFixed": 0,
       "showCatalogSpec": false,
@@ -2221,6 +2345,9 @@
       "sizes": [
         {
           "label": "42 мм"
+        },
+        {
+          "label": "46 мм"
         }
       ],
       "stock": [],
@@ -2235,12 +2362,55 @@
         "assets/products/52e41ae038d99b86eb50b3c0343606bd624e3342608bd09093297fc45e97e78b.jpg.webp",
         "assets/products/c83f65d13771799451cccc4c58da2cdfed21f89e2b610341a1de432c47d6e12d.jpg.webp"
       ],
-      "variants": [],
+      "variants": [
+        {
+          "colorId": "c1783090702702",
+          "storage": "46 мм",
+          "simType": "",
+          "purchasePrice": 30000,
+          "price": 33900
+        },
+        {
+          "colorId": "c1783090554849",
+          "storage": "46 мм",
+          "simType": "",
+          "purchasePrice": 29600,
+          "price": 33900
+        },
+        {
+          "colorId": "c1783090702702",
+          "storage": "42 мм",
+          "simType": "",
+          "purchasePrice": 27000,
+          "price": 30900
+        },
+        {
+          "colorId": "c1783090651883",
+          "storage": "42 мм",
+          "simType": "",
+          "purchasePrice": 27000,
+          "price": 30900
+        },
+        {
+          "colorId": "c1783090242748",
+          "storage": "42 мм",
+          "simType": "",
+          "purchasePrice": 27500,
+          "price": 30900
+        },
+        {
+          "colorId": "c1783090554849",
+          "storage": "42 мм",
+          "simType": "",
+          "purchasePrice": 27000,
+          "price": 30900
+        }
+      ],
       "markupPercent": 15,
       "markupFixed": 0,
       "showCatalogSpec": false,
       "hidden": false,
-      "importNames": "S11",
+      "importNames": "Apple Watch S11",
       "coverImage": "assets/products/93d7db5f16639554ac08b80932c14d39d7a54b580a49cd683b2426e92242abc9.jpg.webp"
     }
   ]

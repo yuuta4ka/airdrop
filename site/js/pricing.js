@@ -25,15 +25,20 @@ export function getMarkupSettings(product, variant = null) {
   }
 }
 
+function normalizeStorageKey(label) {
+  return String(label || '').replace(/\s/g, '').toLowerCase().replace(/mm/g, 'мм')
+}
+
 export function usesSupplierPricing(product) {
   return Boolean(product?.variants?.length)
 }
 
 export function findVariant(product, colorId, storageLabel, simType = null) {
   if (!product?.variants?.length) return null
+  const normStorage = normalizeStorageKey(storageLabel)
   return product.variants.find((v) =>
     v.colorId === colorId &&
-    v.storage === storageLabel &&
+    normalizeStorageKey(v.storage) === normStorage &&
     (simType ? v.simType === simType : !v.simType) &&
     Number(v.purchasePrice) > 0
   ) || null
@@ -117,7 +122,7 @@ export function isOptionUnavailable(product, type, value, selected = {}) {
 
   const matches = (v, p) => {
     if (p.colorId && v.colorId !== p.colorId) return false
-    if (p.storage && v.storage !== p.storage) return false
+    if (p.storage && normalizeStorageKey(v.storage) !== normalizeStorageKey(p.storage)) return false
     if (p.simType !== undefined && p.simType !== null && (v.simType || '') !== (p.simType || '')) return false
     return true
   }
@@ -155,7 +160,7 @@ export function getAvailableOptions(product, selected = {}) {
 
   const matches = (v, partial) => {
     if (partial.colorId && v.colorId !== partial.colorId) return false
-    if (partial.storage && v.storage !== partial.storage) return false
+    if (partial.storage && normalizeStorageKey(v.storage) !== normalizeStorageKey(partial.storage)) return false
     if (partial.simType !== undefined && partial.simType !== null && (v.simType || '') !== (partial.simType || '')) return false
     return true
   }

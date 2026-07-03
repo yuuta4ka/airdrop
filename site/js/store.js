@@ -3,7 +3,7 @@ import {
   calcRetailFromPurchase, recalcAllVariants, getStockFallbackPrice,
   getStockForVariant, hasPhysicalStock, isComboOrderable,
 } from './pricing.js'
-import { getDisplayStorage } from './product-options.js'
+import { getDisplayStorage, getProductSizeLabels, resolveVariantStorageLabel } from './product-options.js'
 
 const DEFAULT_CATEGORY_LABELS = {
   all: 'Все',
@@ -99,10 +99,7 @@ export function getProductById(store, id) {
 
 export function calcPrice(product, colorIdx = 0, storageIdx = 0, sizeIdx = 0, simType = null) {
   const color = product.colors?.[colorIdx]
-  const storage = product.storage?.[storageIdx]
-  const storageLabel = product.sizes?.length > 1
-    ? product.sizes[sizeIdx ?? 0]?.label
-    : storage?.label
+  const storageLabel = resolveVariantStorageLabel(product, storageIdx, sizeIdx)
 
   if (usesSupplierPricing(product) && color && storageLabel) {
     const variant = findVariant(product, color.id, storageLabel, simType)
@@ -118,7 +115,7 @@ export function calcPrice(product, colorIdx = 0, storageIdx = 0, sizeIdx = 0, si
     if (product.sizes?.length > 1) {
       price = product.sizes[sizeIdx ?? 0]?.price ?? 0
     } else {
-      price = storage?.price ?? 0
+      price = product.storage?.[storageIdx]?.price ?? 0
     }
     return price
   }
@@ -221,8 +218,9 @@ export function getInitialColorIndex(product) {
 /** Первая доступная комбинация (приоритет — позиции в наличии на складе) */
 export function getInitialSelection(product) {
   const simTypes = product.simTypes?.length ? product.simTypes : [null]
-  const storageLabels = product.sizes?.length > 1
-    ? product.sizes.map((s) => s.label)
+  const sizeLabels = getProductSizeLabels(product)
+  const storageLabels = sizeLabels.length
+    ? sizeLabels
     : getDisplayStorage(product).map((s) => s.label).length
       ? getDisplayStorage(product).map((s) => s.label)
       : product.storage?.map((s) => s.label) || ['Стандарт']

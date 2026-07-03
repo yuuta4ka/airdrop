@@ -952,6 +952,8 @@ function renderProductEditor(c) {
 
     ${section('Цвета', `<div id="color-list"></div><button type="button" class="btn btn--secondary" id="add-color">+ Цвет</button>
     <p class="admin-hint">В «Названия в прайсе» — как у поставщика (Silver, Deep Blue…), через запятую.</p>`)}
+
+    ${showStorage ? section('Память', `<div id="storage-list"></div><button type="button" class="btn btn--secondary" id="add-storage">+ Объём</button>
     <p class="admin-hint">256 ГБ, 512 ГБ, 1 ТБ. Цены — в блоке прайса ниже.</p>`) : ''}
 
     ${showSim ? section('Версия SIM', `

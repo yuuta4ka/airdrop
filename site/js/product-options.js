@@ -35,13 +35,23 @@ export function getDisplayStorage(product) {
 }
 
 export function shouldShowStorageOptions(product) {
-  if (product.sizes?.length > 1) return false
+  if (shouldShowSizesOptions(product)) return false
   const visible = getDisplayStorage(product)
   return visible.length > 1 || (visible.length === 1 && isMeaningfulStorageLabel(visible[0].label))
 }
 
-export function shouldShowSizesOptions(product) {
-  return product.sizes?.length > 1
+export function resolveVariantStorageLabel(product, storageIdx = 0, sizeIdx = 0) {
+  const sizeLabels = getProductSizeLabels(product)
+  if (sizeLabels.length) {
+    const idx = Math.min(Math.max(sizeIdx ?? 0, 0), sizeLabels.length - 1)
+    return sizeLabels[idx] || sizeLabels[0] || ''
+  }
+  if (product.sizes?.length > 1) {
+    return product.sizes[sizeIdx ?? 0]?.label || ''
+  }
+  const visible = getDisplayStorage(product)
+  if (visible.length) return visible[storageIdx]?.label || visible[0]?.label || ''
+  return product.storage?.[storageIdx]?.label || product.storage?.[0]?.label || ''
 }
 
 export function normalizeWatchSizeLabel(label) {
@@ -51,4 +61,44 @@ export function normalizeWatchSizeLabel(label) {
   const m = s.match(/^(\d{2})$/) || s.match(/^(\d{2})\s*mm$/i)
   if (m) return `${m[1]} мм`
   return s
+}
+
+export function normalizeOptionLabel(label) {
+  return String(label || '').replace(/\s/g, '').toLowerCase().replace(/mm/g, 'мм')
+}
+
+/** Размеры часов: из блока «Размеры» + из прайса (variants.storage) */
+export function getProductSizeLabels(product) {
+  const fromSizes = (product.sizes || [])
+    .map((s) => normalizeWatchSizeLabel(s.label))
+    .filter(Boolean)
+
+  if (!isWatchCategory(product.category) && product.category !== 'galaxy-watch') {
+    return fromSizes.length > 1 ? fromSizes : []
+  }
+
+  const fromVariants = [...new Set(
+    (product.variants || [])
+      .map((v) => v.storage)
+      .filter((l) => l && (l === 'Стандарт' || /мм|mm/i.test(l)))
+      .map((l) => normalizeWatchSizeLabel(l)),
+  )]
+
+  const merged = [...new Set([...fromSizes, ...fromVariants])]
+  const order = (a, b) => {
+    const na = Number(String(a).match(/(\d+)/)?.[1] || 0)
+    const nb = Number(String(b).match(/(\d+)/)?.[1] || 0)
+    if (na && nb && na !== nb) return na - nb
+    if (a === 'Стандарт') return 1
+    if (b === 'Стандарт') return -1
+    return a.localeCompare(b, 'ru')
+  }
+  return merged.sort(order)
+}
+
+export function shouldShowSizesOptions(product) {
+  if (isWatchCategory(product.category) || product.category === 'galaxy-watch') {
+    return getProductSizeLabels(product).length > 1
+  }
+  return (product.sizes?.length || 0) > 1
 }

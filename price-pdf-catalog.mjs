@@ -4,7 +4,7 @@ import { CATALOG_SECTIONS, filterCatalogEntries, extractPriceEntries, resolveCat
 const COLOR_ALIASES = {
   silver: ['silver', 'серебро', 'серебристый', 'starlight', 'сияющая звезда', 'whitesilver', 'silvershadow'],
   white: ['white', 'белый', 'silver', 'starlight'],
-  black: ['black', 'чёрный', 'черный', 'jet black', 'midnight', 'graphite', 'space black', 'space gray', 'gray', 'grey', 'jetblack'],
+  black: ['black', 'чёрный', 'черный', 'jet black', 'midnight', 'graphite', 'space black', 'space gray', 'gray', 'grey', 'jetblack', 'charcoal'],
   blue: ['blue', 'синий', 'deep blue', 'ultramarine', 'sky blue', 'mist blue', 'cobalt violet', 'silverblue', 'indigo'],
   orange: ['orange', 'оранжевый', 'cosmic orange'],
   green: ['green', 'зелёный', 'sage', 'teal', 'бирюзовый'],
@@ -206,8 +206,9 @@ function parseVariantForUpdate(name, product, meta) {
     const colorPart = parseWatchColorPart(name)
     const colorId = findColorId(colorPart, product.colors) || findColorId(name, product.colors)
     if (!colorId) return null
-    const storageLabel = resolveWatchStorageLabel(sizeLabel, product, meta)
-    if (!storageLabel) return null
+    let storageLabel = resolveWatchStorageLabel(sizeLabel, product, meta)
+    if (!storageLabel && sizeLabel && sizeLabel !== 'Стандарт') storageLabel = sizeLabel
+    if (!storageLabel) storageLabel = 'Стандарт'
     return { colorId, storage: storageLabel, simType: '' }
   }
 
@@ -274,14 +275,21 @@ function normalizeWatchSizeLabel(label) {
 
 function parseWatchSizeLabel(name) {
   const m = String(name).match(/\b(\d{2})\s*mm\b/i)
-  return m ? normalizeWatchSizeLabel(m[1]) : 'Стандарт'
+  if (m) return normalizeWatchSizeLabel(m[1])
+  const se = String(name).match(/\bSE\s+(\d{2})\b/i)
+  if (se) return `${se[1]} мм`
+  return 'Стандарт'
 }
 
 function parseWatchColorPart(name) {
-  const sizeColor = String(name).match(/\b(?:S\d+|SE)\s+\d{2}\s*mm\s+(.+)$/i)
+  const ultra = String(name).match(/^Ultra\s+\d+\s+(.+)$/i)
+  if (ultra) return ultra[1].trim()
+  const sizeColor = String(name).match(/\b(?:S\d+|SE)\s+(?:\d{2}\s*mm|\d{2}\s*\(\d{4}\)|\d{2})\s+(.+)$/i)
   if (sizeColor) return sizeColor[1].trim()
-  const seColor = String(name).match(/^SE\s+\S+\s+(.+)$/i)
+  const seColor = String(name).match(/^SE\s+(?:\d{2}\s*)?(?:\(\d{4}\)\s*)?(.+)$/i)
   if (seColor) return seColor[1].trim()
+  const afterGen = String(name).match(/^S\d+\s+(.+)$/i)
+  if (afterGen && !/\d{2}\s*mm/i.test(name)) return afterGen[1].trim()
   return String(name).split(/\s+/).slice(2).join(' ') || String(name)
 }
 
@@ -552,6 +560,20 @@ function registerProductKeys(productMap, product) {
   if (product.category === 'samsung' && product.name.startsWith('Galaxy ')) {
     const tail = product.name.slice(7).toLowerCase()
     productMap.set(`${product.category}::samsung galaxy ${tail}`, product)
+  }
+  const watchSeries = product.name.match(/^watch\s+series\s+(\d+)/i)
+  if (watchSeries && product.category === 'apple-watch') {
+    const n = watchSeries[1]
+    productMap.set(`${product.category}::apple watch s${n}`, product)
+    productMap.set(`${product.category}::watch s${n}`, product)
+    productMap.set(`${product.category}::s${n}`, product)
+  }
+  if (/^watch\s+se\b/i.test(product.name) && product.category === 'apple-watch') {
+    productMap.set(`${product.category}::apple watch se`, product)
+  }
+  if (/ultra/i.test(product.name) && product.category === 'apple-watch') {
+    productMap.set(`${product.category}::apple watch ultra 3`, product)
+    productMap.set(`${product.category}::apple watch ultra`, product)
   }
 }
 
