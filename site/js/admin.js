@@ -358,6 +358,7 @@ function formatPdfImportStats(s) {
   if (s.pricesUpdated) lines.push(`Обновлено цен: ${s.pricesUpdated}`)
   if (s.variantsAdded) lines.push(`Добавлено конфигураций: ${s.variantsAdded}`)
   else if (s.variantsUpdated) lines.push(`Обновлено конфигураций: ${s.variantsUpdated}`)
+  if (s.productsCreated) lines.push(`Создано карточек: ${s.productsCreated}`)
   if (s.productsUpdated) lines.push(`Товаров затронуто: ${s.productsUpdated}`)
   if (s.skippedVariants) lines.push(`Не сопоставлено конфигураций: ${s.skippedVariants}`)
   if (s.skipped) lines.push(`Строк без товара в каталоге: ${s.skipped}`)

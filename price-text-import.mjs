@@ -1,5 +1,5 @@
 import { CATALOG_SECTIONS } from './price-pdf-parser.mjs'
-import { buildCatalogFromEntries } from './price-pdf-catalog.mjs'
+import { buildCatalogFromEntries, extractAirpodsProductKey } from './price-pdf-catalog.mjs'
 
 function parsePriceCell(cell) {
   const digits = String(cell ?? '').replace(/\D/g, '')
@@ -19,6 +19,9 @@ function detectSection(name) {
   if (/^Apple\s+Watch\s+Ultra/i.test(n)) return 'Apple Watch Ultra'
   if (/^Apple\s+Watch/i.test(n)) return 'Apple Watch S / SE'
   if (/^Apple\s+AirPods|^Marshall/i.test(n)) return 'Apple AirPods / Marshall'
+  if (/^Samsung\s+Buds/i.test(n)) return 'Samsung Buds'
+  if (/^Ray\s+Ban\s+Meta/i.test(n)) return 'Ray Ban Meta'
+  if (/^Google\s+Fitbit/i.test(n)) return 'Google Fitbit'
   if (/^Samsung\s+Galaxy\s+Z/i.test(n)) return 'Samsung Серия Z'
   if (/^Samsung\s+Galaxy\s+S26/i.test(n)) return 'Samsung Серия S26'
   if (/^Samsung\s+Galaxy\s+S25/i.test(n)) return 'Samsung Серия S25'
@@ -61,10 +64,8 @@ function productKeyFromTextName(name, meta) {
     return n.replace(/^Apple\s+Watch\s+/i, 'Apple Watch ').split(/\d{2}\s*mm/i)[0].trim()
   }
   if (meta.type === 'airpods') {
-    const base = n.replace(/^Apple\s+/i, '')
-    const m = base.match(/^(AirPods(?:\s+Pro)?(?:\s+Max)?(?:\s+USB-C)?(?:\s*\(\d{4}\))?|AirPods\s+Pro\s+\d+|AirPods\s+\d+(?:\s+ANC)?|Marshall\s+Major\s+\d+)/i)
-    if (m) return m[1].trim()
-    return base.split(/\s+(?:Midnight|Purple|Starlight|Orange|Black|White|Blue|Brown|Cream)\s*$/i)[0].trim()
+    const base = n.replace(/^Apple\s+/i, '').replace(/Цветные\s+/i, '')
+    return extractAirpodsProductKey(base)
   }
   if (meta.type === 'samsung-phone') {
     let withoutBrand = n.replace(/^Samsung\s+Galaxy\s+/i, '')
@@ -149,6 +150,7 @@ export function buildCatalogFromPriceText(text, existingProducts, markup = { per
   const result = buildCatalogFromEntries(entries, existingProducts, markup, {
     pricesOnly: true,
     upsertVariants: true,
+    upsertProducts: true,
     filterSections: false,
     getProductKey: (entry, meta) => productKeyFromTextName(entry.name, meta),
     getVariantName: (entry, meta) => variantNameFromText(entry.name, meta),

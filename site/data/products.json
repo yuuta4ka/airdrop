@@ -928,7 +928,15 @@
       "image": "https://store.storeimages.cdn-apple.com/1/as-images.apple.com/is/MQD83?wid=400&hei=400&fmt=jpeg&qlt=90&.v=1660803972361",
       "description": "AirPods Pro 2 с активным шумоподавлением. С разъемом для зарядки Type-C",
       "simTypes": null,
-      "colors": [],
+      "colors": [
+        {
+          "id": "стандарт",
+          "name": "Стандарт",
+          "hex": "#888888",
+          "image": "",
+          "importNames": "Стандарт"
+        }
+      ],
       "storage": [
         {
           "label": "Стандарт"
@@ -936,7 +944,15 @@
       ],
       "sizes": [],
       "stock": [],
-      "variants": [],
+      "variants": [
+        {
+          "colorId": "стандарт",
+          "storage": "Стандарт",
+          "simType": "",
+          "purchasePrice": 13300,
+          "price": 14900
+        }
+      ],
       "images": [
         "https://store.storeimages.cdn-apple.com/1/as-images.apple.com/is/MQD83?wid=400&hei=400&fmt=jpeg&qlt=90&.v=1660803972361",
         "assets/products/optimize.webp",
@@ -950,7 +966,7 @@
       "simModifiers": [],
       "showCatalogSpec": false,
       "hidden": false,
-      "importNames": "AirPods Pro 2 Type-C",
+      "importNames": "Apple AirPods Pro 2 Type-C",
       "markupPercent": 20,
       "markupFixed": 0
     },
@@ -2034,15 +2050,15 @@
           "colorId": "c1783088640318",
           "storage": "Стандарт",
           "simType": "",
-          "purchasePrice": 36500,
-          "price": 40900
+          "purchasePrice": 41500,
+          "price": 46900
         },
         {
           "colorId": "c1783088850034",
           "storage": "Стандарт",
           "simType": "",
-          "purchasePrice": 38900,
-          "price": 43900
+          "purchasePrice": 41600,
+          "price": 46900
         },
         {
           "colorId": "c1783088962652",
@@ -2050,13 +2066,6 @@
           "simType": "",
           "purchasePrice": 41500,
           "price": 46900
-        },
-        {
-          "colorId": "c1783088910650",
-          "storage": "Стандарт",
-          "simType": "",
-          "purchasePrice": 40200,
-          "price": 44900
         }
       ],
       "markupPercent": 15,
@@ -2122,7 +2131,29 @@
         "assets/products/f2c4f7fcf821ef85e97df098ed0357112fe319df0a41a224fc654e268836a403.jpg.webp",
         "assets/products/983ff25d5312c5a522a80e5259aaf34130af9bdc30888ac5a0654d134a3bfc5c.jpg.webp"
       ],
-      "variants": [],
+      "variants": [
+        {
+          "colorId": "c1783089148139",
+          "storage": "Стандарт",
+          "simType": "",
+          "purchasePrice": 40200,
+          "price": 44900
+        },
+        {
+          "colorId": "c1783089238656",
+          "storage": "Стандарт",
+          "simType": "",
+          "purchasePrice": 36500,
+          "price": 40900
+        },
+        {
+          "colorId": "c1783089216056",
+          "storage": "Стандарт",
+          "simType": "",
+          "purchasePrice": 38900,
+          "price": 43900
+        }
+      ],
       "markupPercent": 15,
       "markupFixed": 0,
       "showCatalogSpec": false,
@@ -2141,7 +2172,15 @@
       "description": "AirPods Pro 3 с улучшенной акустической изоляцией автоматически адаптируются к вашим предпочтениям и окружающей обстановке. А обновленные микрофоны ещё больше устраняют нежелательные звуки. Вы слышите только то, что хотите в беспрецедентном аудио-ощущении.",
       "simTypes": null,
       "simModifiers": [],
-      "colors": [],
+      "colors": [
+        {
+          "id": "стандарт",
+          "name": "Стандарт",
+          "hex": "#888888",
+          "image": "",
+          "importNames": "Стандарт"
+        }
+      ],
       "storage": [],
       "sizes": [],
       "stock": [],
@@ -2152,7 +2191,15 @@
         "assets/products/optimize__1_.webp",
         "assets/products/optimize__2_.webp"
       ],
-      "variants": [],
+      "variants": [
+        {
+          "colorId": "стандарт",
+          "storage": "Стандарт",
+          "simType": "",
+          "purchasePrice": 16200,
+          "price": 18900
+        }
+      ],
       "markupPercent": 15,
       "markupFixed": 0,
       "showCatalogSpec": false,
@@ -2259,8 +2306,8 @@
           "colorId": "стандарт",
           "storage": "Стандарт",
           "simType": "",
-          "purchasePrice": 9300,
-          "price": 10900
+          "purchasePrice": 13200,
+          "price": 14900
         }
       ],
       "markupPercent": 15,
@@ -2281,7 +2328,15 @@
       "description": "Наушники TWS Apple Airpods 4 имеют защищенную конструкцию по стандарту IP54. Они не боятся воздействия пыли, влаги, брызг воды и атмосферных осадков. Эргономичная форма вкладышей обеспечивает комфорт в использовании.",
       "simTypes": null,
       "simModifiers": [],
-      "colors": [],
+      "colors": [
+        {
+          "id": "стандарт",
+          "name": "Стандарт",
+          "hex": "#888888",
+          "image": "",
+          "importNames": "Стандарт"
+        }
+      ],
       "storage": [],
       "sizes": [],
       "stock": [],
@@ -2292,7 +2347,15 @@
         "assets/products/6fad4fca357b7f5a1235c34ee6595981a4ade3b51393fe6c760eba4897ffdbd3.jpg.webp",
         "assets/products/568f2cc4f89abf1d831afaf7b6e8f53e822b3db78cb59f2ffcffc442a41a19b8.jpg.webp"
       ],
-      "variants": [],
+      "variants": [
+        {
+          "colorId": "стандарт",
+          "storage": "Стандарт",
+          "simType": "",
+          "purchasePrice": 9300,
+          "price": 10900
+        }
+      ],
       "markupPercent": 15,
       "markupFixed": 0,
       "showCatalogSpec": false,
@@ -2345,9 +2408,6 @@
       "sizes": [
         {
           "label": "42 мм"
-        },
-        {
-          "label": "46 мм"
         }
       ],
       "stock": [],
@@ -2412,6 +2472,1584 @@
       "hidden": false,
       "importNames": "Apple Watch S11",
       "coverImage": "assets/products/93d7db5f16639554ac08b80932c14d39d7a54b580a49cd683b2426e92242abc9.jpg.webp"
+    },
+    {
+      "id": 56,
+      "slug": "iphone-15",
+      "name": "iPhone 15",
+      "category": "iphone",
+      "brand": "Apple",
+      "badge": null,
+      "image": "",
+      "coverImage": "",
+      "description": "iPhone 15 — оригинальная техника, под заказ от 3–5 дней.",
+      "simTypes": [
+        "eSIM only",
+        "eSIM + SIM"
+      ],
+      "simModifiers": [],
+      "colors": [
+        {
+          "id": "blue",
+          "name": "Синий",
+          "hex": "#2a4a7a",
+          "image": "",
+          "importNames": "Deep Blue, Blue"
+        },
+        {
+          "id": "white",
+          "name": "Белый",
+          "hex": "#f0f0f0",
+          "image": "",
+          "importNames": "Silver, White, Starlight"
+        },
+        {
+          "id": "orange",
+          "name": "Оранжевый",
+          "hex": "#e88a40",
+          "image": "",
+          "importNames": "Orange, Cosmic Orange"
+        },
+        {
+          "id": "black",
+          "name": "Black",
+          "hex": "#888888",
+          "image": "",
+          "importNames": "Black"
+        }
+      ],
+      "storage": [
+        {
+          "label": "128 ГБ"
+        }
+      ],
+      "variants": [
+        {
+          "colorId": "black",
+          "storage": "128 ГБ",
+          "simType": "",
+          "purchasePrice": 47500,
+          "price": 53900
+        }
+      ],
+      "sizes": null,
+      "stock": [],
+      "images": [],
+      "markupPercent": 15,
+      "markupFixed": 0,
+      "showCatalogSpec": false,
+      "importNames": "iPhone 15",
+      "hidden": true
+    },
+    {
+      "id": 57,
+      "slug": "ipad-mini-a17-pro",
+      "name": "iPad mini (A17 Pro)",
+      "category": "ipad",
+      "brand": "Apple",
+      "badge": null,
+      "image": "",
+      "coverImage": "",
+      "description": "iPad mini (A17 Pro) — оригинальная техника, под заказ от 3–5 дней.",
+      "simTypes": null,
+      "simModifiers": [],
+      "colors": [
+        {
+          "id": "default",
+          "name": "Стандарт",
+          "hex": "#888888",
+          "image": "",
+          "importNames": ""
+        },
+        {
+          "id": "gray",
+          "name": "Gray",
+          "hex": "#888888",
+          "image": "",
+          "importNames": "Gray"
+        }
+      ],
+      "storage": [
+        {
+          "label": "Wi-Fi + Cellular"
+        }
+      ],
+      "variants": [
+        {
+          "colorId": "gray",
+          "storage": "Wi-Fi + Cellular",
+          "simType": "",
+          "purchasePrice": 73000,
+          "price": 81900
+        }
+      ],
+      "sizes": null,
+      "stock": [],
+      "images": [],
+      "markupPercent": 15,
+      "markupFixed": 0,
+      "showCatalogSpec": false,
+      "importNames": "iPad mini (A17 Pro)",
+      "hidden": true
+    },
+    {
+      "id": 58,
+      "slug": "apple-watch-se",
+      "name": "Apple Watch SE",
+      "category": "apple-watch",
+      "brand": "Apple",
+      "badge": null,
+      "image": "",
+      "coverImage": "",
+      "description": "Apple Watch SE — оригинальная техника, под заказ от 3–5 дней.",
+      "simTypes": null,
+      "simModifiers": [],
+      "colors": [
+        {
+          "id": "default",
+          "name": "Стандарт",
+          "hex": "#888888",
+          "image": "",
+          "importNames": ""
+        },
+        {
+          "id": "midnight-aluminum-midnig",
+          "name": "Midnight Aluminum Midnight Sport Band",
+          "hex": "#888888",
+          "image": "",
+          "importNames": "Midnight Aluminum Midnight Sport Band"
+        }
+      ],
+      "storage": [
+        {
+          "label": "40 мм"
+        }
+      ],
+      "variants": [
+        {
+          "colorId": "midnight-aluminum-midnig",
+          "storage": "40 мм",
+          "simType": "",
+          "purchasePrice": 19500,
+          "price": 21900
+        }
+      ],
+      "sizes": [
+        {
+          "label": "40 мм"
+        }
+      ],
+      "stock": [],
+      "images": [],
+      "markupPercent": 15,
+      "markupFixed": 0,
+      "showCatalogSpec": false,
+      "importNames": "Apple Watch SE",
+      "hidden": true
+    },
+    {
+      "id": 59,
+      "slug": "apple-watch-ultra-3",
+      "name": "Apple Watch Ultra 3",
+      "category": "apple-watch",
+      "brand": "Apple",
+      "badge": null,
+      "image": "",
+      "coverImage": "",
+      "description": "Apple Watch Ultra 3 — оригинальная техника, под заказ от 3–5 дней.",
+      "simTypes": null,
+      "simModifiers": [],
+      "colors": [
+        {
+          "id": "default",
+          "name": "Стандарт",
+          "hex": "#888888",
+          "image": "",
+          "importNames": ""
+        },
+        {
+          "id": "black-black-ocean-band",
+          "name": "Black Black Ocean Band",
+          "hex": "#888888",
+          "image": "",
+          "importNames": "Black Black Ocean Band"
+        },
+        {
+          "id": "black-ti-black-charcoal-",
+          "name": "Black Ti Black/Charcoal TI",
+          "hex": "#888888",
+          "image": "",
+          "importNames": "Black Ti Black/Charcoal TI"
+        }
+      ],
+      "storage": [],
+      "variants": [
+        {
+          "colorId": "black-black-ocean-band",
+          "storage": "Стандарт",
+          "simType": "",
+          "purchasePrice": 57500,
+          "price": 64900
+        },
+        {
+          "colorId": "black-ti-black-charcoal-",
+          "storage": "Стандарт",
+          "simType": "",
+          "purchasePrice": 56500,
+          "price": 63900
+        }
+      ],
+      "sizes": [],
+      "stock": [],
+      "images": [],
+      "markupPercent": 15,
+      "markupFixed": 0,
+      "showCatalogSpec": false,
+      "importNames": "Apple Watch Ultra 3",
+      "hidden": true
+    },
+    {
+      "id": 60,
+      "slug": "marshall-major-5",
+      "name": "Marshall Major 5",
+      "category": "airpods",
+      "brand": "Apple",
+      "badge": null,
+      "image": "",
+      "coverImage": "",
+      "description": "Marshall Major 5 — оригинальная техника, под заказ от 3–5 дней.",
+      "simTypes": null,
+      "simModifiers": [],
+      "colors": [
+        {
+          "id": "default",
+          "name": "Стандарт",
+          "hex": "#888888",
+          "image": "",
+          "importNames": ""
+        },
+        {
+          "id": "black",
+          "name": "Black",
+          "hex": "#888888",
+          "image": "",
+          "importNames": "Black"
+        },
+        {
+          "id": "brown",
+          "name": "Brown",
+          "hex": "#888888",
+          "image": "",
+          "importNames": "Brown"
+        },
+        {
+          "id": "blue",
+          "name": "Blue",
+          "hex": "#888888",
+          "image": "",
+          "importNames": "Blue"
+        }
+      ],
+      "storage": [
+        {
+          "label": "Стандарт"
+        }
+      ],
+      "variants": [
+        {
+          "colorId": "black",
+          "storage": "Стандарт",
+          "simType": "",
+          "purchasePrice": 5000,
+          "price": 5900
+        },
+        {
+          "colorId": "brown",
+          "storage": "Стандарт",
+          "simType": "",
+          "purchasePrice": 5000,
+          "price": 5900
+        },
+        {
+          "colorId": "blue",
+          "storage": "Стандарт",
+          "simType": "",
+          "purchasePrice": 4500,
+          "price": 5900
+        }
+      ],
+      "sizes": null,
+      "stock": [],
+      "images": [],
+      "markupPercent": 15,
+      "markupFixed": 0,
+      "showCatalogSpec": false,
+      "importNames": "Marshall Major 5",
+      "hidden": true
+    },
+    {
+      "id": 61,
+      "slug": "galaxy-z-fold-7",
+      "name": "Galaxy Z Fold 7",
+      "category": "samsung",
+      "brand": "Samsung",
+      "badge": null,
+      "image": "",
+      "coverImage": "",
+      "description": "Galaxy Z Fold 7 — оригинальная техника, под заказ от 3–5 дней.",
+      "simTypes": null,
+      "simModifiers": [],
+      "colors": [
+        {
+          "id": "default",
+          "name": "Стандарт",
+          "hex": "#888888",
+          "image": "",
+          "importNames": ""
+        },
+        {
+          "id": "blue-shadow",
+          "name": "Blue Shadow",
+          "hex": "#888888",
+          "image": "",
+          "importNames": "Blue Shadow"
+        },
+        {
+          "id": "silver-shadow",
+          "name": "Silver Shadow",
+          "hex": "#888888",
+          "image": "",
+          "importNames": "Silver Shadow"
+        }
+      ],
+      "storage": [
+        {
+          "label": "256 ГБ"
+        }
+      ],
+      "variants": [
+        {
+          "colorId": "blue-shadow",
+          "storage": "256 ГБ",
+          "simType": "",
+          "purchasePrice": 92000,
+          "price": 102900
+        },
+        {
+          "colorId": "silver-shadow",
+          "storage": "256 ГБ",
+          "simType": "",
+          "purchasePrice": 92000,
+          "price": 102900
+        }
+      ],
+      "sizes": null,
+      "stock": [],
+      "images": [],
+      "markupPercent": 15,
+      "markupFixed": 0,
+      "showCatalogSpec": false,
+      "importNames": "Galaxy Z Fold 7",
+      "hidden": true
+    },
+    {
+      "id": 62,
+      "slug": "samsung-buds-4-pro",
+      "name": "Samsung Buds 4 Pro",
+      "category": "airpods",
+      "brand": "Samsung",
+      "badge": null,
+      "image": "",
+      "coverImage": "",
+      "description": "Samsung Buds 4 Pro — оригинальная техника, под заказ от 3–5 дней.",
+      "simTypes": null,
+      "simModifiers": [],
+      "colors": [
+        {
+          "id": "default",
+          "name": "Стандарт",
+          "hex": "#888888",
+          "image": "",
+          "importNames": ""
+        }
+      ],
+      "storage": [
+        {
+          "label": "Стандарт"
+        }
+      ],
+      "variants": [
+        {
+          "colorId": "default",
+          "storage": "Стандарт",
+          "simType": "",
+          "purchasePrice": 12800,
+          "price": 14900
+        }
+      ],
+      "sizes": null,
+      "stock": [],
+      "images": [],
+      "markupPercent": 15,
+      "markupFixed": 0,
+      "showCatalogSpec": false,
+      "importNames": "Samsung Buds 4 Pro",
+      "hidden": true
+    },
+    {
+      "id": 63,
+      "slug": "redmi-note-14-pro-plus-5g",
+      "name": "Redmi Note 14 Pro Plus 5G",
+      "category": "xiaomi",
+      "brand": "Xiaomi",
+      "badge": null,
+      "image": "",
+      "coverImage": "",
+      "description": "Redmi Note 14 Pro Plus 5G — оригинальная техника, под заказ от 3–5 дней.",
+      "simTypes": null,
+      "simModifiers": [],
+      "colors": [
+        {
+          "id": "default",
+          "name": "Стандарт",
+          "hex": "#888888",
+          "image": "",
+          "importNames": ""
+        },
+        {
+          "id": "purple",
+          "name": "Purple",
+          "hex": "#888888",
+          "image": "",
+          "importNames": "Purple"
+        },
+        {
+          "id": "blue",
+          "name": "Blue",
+          "hex": "#888888",
+          "image": "",
+          "importNames": "Blue"
+        }
+      ],
+      "storage": [],
+      "variants": [
+        {
+          "colorId": "purple",
+          "storage": "512 ГБ",
+          "simType": "",
+          "purchasePrice": 28200,
+          "price": 31900
+        },
+        {
+          "colorId": "blue",
+          "storage": "512 ГБ",
+          "simType": "",
+          "purchasePrice": 28600,
+          "price": 31900
+        }
+      ],
+      "sizes": null,
+      "stock": [],
+      "images": [],
+      "markupPercent": 15,
+      "markupFixed": 0,
+      "showCatalogSpec": false,
+      "importNames": "Redmi Note 14 Pro Plus 5G",
+      "hidden": true
+    },
+    {
+      "id": 64,
+      "slug": "redmi-note-14-pro-5g",
+      "name": "Redmi Note 14 Pro 5G",
+      "category": "xiaomi",
+      "brand": "Xiaomi",
+      "badge": null,
+      "image": "",
+      "coverImage": "",
+      "description": "Redmi Note 14 Pro 5G — оригинальная техника, под заказ от 3–5 дней.",
+      "simTypes": null,
+      "simModifiers": [],
+      "colors": [
+        {
+          "id": "default",
+          "name": "Стандарт",
+          "hex": "#888888",
+          "image": "",
+          "importNames": ""
+        },
+        {
+          "id": "sand-gold",
+          "name": "Sand Gold",
+          "hex": "#888888",
+          "image": "",
+          "importNames": "Sand Gold"
+        }
+      ],
+      "storage": [],
+      "variants": [
+        {
+          "colorId": "sand-gold",
+          "storage": "512 ГБ",
+          "simType": "",
+          "purchasePrice": 23300,
+          "price": 26900
+        }
+      ],
+      "sizes": null,
+      "stock": [],
+      "images": [],
+      "markupPercent": 15,
+      "markupFixed": 0,
+      "showCatalogSpec": false,
+      "importNames": "Redmi Note 14 Pro 5G",
+      "hidden": true
+    },
+    {
+      "id": 65,
+      "slug": "redmi-note-15-pro-5g",
+      "name": "Redmi Note 15 Pro 5G",
+      "category": "xiaomi",
+      "brand": "Xiaomi",
+      "badge": null,
+      "image": "",
+      "coverImage": "",
+      "description": "Redmi Note 15 Pro 5G — оригинальная техника, под заказ от 3–5 дней.",
+      "simTypes": null,
+      "simModifiers": [],
+      "colors": [
+        {
+          "id": "default",
+          "name": "Стандарт",
+          "hex": "#888888",
+          "image": "",
+          "importNames": ""
+        },
+        {
+          "id": "glacier-blue",
+          "name": "Glacier Blue",
+          "hex": "#888888",
+          "image": "",
+          "importNames": "Glacier Blue"
+        },
+        {
+          "id": "black",
+          "name": "Black",
+          "hex": "#888888",
+          "image": "",
+          "importNames": "Black"
+        },
+        {
+          "id": "mist-purple",
+          "name": "Mist Purple",
+          "hex": "#888888",
+          "image": "",
+          "importNames": "Mist Purple"
+        },
+        {
+          "id": "titanium-color",
+          "name": "Titanium Color",
+          "hex": "#888888",
+          "image": "",
+          "importNames": "Titanium Color"
+        }
+      ],
+      "storage": [],
+      "variants": [
+        {
+          "colorId": "glacier-blue",
+          "storage": "512 ГБ",
+          "simType": "",
+          "purchasePrice": 23400,
+          "price": 26900
+        },
+        {
+          "colorId": "black",
+          "storage": "512 ГБ",
+          "simType": "",
+          "purchasePrice": 23400,
+          "price": 26900
+        },
+        {
+          "colorId": "mist-purple",
+          "storage": "512 ГБ",
+          "simType": "",
+          "purchasePrice": 23400,
+          "price": 26900
+        },
+        {
+          "colorId": "titanium-color",
+          "storage": "512 ГБ",
+          "simType": "",
+          "purchasePrice": 23400,
+          "price": 26900
+        },
+        {
+          "colorId": "black",
+          "storage": "256 ГБ",
+          "simType": "",
+          "purchasePrice": 21300,
+          "price": 23900
+        },
+        {
+          "colorId": "mist-purple",
+          "storage": "256 ГБ",
+          "simType": "",
+          "purchasePrice": 21700,
+          "price": 24900
+        },
+        {
+          "colorId": "glacier-blue",
+          "storage": "256 ГБ",
+          "simType": "",
+          "purchasePrice": 21700,
+          "price": 24900
+        },
+        {
+          "colorId": "titanium-color",
+          "storage": "256 ГБ",
+          "simType": "",
+          "purchasePrice": 21300,
+          "price": 23900
+        }
+      ],
+      "sizes": null,
+      "stock": [],
+      "images": [],
+      "markupPercent": 15,
+      "markupFixed": 0,
+      "showCatalogSpec": false,
+      "importNames": "Redmi Note 15 Pro 5G",
+      "hidden": true
+    },
+    {
+      "id": 66,
+      "slug": "redmi-a7-pro",
+      "name": "Redmi A7 Pro",
+      "category": "xiaomi",
+      "brand": "Xiaomi",
+      "badge": null,
+      "image": "",
+      "coverImage": "",
+      "description": "Redmi A7 Pro — оригинальная техника, под заказ от 3–5 дней.",
+      "simTypes": null,
+      "simModifiers": [],
+      "colors": [
+        {
+          "id": "default",
+          "name": "Стандарт",
+          "hex": "#888888",
+          "image": "",
+          "importNames": ""
+        },
+        {
+          "id": "black",
+          "name": "Black",
+          "hex": "#888888",
+          "image": "",
+          "importNames": "Black"
+        },
+        {
+          "id": "mist-blue",
+          "name": "Mist Blue",
+          "hex": "#888888",
+          "image": "",
+          "importNames": "Mist Blue"
+        },
+        {
+          "id": "silver",
+          "name": "Silver",
+          "hex": "#888888",
+          "image": "",
+          "importNames": "Silver"
+        },
+        {
+          "id": "lavender-purple",
+          "name": "Lavender Purple",
+          "hex": "#888888",
+          "image": "",
+          "importNames": "Lavender Purple"
+        },
+        {
+          "id": "green",
+          "name": "Green",
+          "hex": "#888888",
+          "image": "",
+          "importNames": "Green"
+        }
+      ],
+      "storage": [],
+      "variants": [
+        {
+          "colorId": "black",
+          "storage": "128 ГБ",
+          "simType": "",
+          "purchasePrice": 12300,
+          "price": 13900
+        },
+        {
+          "colorId": "mist-blue",
+          "storage": "128 ГБ",
+          "simType": "",
+          "purchasePrice": 7800,
+          "price": 8900
+        },
+        {
+          "colorId": "black",
+          "storage": "64 ГБ",
+          "simType": "",
+          "purchasePrice": 6600,
+          "price": 7900
+        },
+        {
+          "colorId": "mist-blue",
+          "storage": "64 ГБ",
+          "simType": "",
+          "purchasePrice": 6600,
+          "price": 7900
+        },
+        {
+          "colorId": "silver",
+          "storage": "128 ГБ",
+          "simType": "",
+          "purchasePrice": 17600,
+          "price": 19900
+        },
+        {
+          "colorId": "lavender-purple",
+          "storage": "256 ГБ",
+          "simType": "",
+          "purchasePrice": 14700,
+          "price": 16900
+        },
+        {
+          "colorId": "lavender-purple",
+          "storage": "128 ГБ",
+          "simType": "",
+          "purchasePrice": 11800,
+          "price": 13900
+        },
+        {
+          "colorId": "green",
+          "storage": "256 ГБ",
+          "simType": "",
+          "purchasePrice": 14700,
+          "price": 16900
+        }
+      ],
+      "sizes": null,
+      "stock": [],
+      "images": [],
+      "markupPercent": 15,
+      "markupFixed": 0,
+      "showCatalogSpec": false,
+      "importNames": "Redmi A7 Pro",
+      "hidden": true
+    },
+    {
+      "id": 67,
+      "slug": "oneplus-15",
+      "name": "OnePlus 15",
+      "category": "xiaomi",
+      "brand": "Xiaomi",
+      "badge": null,
+      "image": "",
+      "coverImage": "",
+      "description": "OnePlus 15 — оригинальная техника, под заказ от 3–5 дней.",
+      "simTypes": null,
+      "simModifiers": [],
+      "colors": [
+        {
+          "id": "default",
+          "name": "Стандарт",
+          "hex": "#888888",
+          "image": "",
+          "importNames": ""
+        },
+        {
+          "id": "ultra-violet",
+          "name": "Ultra Violet",
+          "hex": "#888888",
+          "image": "",
+          "importNames": "Ultra Violet"
+        },
+        {
+          "id": "mint-breeze",
+          "name": "Mint Breeze",
+          "hex": "#888888",
+          "image": "",
+          "importNames": "Mint Breeze"
+        }
+      ],
+      "storage": [],
+      "variants": [
+        {
+          "colorId": "ultra-violet",
+          "storage": "512 ГБ",
+          "simType": "",
+          "purchasePrice": 67000,
+          "price": 74900
+        },
+        {
+          "colorId": "mint-breeze",
+          "storage": "256 ГБ",
+          "simType": "",
+          "purchasePrice": 37500,
+          "price": 41900
+        }
+      ],
+      "sizes": null,
+      "stock": [],
+      "images": [],
+      "markupPercent": 15,
+      "markupFixed": 0,
+      "showCatalogSpec": false,
+      "importNames": "OnePlus 15",
+      "hidden": true
+    },
+    {
+      "id": 68,
+      "slug": "oneplus-nord-6",
+      "name": "OnePlus Nord 6",
+      "category": "xiaomi",
+      "brand": "Xiaomi",
+      "badge": null,
+      "image": "",
+      "coverImage": "",
+      "description": "OnePlus Nord 6 — оригинальная техника, под заказ от 3–5 дней.",
+      "simTypes": null,
+      "simModifiers": [],
+      "colors": [
+        {
+          "id": "default",
+          "name": "Стандарт",
+          "hex": "#888888",
+          "image": "",
+          "importNames": ""
+        },
+        {
+          "id": "fresh-mint",
+          "name": "Fresh Mint",
+          "hex": "#888888",
+          "image": "",
+          "importNames": "Fresh Mint"
+        },
+        {
+          "id": "pitch-black",
+          "name": "Pitch Black",
+          "hex": "#888888",
+          "image": "",
+          "importNames": "Pitch Black"
+        }
+      ],
+      "storage": [],
+      "variants": [
+        {
+          "colorId": "fresh-mint",
+          "storage": "512 ГБ",
+          "simType": "",
+          "purchasePrice": 36800,
+          "price": 41900
+        },
+        {
+          "colorId": "pitch-black",
+          "storage": "512 ГБ",
+          "simType": "",
+          "purchasePrice": 36800,
+          "price": 41900
+        }
+      ],
+      "sizes": null,
+      "stock": [],
+      "images": [],
+      "markupPercent": 15,
+      "markupFixed": 0,
+      "showCatalogSpec": false,
+      "importNames": "OnePlus Nord 6",
+      "hidden": true
+    },
+    {
+      "id": 69,
+      "slug": "oneplus-nord-ce6",
+      "name": "OnePlus Nord CE6",
+      "category": "xiaomi",
+      "brand": "Xiaomi",
+      "badge": null,
+      "image": "",
+      "coverImage": "",
+      "description": "OnePlus Nord CE6 — оригинальная техника, под заказ от 3–5 дней.",
+      "simTypes": null,
+      "simModifiers": [],
+      "colors": [
+        {
+          "id": "default",
+          "name": "Стандарт",
+          "hex": "#888888",
+          "image": "",
+          "importNames": ""
+        },
+        {
+          "id": "lunar-pearl",
+          "name": "Lunar Pearl",
+          "hex": "#888888",
+          "image": "",
+          "importNames": "Lunar Pearl"
+        },
+        {
+          "id": "pitch-black",
+          "name": "Pitch Black",
+          "hex": "#888888",
+          "image": "",
+          "importNames": "Pitch Black"
+        }
+      ],
+      "storage": [],
+      "variants": [
+        {
+          "colorId": "lunar-pearl",
+          "storage": "128 ГБ",
+          "simType": "",
+          "purchasePrice": 23500,
+          "price": 26900
+        },
+        {
+          "colorId": "pitch-black",
+          "storage": "128 ГБ",
+          "simType": "",
+          "purchasePrice": 23500,
+          "price": 26900
+        }
+      ],
+      "sizes": null,
+      "stock": [],
+      "images": [],
+      "markupPercent": 15,
+      "markupFixed": 0,
+      "showCatalogSpec": false,
+      "importNames": "OnePlus Nord CE6",
+      "hidden": true
+    },
+    {
+      "id": 70,
+      "slug": "poco-m8-5g",
+      "name": "Poco M8 5G",
+      "category": "xiaomi",
+      "brand": "Xiaomi",
+      "badge": null,
+      "image": "",
+      "coverImage": "",
+      "description": "Poco M8 5G — оригинальная техника, под заказ от 3–5 дней.",
+      "simTypes": null,
+      "simModifiers": [],
+      "colors": [
+        {
+          "id": "default",
+          "name": "Стандарт",
+          "hex": "#888888",
+          "image": "",
+          "importNames": ""
+        },
+        {
+          "id": "black",
+          "name": "Black",
+          "hex": "#888888",
+          "image": "",
+          "importNames": "Black"
+        }
+      ],
+      "storage": [],
+      "variants": [
+        {
+          "colorId": "black",
+          "storage": "512 ГБ",
+          "simType": "",
+          "purchasePrice": 20400,
+          "price": 22900
+        }
+      ],
+      "sizes": null,
+      "stock": [],
+      "images": [],
+      "markupPercent": 15,
+      "markupFixed": 0,
+      "showCatalogSpec": false,
+      "importNames": "Poco M8 5G",
+      "hidden": true
+    },
+    {
+      "id": 71,
+      "slug": "poco-c81-pro",
+      "name": "Poco C81 Pro",
+      "category": "xiaomi",
+      "brand": "Xiaomi",
+      "badge": null,
+      "image": "",
+      "coverImage": "",
+      "description": "Poco C81 Pro — оригинальная техника, под заказ от 3–5 дней.",
+      "simTypes": null,
+      "simModifiers": [],
+      "colors": [
+        {
+          "id": "default",
+          "name": "Стандарт",
+          "hex": "#888888",
+          "image": "",
+          "importNames": ""
+        },
+        {
+          "id": "gold",
+          "name": "Gold",
+          "hex": "#888888",
+          "image": "",
+          "importNames": "Gold"
+        },
+        {
+          "id": "green",
+          "name": "Green",
+          "hex": "#888888",
+          "image": "",
+          "importNames": "Green"
+        },
+        {
+          "id": "black",
+          "name": "Black",
+          "hex": "#888888",
+          "image": "",
+          "importNames": "Black"
+        }
+      ],
+      "storage": [],
+      "variants": [
+        {
+          "colorId": "gold",
+          "storage": "128 ГБ",
+          "simType": "",
+          "purchasePrice": 8400,
+          "price": 9900
+        },
+        {
+          "colorId": "green",
+          "storage": "128 ГБ",
+          "simType": "",
+          "purchasePrice": 8400,
+          "price": 9900
+        },
+        {
+          "colorId": "black",
+          "storage": "64 ГБ",
+          "simType": "",
+          "purchasePrice": 7600,
+          "price": 8900
+        },
+        {
+          "colorId": "gold",
+          "storage": "64 ГБ",
+          "simType": "",
+          "purchasePrice": 7600,
+          "price": 8900
+        },
+        {
+          "colorId": "green",
+          "storage": "64 ГБ",
+          "simType": "",
+          "purchasePrice": 7600,
+          "price": 8900
+        }
+      ],
+      "sizes": null,
+      "stock": [],
+      "images": [],
+      "markupPercent": 15,
+      "markupFixed": 0,
+      "showCatalogSpec": false,
+      "importNames": "Poco C81 Pro",
+      "hidden": true
+    },
+    {
+      "id": 72,
+      "slug": "huawei-pura-80-pro",
+      "name": "HUAWEI Pura 80 Pro",
+      "category": "huawei",
+      "brand": "Huawei",
+      "badge": null,
+      "image": "",
+      "coverImage": "",
+      "description": "HUAWEI Pura 80 Pro — оригинальная техника, под заказ от 3–5 дней.",
+      "simTypes": null,
+      "simModifiers": [],
+      "colors": [
+        {
+          "id": "default",
+          "name": "Стандарт",
+          "hex": "#888888",
+          "image": "",
+          "importNames": ""
+        },
+        {
+          "id": "black",
+          "name": "Black",
+          "hex": "#888888",
+          "image": "",
+          "importNames": "Black"
+        }
+      ],
+      "storage": [],
+      "variants": [
+        {
+          "colorId": "black",
+          "storage": "512 ГБ",
+          "simType": "",
+          "purchasePrice": 44500,
+          "price": 49900
+        },
+        {
+          "colorId": "black",
+          "storage": "256 ГБ",
+          "simType": "",
+          "purchasePrice": 31500,
+          "price": 35900
+        }
+      ],
+      "sizes": null,
+      "stock": [],
+      "images": [],
+      "markupPercent": 15,
+      "markupFixed": 0,
+      "showCatalogSpec": false,
+      "importNames": "HUAWEI Pura 80 Pro",
+      "hidden": true
+    },
+    {
+      "id": 73,
+      "slug": "huawei-watch-fit-5-pro",
+      "name": "Huawei Watch Fit 5 Pro",
+      "category": "huawei",
+      "brand": "Huawei",
+      "badge": null,
+      "image": "",
+      "coverImage": "",
+      "description": "Huawei Watch Fit 5 Pro — оригинальная техника, под заказ от 3–5 дней.",
+      "simTypes": null,
+      "simModifiers": [],
+      "colors": [
+        {
+          "id": "default",
+          "name": "Стандарт",
+          "hex": "#888888",
+          "image": "",
+          "importNames": ""
+        }
+      ],
+      "storage": [],
+      "variants": [
+        {
+          "colorId": "default",
+          "storage": "Стандарт",
+          "simType": "",
+          "purchasePrice": 12300,
+          "price": 13900
+        }
+      ],
+      "sizes": null,
+      "stock": [],
+      "images": [],
+      "markupPercent": 15,
+      "markupFixed": 0,
+      "showCatalogSpec": false,
+      "importNames": "Huawei Watch Fit 5 Pro",
+      "hidden": true
+    },
+    {
+      "id": 74,
+      "slug": "honor-600-lite",
+      "name": "Honor 600 Lite",
+      "category": "huawei",
+      "brand": "Huawei",
+      "badge": null,
+      "image": "",
+      "coverImage": "",
+      "description": "Honor 600 Lite — оригинальная техника, под заказ от 3–5 дней.",
+      "simTypes": null,
+      "simModifiers": [],
+      "colors": [
+        {
+          "id": "default",
+          "name": "Стандарт",
+          "hex": "#888888",
+          "image": "",
+          "importNames": ""
+        },
+        {
+          "id": "gray",
+          "name": "Gray",
+          "hex": "#888888",
+          "image": "",
+          "importNames": "Gray"
+        },
+        {
+          "id": "black",
+          "name": "Black",
+          "hex": "#888888",
+          "image": "",
+          "importNames": "Black"
+        },
+        {
+          "id": "gold",
+          "name": "Gold",
+          "hex": "#888888",
+          "image": "",
+          "importNames": "Gold"
+        }
+      ],
+      "storage": [],
+      "variants": [
+        {
+          "colorId": "gray",
+          "storage": "256 ГБ",
+          "simType": "",
+          "purchasePrice": 18200,
+          "price": 20900
+        },
+        {
+          "colorId": "black",
+          "storage": "256 ГБ",
+          "simType": "",
+          "purchasePrice": 19100,
+          "price": 21900
+        },
+        {
+          "colorId": "gold",
+          "storage": "256 ГБ",
+          "simType": "",
+          "purchasePrice": 18200,
+          "price": 20900
+        }
+      ],
+      "sizes": null,
+      "stock": [],
+      "images": [],
+      "markupPercent": 15,
+      "markupFixed": 0,
+      "showCatalogSpec": false,
+      "importNames": "Honor 600 Lite",
+      "hidden": true
+    },
+    {
+      "id": 75,
+      "slug": "honor-400-pro",
+      "name": "Honor 400 Pro",
+      "category": "huawei",
+      "brand": "Huawei",
+      "badge": null,
+      "image": "",
+      "coverImage": "",
+      "description": "Honor 400 Pro — оригинальная техника, под заказ от 3–5 дней.",
+      "simTypes": null,
+      "simModifiers": [],
+      "colors": [
+        {
+          "id": "default",
+          "name": "Стандарт",
+          "hex": "#888888",
+          "image": "",
+          "importNames": ""
+        },
+        {
+          "id": "black",
+          "name": "Black",
+          "hex": "#888888",
+          "image": "",
+          "importNames": "Black"
+        }
+      ],
+      "storage": [],
+      "variants": [
+        {
+          "colorId": "black",
+          "storage": "256 ГБ",
+          "simType": "",
+          "purchasePrice": 40000,
+          "price": 44900
+        }
+      ],
+      "sizes": null,
+      "stock": [],
+      "images": [],
+      "markupPercent": 15,
+      "markupFixed": 0,
+      "showCatalogSpec": false,
+      "importNames": "Honor 400 Pro",
+      "hidden": true
+    },
+    {
+      "id": 76,
+      "slug": "honor-x8d",
+      "name": "Honor X8d",
+      "category": "huawei",
+      "brand": "Huawei",
+      "badge": null,
+      "image": "",
+      "coverImage": "",
+      "description": "Honor X8d — оригинальная техника, под заказ от 3–5 дней.",
+      "simTypes": null,
+      "simModifiers": [],
+      "colors": [
+        {
+          "id": "default",
+          "name": "Стандарт",
+          "hex": "#888888",
+          "image": "",
+          "importNames": ""
+        },
+        {
+          "id": "воздушный-голубой",
+          "name": "Воздушный голубой",
+          "hex": "#888888",
+          "image": "",
+          "importNames": "Воздушный голубой"
+        },
+        {
+          "id": "вельветовый-серый",
+          "name": "Вельветовый серый",
+          "hex": "#888888",
+          "image": "",
+          "importNames": "Вельветовый серый"
+        }
+      ],
+      "storage": [],
+      "variants": [
+        {
+          "colorId": "воздушный-голубой",
+          "storage": "256 ГБ",
+          "simType": "",
+          "purchasePrice": 15500,
+          "price": 17900
+        },
+        {
+          "colorId": "вельветовый-серый",
+          "storage": "256 ГБ",
+          "simType": "",
+          "purchasePrice": 15500,
+          "price": 17900
+        }
+      ],
+      "sizes": null,
+      "stock": [],
+      "images": [],
+      "markupPercent": 15,
+      "markupFixed": 0,
+      "showCatalogSpec": false,
+      "importNames": "Honor X8d",
+      "hidden": true
+    },
+    {
+      "id": 77,
+      "slug": "ray-ban-meta-headliner-gen-2",
+      "name": "Ray Ban Meta Headliner (Gen 2)",
+      "category": "airpods",
+      "brand": "Ray-Ban",
+      "badge": null,
+      "image": "",
+      "coverImage": "",
+      "description": "Ray Ban Meta Headliner (Gen 2) — оригинальная техника, под заказ от 3–5 дней.",
+      "simTypes": null,
+      "simModifiers": [],
+      "colors": [
+        {
+          "id": "default",
+          "name": "Стандарт",
+          "hex": "#888888",
+          "image": "",
+          "importNames": ""
+        }
+      ],
+      "storage": [
+        {
+          "label": "Стандарт"
+        }
+      ],
+      "variants": [
+        {
+          "colorId": "default",
+          "storage": "S50",
+          "simType": "",
+          "purchasePrice": 32500,
+          "price": 36900
+        }
+      ],
+      "sizes": null,
+      "stock": [],
+      "images": [],
+      "markupPercent": 15,
+      "markupFixed": 0,
+      "showCatalogSpec": false,
+      "importNames": "Ray Ban Meta Headliner (Gen 2)",
+      "hidden": true
+    },
+    {
+      "id": 78,
+      "slug": "ray-ban-meta-wayfarer-gen-2",
+      "name": "Ray Ban Meta Wayfarer (Gen 2)",
+      "category": "airpods",
+      "brand": "Ray-Ban",
+      "badge": null,
+      "image": "",
+      "coverImage": "",
+      "description": "Ray Ban Meta Wayfarer (Gen 2) — оригинальная техника, под заказ от 3–5 дней.",
+      "simTypes": null,
+      "simModifiers": [],
+      "colors": [
+        {
+          "id": "default",
+          "name": "Стандарт",
+          "hex": "#888888",
+          "image": "",
+          "importNames": ""
+        }
+      ],
+      "storage": [
+        {
+          "label": "Стандарт"
+        }
+      ],
+      "variants": [
+        {
+          "colorId": "default",
+          "storage": "S50",
+          "simType": "",
+          "purchasePrice": 31000,
+          "price": 34900
+        },
+        {
+          "colorId": "default",
+          "storage": "S53",
+          "simType": "",
+          "purchasePrice": 31500,
+          "price": 35900
+        }
+      ],
+      "sizes": null,
+      "stock": [],
+      "images": [],
+      "markupPercent": 15,
+      "markupFixed": 0,
+      "showCatalogSpec": false,
+      "importNames": "Ray Ban Meta Wayfarer (Gen 2)",
+      "hidden": true
+    },
+    {
+      "id": 79,
+      "slug": "google-fitbit-air",
+      "name": "Google Fitbit Air",
+      "category": "airpods",
+      "brand": "Google",
+      "badge": null,
+      "image": "",
+      "coverImage": "",
+      "description": "Google Fitbit Air — оригинальная техника, под заказ от 3–5 дней.",
+      "simTypes": null,
+      "simModifiers": [],
+      "colors": [
+        {
+          "id": "default",
+          "name": "Стандарт",
+          "hex": "#888888",
+          "image": "",
+          "importNames": ""
+        }
+      ],
+      "storage": [
+        {
+          "label": "Стандарт"
+        }
+      ],
+      "variants": [
+        {
+          "colorId": "default",
+          "storage": "Стандарт",
+          "simType": "",
+          "purchasePrice": 14000,
+          "price": 15900
+        }
+      ],
+      "sizes": null,
+      "stock": [],
+      "images": [],
+      "markupPercent": 15,
+      "markupFixed": 0,
+      "showCatalogSpec": false,
+      "importNames": "Google Fitbit Air",
+      "hidden": true
+    },
+    {
+      "id": 80,
+      "slug": "redmi-note-15-pro",
+      "name": "Redmi Note 15 Pro",
+      "category": "xiaomi",
+      "brand": "Xiaomi",
+      "badge": null,
+      "image": "",
+      "coverImage": "",
+      "description": "Redmi Note 15 Pro — оригинальная техника, под заказ от 3–5 дней.",
+      "simTypes": null,
+      "simModifiers": [],
+      "colors": [
+        {
+          "id": "default",
+          "name": "Стандарт",
+          "hex": "#888888",
+          "image": "",
+          "importNames": ""
+        },
+        {
+          "id": "glacier-blue",
+          "name": "Glacier Blue",
+          "hex": "#888888",
+          "image": "",
+          "importNames": "Glacier Blue"
+        },
+        {
+          "id": "black",
+          "name": "Black",
+          "hex": "#888888",
+          "image": "",
+          "importNames": "Black"
+        }
+      ],
+      "storage": [
+        {
+          "label": "Стандарт"
+        }
+      ],
+      "variants": [
+        {
+          "colorId": "glacier-blue",
+          "storage": "512 ГБ",
+          "simType": "",
+          "purchasePrice": 22600,
+          "price": 25900
+        },
+        {
+          "colorId": "black",
+          "storage": "512 ГБ",
+          "simType": "",
+          "purchasePrice": 22600,
+          "price": 25900
+        },
+        {
+          "colorId": "glacier-blue",
+          "storage": "256 ГБ",
+          "simType": "",
+          "purchasePrice": 20400,
+          "price": 22900
+        }
+      ],
+      "sizes": null,
+      "stock": [],
+      "images": [],
+      "markupPercent": 15,
+      "markupFixed": 0,
+      "showCatalogSpec": false,
+      "importNames": "Redmi Note 15 Pro"
     }
   ]
 }

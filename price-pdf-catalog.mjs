@@ -213,17 +213,28 @@ function parseVariantForUpdate(name, product, meta) {
   }
 
   if (meta.type === 'airpods') {
+    if (/^Ray\s+Ban\s+Meta/i.test(name)) return parseRayBanVariant(name, product, false)
+    if (/^Samsung\s+(?:Galaxy\s+)?Buds/i.test(name)) return parseSamsungBudsVariant(name, product, false)
+    if (/^Google\s+Fitbit/i.test(name)) return parseFitbitVariant(name, product, false)
     let colorName = ''
     for (const w of AIRPODS_COLOR_SUFFIXES) {
       const re = new RegExp(`\\s+${w.replace(/\s+/g, '\\s+')}\\s*$`, 'i')
       if (re.test(name)) { colorName = w; break }
     }
-    const colorId = colorName ? findColorId(colorName, product.colors) : product.colors?.[0]?.id
-    if (!colorId) return null
+    const colorId = colorName
+      ? (findColorId(colorName, product.colors) || ensureColor(product, colorName))
+      : (product.colors?.[0]?.id || ensureColor(product, 'Стандарт'))
     const storageLabel = resolveStorageLabel('Стандарт', product, meta)
       || product.storage?.[0]?.label
       || 'Стандарт'
     return { colorId, storage: storageLabel, simType: '' }
+  }
+
+  if (meta.type === 'xiaomi' || meta.type === 'huawei') {
+    if (meta.type === 'huawei' && /watch/i.test(name)) {
+      return parseHuaweiWatchVariant(name, product, false)
+    }
+    return parsePhoneStorageColorVariant(name, product, meta, false)
   }
 
   const storageMatch = name.match(/(\d+\/\d+\s*Gb?|\d+\/\d+GB|\d+\s*Gb)/i)
@@ -260,6 +271,28 @@ function stripAirpodsColorSuffix(name) {
     if (re.test(base)) return base.replace(re, '').trim()
   }
   return base
+}
+
+/** Ключ товара AirPods/Marshall — более специфичные шаблоны раньше коротких */
+export function extractAirpodsProductKey(base) {
+  const patterns = [
+    /^Marshall\s+Major\s+\d+/i,
+    /^AirPods\s+Max\s*\(\d{4}\)/i,
+    /^AirPods\s+Pro\s+3/i,
+    /^AirPods\s+Pro\s+2(?:\s+Type-C)?/i,
+    /^AirPods\s+\d+\s+ANC/i,
+    /^AirPods\s+\d+/i,
+    /^AirPods\s+Max(?:\s+USB-C)?/i,
+    /^AirPods\s+Pro/i,
+    /^Samsung\s+(?:Galaxy\s+)?Buds\s+\d+(?:\s+Pro)?/i,
+    /^Google\s+Fitbit\s+\w+/i,
+    /^Ray\s+Ban\s+Meta\s+\w+\s*(?:\([^)]+\))?/i,
+  ]
+  for (const re of patterns) {
+    const m = String(base).trim().match(re)
+    if (m) return m[0].trim()
+  }
+  return String(base).trim()
 }
 
 function normalizeWatchSizeLabel(label) {
@@ -383,7 +416,85 @@ function parseWatchVariant(name, product) {
   return { colorId, storage: sizeLabel, simType: '' }
 }
 
+function parseRayBanVariant(name, product, mutate = true) {
+  const sizeM = String(name).match(/\s+(S\d{2})\s*$/i)
+  const storage = sizeM ? sizeM[1] : 'Стандарт'
+  const colorPart = sizeM ? name.slice(0, sizeM.index).trim() : name
+  const frameM = colorPart.match(/^Ray\s+Ban\s+Meta\s+\w+\s*(?:\([^)]+\))?\s*(.*)$/i)
+  const colorName = frameM?.[1]?.trim() || 'Стандарт'
+  const colorId = findColorId(colorName, product.colors)
+    || (mutate ? ensureColor(product, colorName) : null)
+    || product.colors?.[0]?.id
+  if (!colorId) return null
+  if (mutate) ensureStorage(product, storage)
+  return { colorId, storage, simType: '' }
+}
+
+function parseSamsungBudsVariant(name, product, mutate = true) {
+  const m = String(name).match(/^(?:Samsung\s+(?:Galaxy\s+)?)?Buds\s+\d+(?:\s+Pro)?\s+(.+)$/i)
+  const colorName = m?.[1]?.trim() || 'Стандарт'
+  const colorId = findColorId(colorName, product.colors)
+    || (mutate ? ensureColor(product, colorName) : null)
+    || product.colors?.[0]?.id
+  if (!colorId) return null
+  if (mutate) ensureStorage(product, 'Стандарт')
+  return { colorId, storage: 'Стандарт', simType: '' }
+}
+
+function parseFitbitVariant(name, product, mutate = true) {
+  const m = String(name).match(/^Google\s+Fitbit\s+\w+\s+(.+)$/i)
+  const colorName = m?.[1]?.trim() || 'Стандарт'
+  const colorId = findColorId(colorName, product.colors)
+    || (mutate ? ensureColor(product, colorName) : null)
+    || product.colors?.[0]?.id
+  if (!colorId) return null
+  if (mutate) ensureStorage(product, 'Стандарт')
+  return { colorId, storage: 'Стандарт', simType: '' }
+}
+
+function parseHuaweiWatchVariant(name, product, mutate = true) {
+  const paren = String(name).match(/\(([^)]+)\)\s*$/)
+  const colorName = paren?.[1]?.trim() || 'Стандарт'
+  const colorId = findColorId(colorName, product.colors)
+    || (mutate ? ensureColor(product, colorName) : null)
+    || product.colors?.[0]?.id
+  if (!colorId) return null
+  if (mutate) ensureStorage(product, 'Стандарт')
+  return { colorId, storage: 'Стандарт', simType: '' }
+}
+
+function parsePhoneStorageColorVariant(name, product, meta, mutate = true) {
+  const paren = String(name).match(/\(([^)]+)\)\s*$/)
+  if (paren) {
+    const storageMatch = name.match(/(\d+\/\d+\s*Gb?|\d+\s*Gb)/i)
+    if (!storageMatch) return null
+    const storage = normalizeSamsungPhoneStorage(storageMatch[0], product)
+    const colorName = paren[1].trim()
+    const colorId = findColorId(colorName, product.colors)
+      || (mutate ? ensureColor(product, colorName) : null)
+    if (!colorId) return null
+    const storageLabel = resolveStorageLabel(storage, product, meta)
+      || (mutate ? ensureStorage(product, storage) : storage)
+    if (!storageLabel) return null
+    return { colorId, storage: storageLabel, simType: '' }
+  }
+  const m = String(name).match(/(\d+\/\d+\s*Gb?|\d+\s*Gb)\s+(.+)$/i)
+  if (!m) return null
+  const storage = normalizeSamsungPhoneStorage(m[1], product)
+  const colorName = m[2].trim()
+  const colorId = findColorId(colorName, product.colors)
+    || (mutate ? ensureColor(product, colorName) : null)
+  if (!colorId) return null
+  const storageLabel = resolveStorageLabel(storage, product, meta)
+    || (mutate ? ensureStorage(product, storage) : storage)
+  if (!storageLabel) return null
+  return { colorId, storage: storageLabel, simType: '' }
+}
+
 function parseAirpodsVariant(name, product) {
+  if (/^Ray\s+Ban\s+Meta/i.test(name)) return parseRayBanVariant(name, product)
+  if (/^Samsung\s+(?:Galaxy\s+)?Buds/i.test(name)) return parseSamsungBudsVariant(name, product)
+  if (/^Google\s+Fitbit/i.test(name)) return parseFitbitVariant(name, product)
   let colorName = 'Стандарт'
   for (const w of AIRPODS_COLOR_SUFFIXES) {
     const re = new RegExp(`\\s+${w.replace(/\s+/g, '\\s+')}\\s*$`, 'i')
@@ -451,10 +562,8 @@ function productKeyFromEntry(entry, meta) {
     return generic ? generic[1].trim() : name.split(/\d+\s*Gb/i)[0].trim()
   }
   if (meta.type === 'airpods') {
-    if (/Marshall/i.test(name)) return name.match(/^Marshall[^\d]+/i)?.[0]?.trim() || name
-    const base = stripAirpodsColorSuffix(name)
-    const m = base.match(/^(AirPods(?:\s+Pro)?(?:\s+Max)?(?:\s+USB-C)?(?:\s*\(\d{4}\))?|Apple AirPods[^\d]*)/i)
-    return m ? m[1].replace(/Цветные\s+/i, '').trim() : base.split(/\s+\d/)[0].trim()
+    const base = stripAirpodsColorSuffix(name).replace(/^Apple\s+/i, '').replace(/Цветные\s+/i, '')
+    return extractAirpodsProductKey(base)
   }
   if (meta.type === 'samsung-phone') {
     const withoutStorage = stripSamsungStorage(name)
@@ -482,6 +591,8 @@ function productKeyFromEntry(entry, meta) {
 }
 
 function createEmptyProduct(name, meta, id) {
+  const isWatch = ['watch', 'watch-ultra', 'samsung-watch'].includes(meta.type)
+  const isIpad = meta.type === 'ipad'
   return {
     id,
     slug: slugify(name),
@@ -501,14 +612,15 @@ function createEmptyProduct(name, meta, id) {
         { id: 'orange', name: 'Оранжевый', hex: '#e88a40', image: '', importNames: 'Orange, Cosmic Orange' },
       ]
       : [{ id: 'default', name: 'Стандарт', hex: '#888888', image: '', importNames: '' }],
-    storage: [{ label: 'Стандарт' }],
+    storage: isWatch || isIpad ? [] : [{ label: 'Стандарт' }],
     variants: [],
-    sizes: null,
+    sizes: isWatch ? [] : null,
     stock: [],
     images: [],
     markupPercent: 15,
     markupFixed: 0,
     showCatalogSpec: false,
+    importNames: name,
   }
 }
 
@@ -520,6 +632,12 @@ function parseVariant(entry, product, meta) {
   if (meta.type === 'watch' || meta.type === 'watch-ultra') return parseWatchVariant(name, product)
   if (meta.type === 'airpods') return parseAirpodsVariant(name, product)
   if (meta.type === 'samsung-phone') return parseSamsungPhoneVariant(name, product)
+  if (meta.type === 'xiaomi' || meta.type === 'huawei') {
+    if (meta.type === 'huawei' && /watch/i.test(name)) {
+      return parseHuaweiWatchVariant(name, product, true)
+    }
+    return parsePhoneStorageColorVariant(name, product, meta, true)
+  }
   return parseGenericVariant(name, product)
 }
 
@@ -528,13 +646,18 @@ function variantKey(v) {
 }
 
 function normalizeProductName(name) {
-  return String(name).toLowerCase()
+  return String(name)
     .replace(/[""«»]/g, '')
-    .replace(/\([^)]*\)/g, '')
-    .replace(/\s+m\d+(\s+max)?/gi, '')
-    .replace(/\s+a\d+(\s+pro)?/gi, '')
+    .replace(/\((?!20\d{2})[^)]*\)/g, '')
+    .replace(/\s+M\d+(\s+Max)?/g, '')
+    .replace(/\s+A\d+(\s+Pro)?/g, '')
+    .toLowerCase()
     .replace(/\s+/g, ' ')
     .trim()
+}
+
+function productGroupKey(category, productName) {
+  return `${category}::${String(productName).toLowerCase().replace(/\s+/g, ' ').trim()}`
 }
 
 function productImportAliases(product) {
@@ -687,7 +810,7 @@ export function buildCatalogFromEntries(rawEntries, existingProducts, markup = {
     const productName = options.getProductKey
       ? options.getProductKey(entry, meta)
       : productKeyFromEntry(entry, meta)
-    const groupKey = `${meta.category}::${normalizeProductName(productName)}`
+    const groupKey = productGroupKey(meta.category, productName)
     if (!byProduct.has(groupKey)) {
       byProduct.set(groupKey, { productName, meta, entries: [] })
     }
@@ -702,7 +825,7 @@ export function buildCatalogFromEntries(rawEntries, existingProducts, markup = {
     let product = options.findProduct?.(productName, meta, groupEntries, productMap, products)
       || resolveProduct(productName, meta, productMap, products, sampleLine)
     if (!product) {
-      if (pricesOnly) {
+      if (pricesOnly && !options.upsertProducts) {
         stats.skipped += groupEntries.length
         if (stats.notFoundSet.size < 50) stats.notFoundSet.add(productName)
         continue
