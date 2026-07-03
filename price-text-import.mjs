@@ -10,7 +10,8 @@ function detectSection(name) {
   const n = String(name).trim()
   if (/^iPhone\s+17\s+Pro\s+Max/i.test(n)) return 'iPhone 17 Pro Max'
   if (/^iPhone\s+17\s+Pro/i.test(n)) return 'iPhone 17 Pro'
-  if (/^iPhone\s+17/i.test(n)) return 'iPhone 17'
+  if (/^iPhone\s+17\s+Air/i.test(n)) return 'iPhone 17'
+  if (/^iPhone\s+17\b/i.test(n)) return 'iPhone 17'
   if (/^iPhone\s+16/i.test(n)) return 'iPhone 16'
   if (/^iPhone\s+15/i.test(n)) return 'iPhone 16'
   if (/^Apple\s+iPad/i.test(n)) return 'Apple iPad'
@@ -31,6 +32,7 @@ function detectSection(name) {
 function productKeyFromTextName(name, meta) {
   const n = String(name).trim()
   if (meta.type === 'iphone') {
+    if (/^iPhone\s+17\s+Air/i.test(n)) return 'iPhone 17 Air'
     const m = n.match(/^iPhone\s+(\d+(?:\s+(?:Pro(?:\s+Max)?|Air|Plus))?)/i)
     if (m) return `iPhone ${m[1].replace(/\s+/g, ' ').trim()}`
     return meta.productName
@@ -65,7 +67,8 @@ function productKeyFromTextName(name, meta) {
     return base.split(/\s+(?:Midnight|Purple|Starlight|Orange|Black|White|Blue|Brown|Cream)\s*$/i)[0].trim()
   }
   if (meta.type === 'samsung-phone') {
-    const withoutBrand = n.replace(/^Samsung\s+Galaxy\s+/i, '')
+    let withoutBrand = n.replace(/^Samsung\s+Galaxy\s+/i, '')
+    withoutBrand = withoutBrand.replace(/\bS(\d+)\+/gi, 'S$1 Plus')
     const m = withoutBrand.match(/^(Z\s+Fold\s+\d+|S\d+\s+Ultra|S\d+\s+Plus|S\d+)/i)
     if (m) return `Galaxy ${m[1].replace(/\s+/g, ' ').trim()}`
     return withoutBrand.replace(/\s+\d+\/\d+\s*Gb?.*/i, '').trim()
@@ -82,9 +85,15 @@ function productKeyFromTextName(name, meta) {
     if (pura) return `HUAWEI ${pura[1]}`
     const watch = n.match(/^Huawei\s+(Watch\s+Fit\s+\d+(?:\s+Pro)?)/i)
     if (watch) return `Huawei ${watch[1]}`
-    const honor = n.match(/^Honor\s+(\S+(?:\s+\S+)?)/i)
-    if (honor) return `Honor ${honor[1].replace(/\s+\d+\/\d+\s*Gb?.*/i, '').trim()}`
+    const honor = n.match(/^Honor\s+(.+?)(?=\s+\d+\/\d+\s*Gb?|\s+\d+\s*Gb\b)/i)
+    if (honor) return `Honor ${honor[1].trim()}`
     return n.split(/\d+\/\d+/)[0].trim()
+  }
+  if (meta.type === 'xiaomi') {
+    return n
+      .replace(/\s+\d+\/\d+\s*Gb?.*/i, '')
+      .replace(/\s+\([^)]+\)\s*$/, '')
+      .trim()
   }
   return n
 }
@@ -96,7 +105,7 @@ function variantNameFromText(name, meta) {
   if (meta.type === 'macbook') return n.replace(/^Apple\s+/i, '')
   if (meta.type === 'watch' || meta.type === 'watch-ultra') return n.replace(/^Apple\s+Watch\s+/i, '')
   if (meta.type === 'airpods') return n.replace(/^Apple\s+/i, '')
-  if (meta.type === 'samsung-phone') return n.replace(/^Samsung\s+Galaxy\s+/i, '')
+  if (meta.type === 'samsung-phone') return n.replace(/^Samsung\s+Galaxy\s+/i, '').replace(/\bS(\d+)\+/gi, 'S$1 Plus')
   if (meta.type === 'samsung-watch') return n.replace(/^Samsung\s+Galaxy\s+/i, '')
   if (meta.type === 'huawei') return n.replace(/^(HUAWEI|Huawei|Honor)\s+/i, '')
   return n
@@ -139,6 +148,7 @@ export function buildCatalogFromPriceText(text, existingProducts, markup = { per
   const { entries, skipped } = parseTextPriceLines(text)
   const result = buildCatalogFromEntries(entries, existingProducts, markup, {
     pricesOnly: true,
+    upsertVariants: true,
     filterSections: false,
     getProductKey: (entry, meta) => productKeyFromTextName(entry.name, meta),
     getVariantName: (entry, meta) => variantNameFromText(entry.name, meta),

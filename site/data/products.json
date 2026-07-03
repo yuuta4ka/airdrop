@@ -919,7 +919,8 @@
       "simModifiers": [],
       "showCatalogSpec": false,
       "markupPercent": 15,
-      "markupFixed": 0
+      "markupFixed": 0,
+      "importNames": "Samsung Galaxy S26 Plus, Galaxy S26+, Samsung Galaxy S26+"
     },
     {
       "id": 14,
@@ -986,7 +987,8 @@
       "simModifiers": [],
       "showCatalogSpec": false,
       "markupPercent": 15,
-      "markupFixed": 0
+      "markupFixed": 0,
+      "importNames": "Samsung Galaxy S26, Galaxy S26"
     },
     {
       "id": 15,

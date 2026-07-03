@@ -91,6 +91,14 @@ function resolveColorId(name, product) {
   return findColorId(name, product.colors || [])
 }
 
+function normalizeSamsungPhoneStorage(raw) {
+  const slash = String(raw).match(/(\d+)\s*\/\s*(\d+)\s*(Gb|GB|ГБ)?/i)
+  if (slash) return `${slash[2]} ГБ`
+  let storage = String(raw).replace(/\s*Gb/i, ' ГБ').replace(/GB/i, ' ГБ').trim()
+  if (!/ГБ|ТБ/.test(storage)) storage += ' ГБ'
+  return storage
+}
+
 function resolveStorageLabel(label, product, meta) {
   if (!label || label === 'Стандарт') {
     if (['watch', 'watch-ultra', 'airpods', 'samsung-watch'].includes(meta.type)) {
@@ -102,7 +110,21 @@ function resolveStorageLabel(label, product, meta) {
   if (exact) return exact.label
   const norm = label.replace(/\s/g, '').toLowerCase()
   const fuzzy = product.storage?.find((s) => s.label.replace(/\s/g, '').toLowerCase() === norm)
-  return fuzzy?.label || label
+  if (fuzzy) return fuzzy.label
+  if (['samsung-phone', 'xiaomi', 'huawei'].includes(meta.type)) {
+    const slash = String(label).match(/(\d+)\s*\/\s*(\d+)/)
+    if (slash) {
+      const romNum = slash[2]
+      const byRom = product.storage?.find((s) => new RegExp(`\\b${romNum}\\s*(ГБ|ТБ)`, 'i').test(s.label))
+      if (byRom) return byRom.label
+    }
+    const num = String(label).match(/(\d+)\s*(ГБ|ТБ)/i)?.[1]
+    if (num) {
+      const byNum = product.storage?.find((s) => new RegExp(`\\b${num}\\s*(ГБ|ТБ)`, 'i').test(s.label))
+      if (byNum) return byNum.label
+    }
+  }
+  return label
 }
 
 /** Разбор строки прайса без изменения карточки товара (только для обновления цен) */
@@ -130,8 +152,7 @@ function parseVariantForUpdate(name, product, meta) {
   if (meta.type === 'samsung-phone') {
     const m = name.match(/(\d+\/\d+\s*Gb?|\d+\s*Gb|\d+\/\d+)\s*(.+)$/i)
     if (!m) return null
-    let storage = m[1].replace(/\s*Gb/i, ' ГБ').trim()
-    if (!/ГБ|ТБ/.test(storage)) storage += ' ГБ'
+    const storage = normalizeSamsungPhoneStorage(m[1])
     const colorId = findColorId(m[2].trim(), product.colors)
     if (!colorId) return null
     const storageLabel = resolveStorageLabel(storage, product, meta)
@@ -286,8 +307,7 @@ function parseSamsungPhoneVariant(name, product) {
   let storage = 'Стандарт'
   let colorPart = name
   if (m) {
-    storage = m[1].replace(/\s*Gb/i, ' ГБ').trim()
-    if (!/ГБ|ТБ/.test(storage)) storage += ' ГБ'
+    storage = normalizeSamsungPhoneStorage(m[1])
     colorPart = m[2]
   }
   const colorId = findColorId(colorPart, product.colors) || ensureColor(product, colorPart.trim())
@@ -488,6 +508,11 @@ function normalizeProductName(name) {
     .trim()
 }
 
+function productImportAliases(product) {
+  return [product.name, ...(String(product.importNames || '').split(/[,;]+/))]
+    .map((s) => s.trim()).filter(Boolean)
+}
+
 function registerProductKeys(productMap, product) {
   productMap.set(`${product.category}::${product.name.toLowerCase()}`, product)
   productMap.set(`${product.category}::${product.slug}`, product)
@@ -499,9 +524,34 @@ function registerProductKeys(productMap, product) {
   if (!norm.startsWith('apple ') && (product.category === 'apple-watch' || product.category === 'airpods')) {
     productMap.set(`${product.category}::apple ${norm}`, product)
   }
+  for (const alias of productImportAliases(product)) {
+    productMap.set(`${product.category}::${alias.toLowerCase()}`, product)
+    productMap.set(`${product.category}::${normalizeProductName(alias)}`, product)
+  }
+  if (product.category === 'samsung' && product.name.startsWith('Galaxy ')) {
+    const tail = product.name.slice(7).toLowerCase()
+    productMap.set(`${product.category}::samsung galaxy ${tail}`, product)
+  }
 }
 
-function resolveProduct(productName, meta, productMap, products) {
+export function resolveProductByLinePrefix(lineName, meta, products) {
+  const line = String(lineName).toLowerCase().trim()
+  let best = null
+  let bestLen = 0
+  for (const product of products) {
+    if (product.category !== meta.category) continue
+    for (const alias of productImportAliases(product)) {
+      const al = alias.toLowerCase()
+      if (line.startsWith(al) && al.length > bestLen) {
+        best = product
+        bestLen = al.length
+      }
+    }
+  }
+  return best
+}
+
+function resolveProduct(productName, meta, productMap, products, lineName = '') {
   const keys = [
     `${meta.category}::${productName.toLowerCase()}`,
     `${meta.category}::${normalizeProductName(productName)}`,
@@ -525,6 +575,21 @@ function resolveProduct(productName, meta, productMap, products) {
     return pn === normShort || pn.endsWith(` ${normShort}`) || normShort.endsWith(` ${pn}`) || pn === norm
   })
   if (matches.length === 1) return matches[0]
+
+  const byAlias = products.filter((p) => {
+    if (p.category !== meta.category) return false
+    return productImportAliases(p).some((alias) => {
+      const an = normalizeProductName(alias)
+      return an === norm || norm.includes(an) || an.includes(norm)
+    })
+  })
+  if (byAlias.length === 1) return byAlias[0]
+
+  if (lineName) {
+    const byPrefix = resolveProductByLinePrefix(lineName, meta, products)
+    if (byPrefix) return byPrefix
+  }
+
   return null
 }
 
@@ -564,6 +629,8 @@ export function buildCatalogFromEntries(rawEntries, existingProducts, markup = {
     skipped: 0,
     skippedVariants: 0,
     notFound: [],
+    notFoundSet: new Set(),
+    skippedVariantSamples: [],
     errors: [],
   }
 
@@ -588,11 +655,13 @@ export function buildCatalogFromEntries(rawEntries, existingProducts, markup = {
   const touchedProducts = new Set()
 
   for (const { productName, meta, entries: groupEntries } of byProduct.values()) {
-    let product = resolveProduct(productName, meta, productMap, products)
+    const sampleLine = groupEntries[0]?.name || ''
+    let product = options.findProduct?.(productName, meta, groupEntries, productMap, products)
+      || resolveProduct(productName, meta, productMap, products, sampleLine)
     if (!product) {
       if (pricesOnly) {
         stats.skipped += groupEntries.length
-        if (stats.notFound.length < 30) stats.notFound.push(productName)
+        if (stats.notFoundSet.size < 50) stats.notFoundSet.add(productName)
         continue
       }
       product = createEmptyProduct(productName, meta, nextId++)
@@ -610,11 +679,21 @@ export function buildCatalogFromEntries(rawEntries, existingProducts, markup = {
           const variant = parseVariantForUpdate(variantName, product, meta)
           if (!variant) {
             stats.skippedVariants += 1
+            if (stats.skippedVariantSamples.length < 12) stats.skippedVariantSamples.push(entry.name)
             continue
           }
           const idx = product.variants.findIndex((v) => variantKey(v) === variantKey(variant))
           if (idx < 0) {
-            stats.skippedVariants += 1
+            if (options.upsertVariants) {
+              upsertVariant(product, variant, entry.price, markup)
+              stats.variantsAdded += 1
+              stats.pricesUpdated += 1
+              stats.variantsUpdated += 1
+              touchedProducts.add(product.id)
+            } else {
+              stats.skippedVariants += 1
+              if (stats.skippedVariantSamples.length < 12) stats.skippedVariantSamples.push(entry.name)
+            }
             continue
           }
           const price = calcRetailFromPurchase(entry.price, markup)
@@ -652,6 +731,8 @@ export function buildCatalogFromEntries(rawEntries, existingProducts, markup = {
   }
 
   stats.productsUpdated = touchedProducts.size
+  stats.notFound = [...stats.notFoundSet]
+  delete stats.notFoundSet
   return { products, stats }
 }
 

@@ -356,13 +356,27 @@ function cleanupProductForSave(p) {
 function formatPdfImportStats(s) {
   const lines = []
   if (s.pricesUpdated) lines.push(`Обновлено цен: ${s.pricesUpdated}`)
+  if (s.variantsAdded) lines.push(`Добавлено конфигураций: ${s.variantsAdded}`)
   else if (s.variantsUpdated) lines.push(`Обновлено конфигураций: ${s.variantsUpdated}`)
   if (s.productsUpdated) lines.push(`Товаров затронуто: ${s.productsUpdated}`)
-  if (s.skippedVariants) lines.push(`Не сопоставлено строк: ${s.skippedVariants}`)
-  if (s.skipped) lines.push(`Товар не найден: ${s.skipped}`)
+  if (s.skippedVariants) lines.push(`Не сопоставлено конфигураций: ${s.skippedVariants}`)
+  if (s.skipped) lines.push(`Строк без товара в каталоге: ${s.skipped}`)
   if (s.unrecognized) lines.push(`Нераспознанных строк: ${s.unrecognized}`)
   if (!lines.length) lines.push(`Обработано строк: ${s.entries ?? 0}`)
   return lines
+}
+
+function formatImportResultHtml(s) {
+  const lines = formatPdfImportStats(s)
+  let html = `<strong>Импорт завершён</strong><br>${lines.map((l) => escAttr(l)).join('<br>')}`
+  if (s.notFound?.length) {
+    html += `<br><span class="admin-hint--warn">Нет в каталоге (${s.notFound.length}): ${escAttr(s.notFound.join(', '))}</span>`
+    html += '<br><span class="admin-hint">Создайте карточку товара или укажите «Названия в прайсе» в её настройках.</span>'
+  }
+  if (s.skippedVariantSamples?.length) {
+    html += `<br><span class="admin-hint--warn">Примеры несопоставленных конфигураций:</span><br>${s.skippedVariantSamples.slice(0, 8).map((n) => escAttr(n)).join('<br>')}`
+  }
+  return html
 }
 
 function validateProductStorage(p) {
@@ -894,6 +908,7 @@ function renderProducts(c) {
       markupFixed: 0,
       showCatalogSpec: false,
       hidden: false,
+      importNames: '',
     })
     editingProductIdx = productsData.products.length - 1
     adminProductView = 'active'
@@ -922,6 +937,8 @@ function renderProductEditor(c) {
     </div>
     <label class="field field--check"><input type="checkbox" id="p-showCatalogSpec" ${p.showCatalogSpec ? 'checked' : ''} /> Показывать «В наличии / Под заказ» на карточке в каталоге</label>
     <label class="field field--check"><input type="checkbox" id="p-hidden" ${p.hidden ? 'checked' : ''} /> Скрыть с сайта (останется в разделе «Скрытые»)</label>
+    ${field('Названия в прайсе', 'p-importNames', p.importNames || '', 'text', 'Samsung Galaxy S26 Plus, Galaxy S26+')}
+    <p class="admin-hint">Если в текстовом прайсе товар называется иначе — укажите здесь через запятую. Импорт сопоставит строки с этой карточкой.</p>
     ${field('Описание', 'p-desc', p.description, 'textarea')}`)}
 
     ${section('Галерея и главное фото', `
@@ -1457,7 +1474,7 @@ function renderPriceImport(c) {
     <p class="admin-hint" id="pdf-import-status"></p>
     <p class="admin-hint" id="pdf-import-result">${pi.lastImportAt ? `Последний PDF: ${new Date(pi.lastImportAt).toLocaleString('ru-RU')}` : ''}</p>
   `) + section('Импорт прайса текстом', `
-    <p class="admin-hint">Формат: <code>Название конфигурации = 128 000 ₽</code> — по одной строке. Обновляет только цены у уже созданных товаров.</p>
+    <p class="admin-hint">Формат: <code>Название конфигурации = 128 000 ₽</code> — по одной строке. Обновляет цены; если конфигурации ещё нет в карточке — добавит её.</p>
     <label class="field"><span>Прайс</span>
       <textarea id="price-text-import" class="admin-textarea" rows="14" placeholder="iPhone 17 Pro Max 256Gb Orange (eSim+eSim) = 128 000 ₽"></textarea>
     </label>
@@ -1555,11 +1572,7 @@ function renderPriceImport(c) {
         const data = await parseApiJson(res)
         if (!res.ok) throw new Error(data?.error || 'Ошибка импорта')
         const s = data.stats
-        const lines = formatPdfImportStats(s)
-        resultEl.innerHTML = `<strong>Импорт завершён</strong><br>${lines.map((l) => escAttr(l)).join('<br>')}`
-        if (s.notFound?.length) {
-          resultEl.innerHTML += `<br><span class="admin-hint--warn">Не найдены: ${escAttr(s.notFound.slice(0, 5).join(', '))}</span>`
-        }
+        resultEl.innerHTML = formatImportResultHtml(s)
         if (s.errors?.length) {
           resultEl.innerHTML += '<br>' + s.errors.slice(0, 5).map((e) => `⚠ ${escAttr(e.name)}: ${escAttr(e.error)}`).join('<br>')
         }
@@ -1605,12 +1618,8 @@ function renderPriceImport(c) {
       })
       const data = await parseApiJson(res)
       if (!res.ok) throw new Error(data?.error || 'Ошибка импорта')
-      const s = data.stats
-      const lines = formatPdfImportStats(s)
-      resultEl.innerHTML = `<strong>Импорт завершён</strong><br>${lines.map((l) => escAttr(l)).join('<br>')}`
-      if (s.notFound?.length) {
-        resultEl.innerHTML += `<br><span class="admin-hint--warn">Товары не найдены: ${escAttr(s.notFound.slice(0, 8).join(', '))}</span>`
-      }
+        const s = data.stats
+        resultEl.innerHTML = formatImportResultHtml(s)
       storeData.priceImport = {
         ...storeData.priceImport,
         markupPercent: num('pi-markup'),
@@ -1983,6 +1992,7 @@ function collectProduct() {
   p.description = val('p-desc')
   p.showCatalogSpec = !!$('p-showCatalogSpec')?.checked
   p.hidden = !!$('p-hidden')?.checked
+  p.importNames = val('p-importNames')
 
   p.images = (p.images || []).map((_, i) => val(`gal-url-${i}`)).filter(Boolean)
   if (p.images.length) {
