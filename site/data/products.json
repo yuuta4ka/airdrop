@@ -552,7 +552,7 @@
       "category": "ipad",
       "brand": "Apple",
       "badge": "Новинка",
-      "image": "https://store.storeimages.cdn-apple.com/1/as-images.apple.com/is/ipad-pro-13-select-wifi-spacegray-202405?wid=400&hei=400&fmt=jpeg&qlt=90&.v=1713319990000",
+      "image": "assets/products/975dea55bf8735c7a2218bcbb9a0363f1bfc1c0ecbdee84a9e15bd7d0e4146ee.jpg.webp",
       "description": "iPad Pro с дисплеем Ultra Retina XDR и чипом M4.",
       "simTypes": null,
       "colors": [
@@ -560,15 +560,15 @@
           "id": "black",
           "name": "Космический чёрный",
           "hex": "#2d2d2d",
-          "image": "",
-          "importNames": ""
+          "image": "assets/products/a48b727e0ff6e962a5edd3cd5890d9a3b22c0ea95ab06d8f3ed8a8a4d2e71253.jpg.webp",
+          "importNames": "Black"
         },
         {
           "id": "silver",
           "name": "Серебристый",
           "hex": "#d8d8d8",
-          "image": "",
-          "importNames": ""
+          "image": "assets/products/de17094d593cd0737412578ca472fea2ded95485b132bcb28ad769322cb2f067.jpg.webp",
+          "importNames": "Silver"
         }
       ],
       "storage": [
@@ -586,9 +586,12 @@
       "stock": [],
       "variants": [],
       "images": [
-        "https://store.storeimages.cdn-apple.com/1/as-images.apple.com/is/ipad-pro-13-select-wifi-spacegray-202405?wid=400&hei=400&fmt=jpeg&qlt=90&.v=1713319990000"
+        "assets/products/975dea55bf8735c7a2218bcbb9a0363f1bfc1c0ecbdee84a9e15bd7d0e4146ee.jpg.webp",
+        "assets/products/a48b727e0ff6e962a5edd3cd5890d9a3b22c0ea95ab06d8f3ed8a8a4d2e71253.jpg.webp",
+        "assets/products/8db9f49b5105c0a3407736150ee3e4d2ecefea9fe9765e6ef03596132c58c1d1.jpg.webp",
+        "assets/products/1100b3623094c2af4d587ba17a3d7e7b603d30f6416641ae043791e085__2b4502.jpg.webp"
       ],
-      "coverImage": "https://store.storeimages.cdn-apple.com/1/as-images.apple.com/is/ipad-pro-13-select-wifi-spacegray-202405?wid=400&hei=400&fmt=jpeg&qlt=90&.v=1713319990000",
+      "coverImage": "assets/products/975dea55bf8735c7a2218bcbb9a0363f1bfc1c0ecbdee84a9e15bd7d0e4146ee.jpg.webp",
       "simModifiers": [],
       "showCatalogSpec": false,
       "markupPercent": 15,
@@ -601,7 +604,7 @@
       "category": "ipad",
       "brand": "Apple",
       "badge": null,
-      "image": "https://store.storeimages.cdn-apple.com/1/as-images.apple.com/is/ipad-air-select-wifi-blue-202405?wid=400&hei=400&fmt=jpeg&qlt=90&.v=1713309448000",
+      "image": "assets/products/250b8d72afb240197368e55e0df086f51ad31c7079b1c3637aece404acad8d5b.jpg.webp",
       "description": "Лёгкий iPad Air с чипом M2.",
       "simTypes": null,
       "colors": [
@@ -609,34 +612,46 @@
           "id": "blue",
           "name": "Голубой",
           "hex": "#6a9ec8",
-          "image": ""
+          "image": "assets/products/d02c5189ce2cf0e862bb6f6c08d4555b1041ea829a1c735aef1a00a3f2f3469c.jpg.webp",
+          "importNames": ""
         },
         {
           "id": "purple",
           "name": "Фиолетовый",
           "hex": "#9a8ac8",
-          "image": ""
+          "image": "assets/products/f8e3b0cc74a8f08f738de47a1b4076ed65a11dbb6780a38b72567f76aa4da458.jpg.webp",
+          "importNames": ""
         },
         {
           "id": "starlight",
           "name": "Сияющая звезда",
           "hex": "#e8e0d0",
-          "image": ""
+          "image": "",
+          "importNames": ""
         }
       ],
       "storage": [
         {
-          "label": "128 ГБ",
-          "price": 69990
+          "label": "128 ГБ"
         },
         {
-          "label": "256 ГБ",
-          "price": 79990
+          "label": "256 ГБ"
         }
       ],
-      "sizes": null,
+      "sizes": [],
       "stock": [],
-      "variants": []
+      "variants": [],
+      "images": [
+        "assets/products/250b8d72afb240197368e55e0df086f51ad31c7079b1c3637aece404acad8d5b.jpg.webp",
+        "assets/products/a49d2fbda9ab26b3adc9d42d6e82d290894eafce031a6071663abae81666ba88.jpg.webp",
+        "assets/products/0e2d71a18af3fdfcf19a5eb8b4f2f7f672d4900ecb871b12f2f40f2aa3fbf38c.jpg.webp",
+        "assets/products/01e9c4e0b7b5ea25a3df8925d36ec27e01e763b45ea96398c774252a03091260.jpg.webp"
+      ],
+      "coverImage": "assets/products/250b8d72afb240197368e55e0df086f51ad31c7079b1c3637aece404acad8d5b.jpg.webp",
+      "simModifiers": [],
+      "showCatalogSpec": false,
+      "markupPercent": 15,
+      "markupFixed": 0
     },
     {
       "id": 8,
@@ -680,7 +695,9 @@
       ],
       "sizes": null,
       "stock": [],
-      "variants": []
+      "variants": [],
+      "images": [],
+      "coverImage": "https://store.storeimages.cdn-apple.com/1/as-images.apple.com/is/mba15-midnight-select-202306?wid=400&hei=400&fmt=jpeg&qlt=90&.v=1684519210000"
     },
     {
       "id": 9,
@@ -689,7 +706,7 @@
       "category": "apple-watch",
       "brand": "Apple",
       "badge": null,
-      "image": "https://store.storeimages.cdn-apple.com/1/as-images.apple.com/is/watch-s10-702702?wid=400&hei=400&fmt=png-alpha&qlt=90&.v=1725308071000",
+      "image": "assets/products/e86f7b605064bf8aa555f8230058c76d97558f896c2366bff5c71ce7d41fe7c9.jpg.webp",
       "description": "Тонкие Apple Watch с расширенными функциями здоровья.",
       "simTypes": null,
       "colors": [
@@ -697,25 +714,27 @@
           "id": "jet-black",
           "name": "Глянцевый чёрный",
           "hex": "#1a1a1a",
-          "image": ""
+          "image": "assets/products/e86f7b605064bf8aa555f8230058c76d97558f896c2366bff5c71ce7d41fe7c9.jpg.webp",
+          "importNames": ""
         },
         {
           "id": "silver",
           "name": "Серебристый",
           "hex": "#d0d0d0",
-          "image": ""
+          "image": "assets/products/e77a79bae775273a3f17d1194fe3d24a46301c6505743e46848c10f7895a1d08.jpg.webp",
+          "importNames": ""
         },
         {
           "id": "rose-gold",
           "name": "Розовое золото",
           "hex": "#d8b8a8",
-          "image": ""
+          "image": "assets/products/1208c01f332e5a95df9383fee80447f502450fe5e79b5bc7ada684a267c64342.jpg.webp",
+          "importNames": ""
         }
       ],
       "storage": [
         {
-          "label": "32 ГБ",
-          "price": 0
+          "label": "32 ГБ"
         }
       ],
       "sizes": [
@@ -729,7 +748,16 @@
         }
       ],
       "stock": [],
-      "variants": []
+      "variants": [],
+      "images": [
+        "assets/products/e86f7b605064bf8aa555f8230058c76d97558f896c2366bff5c71ce7d41fe7c9.jpg.webp",
+        "assets/products/18dea59ad237e01ef0558eb7a48ee274601574c9f7bde96e6ab8c92a4f976e03.jpg.webp"
+      ],
+      "coverImage": "assets/products/e86f7b605064bf8aa555f8230058c76d97558f896c2366bff5c71ce7d41fe7c9.jpg.webp",
+      "simModifiers": [],
+      "showCatalogSpec": false,
+      "markupPercent": 15,
+      "markupFixed": 0
     },
     {
       "id": 10,
@@ -757,7 +785,9 @@
       ],
       "sizes": null,
       "stock": [],
-      "variants": []
+      "variants": [],
+      "images": [],
+      "coverImage": "https://store.storeimages.cdn-apple.com/1/as-images.apple.com/is/MQD83?wid=400&hei=400&fmt=jpeg&qlt=90&.v=1660803972361"
     },
     {
       "id": 12,
@@ -766,7 +796,7 @@
       "category": "samsung",
       "brand": "Samsung",
       "badge": "Хит",
-      "image": "https://images.samsung.com/is/image/samsung/assets/ru/smartphones/galaxy-s25-ultra/images/galaxy-s25-ultra-titanium-gray-s-front.png",
+      "image": "assets/products/2f23b95eec969a45ebe58b843b715fe30341aeb9f5dbb13ae1408c233a0e373e.jpg.webp",
       "description": "Предыдущий флагман Samsung — мощная камера и Galaxy AI.",
       "simTypes": null,
       "colors": [
@@ -774,48 +804,58 @@
           "id": "black",
           "name": "Titanium Black",
           "hex": "#2b2b2e",
-          "priceAdd": 0,
-          "image": ""
+          "image": "assets/products/2f23b95eec969a45ebe58b843b715fe30341aeb9f5dbb13ae1408c233a0e373e.jpg.webp",
+          "importNames": "Titanium Black"
         },
         {
           "id": "gray",
           "name": "Titanium Gray",
           "hex": "#8a8d91",
-          "priceAdd": 0,
-          "image": ""
+          "image": "assets/products/69b496dc0c062ba0c69c7b6b318cb6096e8d90b059c390e4392dabd856a06626.jpg.webp",
+          "importNames": "Titanium Gray"
         },
         {
           "id": "silver",
           "name": "Titanium Silver",
           "hex": "#d8d9db",
-          "priceAdd": 0,
-          "image": ""
+          "image": "assets/products/926340925725ce5742b718b5056f2d7b647bb4b7e788c3aff7fb0fe9ae6e2679.jpg.webp",
+          "importNames": "Titanium Silver"
         },
         {
           "id": "blue",
           "name": "Titanium Blue",
           "hex": "#4a6a8a",
-          "priceAdd": 0,
-          "image": ""
+          "image": "assets/products/9ccb09f3f46b6098c3957cc7a6195f70a6dd24f4ac7e6277df72121a71d6870f.jpg.webp",
+          "importNames": "Titanium Blue"
         }
       ],
       "storage": [
         {
-          "label": "256 ГБ",
-          "price": 109990
+          "label": "256 ГБ"
         },
         {
-          "label": "512 ГБ",
-          "price": 124990
+          "label": "512 ГБ"
         },
         {
-          "label": "1 ТБ",
-          "price": 144990
+          "label": "1 ТБ"
         }
       ],
-      "sizes": null,
+      "sizes": [],
       "stock": [],
-      "variants": []
+      "variants": [],
+      "images": [
+        "assets/products/2f23b95eec969a45ebe58b843b715fe30341aeb9f5dbb13ae1408c233a0e373e.jpg.webp",
+        "assets/products/03cf262834f3523878247b4f0f621401db5e63e20e7a50e14d3d4ebd851dd352.jpg.webp",
+        "assets/products/e554e9c8235359a9036e8d292e929a78edb3c4f68d0593aa037c51b5afecf86a.jpg.webp",
+        "assets/products/3f7912ccb863ef1278e198e7d67075ebf43f3a39b64a6e7fba7045ac2ea061b2.jpg.webp",
+        "assets/products/96348878dc16a7ef461ac2277e7c42effdde11ad63beb6a9dac7789af24ae13e.jpg.webp",
+        "assets/products/7059f541d83fbeaecb7e96ecfdf5db6560ef5858cbc3747fe73a2409545f89f5.jpg.webp"
+      ],
+      "coverImage": "assets/products/2f23b95eec969a45ebe58b843b715fe30341aeb9f5dbb13ae1408c233a0e373e.jpg.webp",
+      "simModifiers": [],
+      "showCatalogSpec": false,
+      "markupPercent": 15,
+      "markupFixed": 0
     },
     {
       "id": 13,
@@ -824,7 +864,7 @@
       "category": "samsung",
       "brand": "Samsung",
       "badge": "Новинка",
-      "image": "https://images.samsung.com/is/image/samsung/assets/ru/smartphones/galaxy-s25/images/galaxy-s25-navy-s-front.png",
+      "image": "assets/products/54312ffdebd4e730492f5c0790df2d40fc448aa31ca0a3b33552ecf4913a383d.jpg.webp",
       "description": "Большой экран и флагманская производительность в тонком корпусе.",
       "simTypes": null,
       "colors": [
@@ -832,44 +872,54 @@
           "id": "navy",
           "name": "Navy",
           "hex": "#2a3a5c",
-          "priceAdd": 0,
-          "image": ""
+          "image": "assets/products/54312ffdebd4e730492f5c0790df2d40fc448aa31ca0a3b33552ecf4913a383d.jpg.webp",
+          "importNames": "Navy"
         },
         {
           "id": "silver",
           "name": "Silver Shadow",
           "hex": "#c5c7ca",
-          "priceAdd": 0,
-          "image": ""
+          "image": "assets/products/311158a9c249096e7a64e483a117712c47ea0c1e2692423d16ef769b3bc6a661.jpg.webp",
+          "importNames": "Silver Shadow"
         },
         {
           "id": "mint",
           "name": "Mint",
           "hex": "#b8d4c8",
-          "priceAdd": 0,
-          "image": ""
+          "image": "assets/products/eef9e52425c3654fdbdc59eba37f0794c0753cf90a571c339e204ca6d633a7fc.jpg.webp",
+          "importNames": "Mint"
         },
         {
           "id": "coral",
           "name": "Coral",
           "hex": "#e8a090",
-          "priceAdd": 0,
-          "image": ""
+          "image": "",
+          "importNames": "Coral"
         }
       ],
       "storage": [
         {
-          "label": "256 ГБ",
-          "price": 99990
+          "label": "256 ГБ"
         },
         {
-          "label": "512 ГБ",
-          "price": 114990
+          "label": "512 ГБ"
         }
       ],
-      "sizes": null,
+      "sizes": [],
       "stock": [],
-      "variants": []
+      "variants": [],
+      "images": [
+        "assets/products/54312ffdebd4e730492f5c0790df2d40fc448aa31ca0a3b33552ecf4913a383d.jpg.webp",
+        "assets/products/e34f7053d67246d18a8e943f2f1d8ffe81d0e062709c05929cd67f5705f7db10.jpg.webp",
+        "assets/products/075dbb11d6a49f33905bff86125dda5c7f651f4e773ac579fe03f119b88cde00.jpg.webp",
+        "assets/products/74a3dc49f26001d345501cada9604302a8cf72a1d27192d9fc412061ee087068.jpg.webp",
+        "assets/products/311e31c0537a42a012b80696fe38cf15483f90399a081549db91764bced55f61.jpg.webp"
+      ],
+      "coverImage": "assets/products/54312ffdebd4e730492f5c0790df2d40fc448aa31ca0a3b33552ecf4913a383d.jpg.webp",
+      "simModifiers": [],
+      "showCatalogSpec": false,
+      "markupPercent": 15,
+      "markupFixed": 0
     },
     {
       "id": 14,
@@ -878,7 +928,7 @@
       "category": "samsung",
       "brand": "Samsung",
       "badge": "Новинка",
-      "image": "https://images.samsung.com/is/image/samsung/assets/ru/smartphones/galaxy-s25/images/galaxy-s25-icyblue-s-front.png",
+      "image": "assets/products/4bd0a2cc846a0d9421fc4eac43a1889cb2a028dd1dea06cc63db4edd8f9bb7f8.jpg.webp",
       "description": "Компактный флагман Samsung нового поколения.",
       "simTypes": null,
       "colors": [
@@ -886,48 +936,57 @@
           "id": "icy",
           "name": "Icy Blue",
           "hex": "#c8dce8",
-          "priceAdd": 0,
-          "image": ""
+          "image": "assets/products/4bd0a2cc846a0d9421fc4eac43a1889cb2a028dd1dea06cc63db4edd8f9bb7f8.jpg.webp",
+          "importNames": "Icy Blue"
         },
         {
           "id": "navy",
           "name": "Navy",
           "hex": "#2a3a5c",
-          "priceAdd": 0,
-          "image": ""
+          "image": "assets/products/ff6693a8bedb119ae141c5d0dc6a068ab8db269ce9c91b31822dc1552e33212b.jpg.webp",
+          "importNames": "Navy"
         },
         {
           "id": "silver",
           "name": "Silver Shadow",
           "hex": "#c5c7ca",
-          "priceAdd": 0,
-          "image": ""
+          "image": "assets/products/ed9bec1f9027a3d5f5cbd2b8c6f91254418bfebdddfd989d967fa4301c868e20.jpg.webp",
+          "importNames": "Silver Shadow"
         },
         {
           "id": "mint",
-          "name": "Mint",
-          "hex": "#b8d4c8",
-          "priceAdd": 0,
-          "image": ""
+          "name": "Black",
+          "hex": "#000000",
+          "image": "assets/products/df2a12a0f8852836fcd6961c434c3ffaefba5f4112c8d5714a39e97d10bff756.jpg.webp",
+          "importNames": "Black"
         }
       ],
       "storage": [
         {
-          "label": "128 ГБ",
-          "price": 79990
+          "label": "128 ГБ"
         },
         {
-          "label": "256 ГБ",
-          "price": 84990
+          "label": "256 ГБ"
         },
         {
-          "label": "512 ГБ",
-          "price": 99990
+          "label": "512 ГБ"
         }
       ],
-      "sizes": null,
+      "sizes": [],
       "stock": [],
-      "variants": []
+      "variants": [],
+      "images": [
+        "assets/products/4bd0a2cc846a0d9421fc4eac43a1889cb2a028dd1dea06cc63db4edd8f9bb7f8.jpg.webp",
+        "assets/products/664ce4d2c1661d32cd6fded492625defd3049aed48434de1fe4a834995590f7d.jpg.webp",
+        "assets/products/089a80ed4a3d85c293f188773fed2c2a08a13db8a950245d94bd8804aae6b8ee.jpg.webp",
+        "assets/products/6705d32a56775053ceb374f8c48a0cde2911d900b82fc00c64c7794c1d84aae1.jpg.webp",
+        "assets/products/9c36ebe30c4c7effdb8420a23d016e2b1ad5dbc5c40d548e0345cce36670dfa3.jpg.webp"
+      ],
+      "coverImage": "assets/products/4bd0a2cc846a0d9421fc4eac43a1889cb2a028dd1dea06cc63db4edd8f9bb7f8.jpg.webp",
+      "simModifiers": [],
+      "showCatalogSpec": false,
+      "markupPercent": 15,
+      "markupFixed": 0
     },
     {
       "id": 15,
@@ -936,7 +995,7 @@
       "category": "galaxy-watch",
       "brand": "Samsung",
       "badge": "Новинка",
-      "image": "https://images.samsung.com/is/image/samsung/assets/ru/watches/galaxy-watch-ultra/images/galaxy-watch-ultra-titanium-gray-front.png",
+      "image": "assets/products/ee7fa8e42db701de6eb04f3a4ce336737c97f341e8db6eeef93e5152c788f7ca.jpg.webp",
       "description": "Galaxy Watch 8 Ultra 2025 · 64 ГБ LTE · 47 мм. Прочный титановый корпус для спорта и приключений.",
       "simTypes": null,
       "colors": [
@@ -944,34 +1003,33 @@
           "id": "gray",
           "name": "Gray",
           "hex": "#6b6e72",
-          "priceAdd": 0,
-          "image": ""
+          "image": "assets/products/a920424ed99f1f243e72cbf640b21db61c30ed89628da8e0f6ff971efb8b9e45.jpg.webp",
+          "importNames": "Gray"
         },
         {
           "id": "blue",
           "name": "Blue",
           "hex": "#4a5f7a",
-          "priceAdd": 0,
-          "image": ""
+          "image": "assets/products/ee7fa8e42db701de6eb04f3a4ce336737c97f341e8db6eeef93e5152c788f7ca.jpg.webp",
+          "importNames": "Blue"
         },
         {
           "id": "white",
           "name": "White",
           "hex": "#ececec",
-          "priceAdd": 0,
-          "image": ""
+          "image": "assets/products/290f05596c4d8650aa709ce7db67710208b7fe84c32e298452985e9b9148822e.jpg.webp",
+          "importNames": "White"
         }
       ],
       "storage": [
         {
-          "label": "64 ГБ LTE",
-          "price": 54990
+          "label": "64 ГБ LTE"
         },
         {
           "label": "64 ГБ"
         }
       ],
-      "sizes": null,
+      "sizes": [],
       "stock": [],
       "variants": [
         {
@@ -979,23 +1037,33 @@
           "storage": "64 ГБ",
           "simType": "",
           "purchasePrice": 25000,
-          "price": 27900
+          "price": 28900
         },
         {
           "colorId": "blue",
           "storage": "64 ГБ",
           "simType": "",
           "purchasePrice": 24800,
-          "price": 27900
+          "price": 28900
         },
         {
           "colorId": "white",
           "storage": "64 ГБ",
           "simType": "",
           "purchasePrice": 23700,
-          "price": 26900
+          "price": 27900
         }
-      ]
+      ],
+      "images": [
+        "assets/products/ee7fa8e42db701de6eb04f3a4ce336737c97f341e8db6eeef93e5152c788f7ca.jpg.webp",
+        "assets/products/016bab50a90774eeb77d0f449208be9197851e389f3492b6e757ae3eb1a7e8dd.jpg.webp",
+        "assets/products/b02e5b010539dbb4329cdcc0e7cb3134440765ad5c746cabea922542f194290b.jpg.webp"
+      ],
+      "coverImage": "assets/products/ee7fa8e42db701de6eb04f3a4ce336737c97f341e8db6eeef93e5152c788f7ca.jpg.webp",
+      "simModifiers": [],
+      "showCatalogSpec": false,
+      "markupPercent": 15,
+      "markupFixed": 0
     },
     {
       "id": 16,
@@ -1040,7 +1108,9 @@
           "purchasePrice": 20500,
           "price": 22900
         }
-      ]
+      ],
+      "images": [],
+      "coverImage": "https://images.samsung.com/is/image/samsung/assets/ru/watches/galaxy-watch7/images/galaxy-watch7-silver-front.png"
     },
     {
       "id": 17,
@@ -1082,7 +1152,9 @@
           "purchasePrice": 13300,
           "price": 14900
         }
-      ]
+      ],
+      "images": [],
+      "coverImage": "https://images.samsung.com/is/image/samsung/assets/ru/watches/galaxy-watch7/images/galaxy-watch7-green-front.png"
     },
     {
       "id": 18,
@@ -1151,7 +1223,9 @@
           "purchasePrice": 52400,
           "price": 58900
         }
-      ]
+      ],
+      "images": [],
+      "coverImage": "assets/logo.png"
     },
     {
       "id": 45,
