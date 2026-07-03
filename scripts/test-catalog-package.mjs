@@ -5,6 +5,7 @@ import {
   buildBackupPayload,
   collectProductAssetPaths,
   mergeProducts,
+  normalizeImportPayload,
   summarizeProducts,
   validateBackupData,
   validateProductsData,
@@ -42,5 +43,9 @@ validateBackupData(backup)
 
 const summary = summarizeProducts(merged)
 assert.equal(summary.count, 3)
+
+const normalized = normalizeImportPayload({ products: [{ name: 'X', image: 'assets/products/x.webp' }] })
+assert.equal(normalized.products[0].colors.length, 1)
+validateProductsData(normalized)
 
 console.log('catalog-package tests OK')

@@ -5,9 +5,29 @@ import {
   CATALOG_MANIFEST,
   collectProductAssetPaths,
   mergeProducts,
+  normalizeImportPayload,
   summarizeProducts,
   validateProductsData,
 } from './catalog-package.mjs'
+
+function normalizeZipPath(name) {
+  return String(name || '').replace(/\\/g, '/').replace(/^\.\//, '').replace(/^\/+/, '')
+}
+
+function findZipEntry(zip, baseName) {
+  const target = baseName.toLowerCase()
+  return zip.getEntries().find((entry) => {
+    const norm = normalizeZipPath(entry.entryName)
+    if (norm === target) return true
+    return norm.split('/').pop()?.toLowerCase() === target
+  }) || null
+}
+
+function parseZipJson(entry) {
+  const raw = entry.getData().toString('utf8').replace(/^\uFEFF/, '')
+  const data = JSON.parse(raw)
+  return normalizeImportPayload(data)
+}
 
 export function buildCatalogZip(siteDir, productsData) {
   const validated = validateProductsData(structuredClone(productsData))
@@ -40,15 +60,15 @@ export function buildCatalogZip(siteDir, productsData) {
 
 export function applyCatalogZip(siteDir, zipBuffer, existingProducts, mode = 'merge') {
   const zip = new AdmZip(zipBuffer)
-  const productsEntry = zip.getEntry('products.json')
+  const productsEntry = findZipEntry(zip, 'products.json')
   if (!productsEntry) throw new Error('В архиве нет products.json')
 
-  const incoming = JSON.parse(productsEntry.getData().toString('utf8'))
+  const incoming = parseZipJson(productsEntry)
   validateProductsData(incoming)
 
   let assetsCopied = 0
   for (const entry of zip.getEntries()) {
-    const name = entry.entryName.replace(/\\/g, '/')
+    const name = normalizeZipPath(entry.entryName)
     if (!name.startsWith('assets/') || entry.isDirectory) continue
     const out = path.join(siteDir, name)
     fs.mkdirSync(path.dirname(out), { recursive: true })

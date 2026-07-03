@@ -638,12 +638,17 @@ const server = http.createServer(async (req, res) => {
       const base64 = raw.replace(/^data:[^;]+;base64,/, '')
       if (!base64) return sendJson(res, 400, { error: 'Файл не передан' })
       const mode = body.mode === 'replace' ? 'replace' : 'merge'
-      const result = applyCatalogZip(
-        SITE_DIR,
-        Buffer.from(base64, 'base64'),
-        readProducts(),
-        mode,
-      )
+      const existing = readProducts()
+      if (!Array.isArray(existing?.products)) existing.products = []
+      let result
+      try {
+        result = applyCatalogZip(SITE_DIR, Buffer.from(base64, 'base64'), existing, mode)
+      } catch (err) {
+        if (String(err?.message || '').includes('No END header')) {
+          throw new Error('Файл не является корректным ZIP-архивом')
+        }
+        throw err
+      }
       writeProducts(result.products)
       return sendJson(res, 200, { ok: true, stats: result.stats })
     } catch (err) {

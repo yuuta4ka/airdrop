@@ -508,6 +508,7 @@ export function buildCatalogFromPdfText(text, existingProducts, markup = { perce
 }
 
 export async function extractTextFromPdfBuffer(buffer) {
+  await import('./scripts/pdf-dom-polyfill.mjs')
   const { PDFParse } = await import('pdf-parse')
   const parser = new PDFParse({ data: buffer })
   const result = await parser.getText()

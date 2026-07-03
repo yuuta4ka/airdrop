@@ -21,6 +21,17 @@ export function collectProductAssetPaths(products) {
   return [...paths].filter((p) => p.startsWith('assets/') && !p.includes('..'))
 }
 
+export function normalizeImportPayload(data) {
+  if (!data) throw new Error('Пустой JSON в архиве')
+  if (Array.isArray(data)) return { products: data }
+  if (Array.isArray(data.products)) {
+    return {
+      products: data.products.map((product) => normalizeImportedProduct(product, product?.id || 0)),
+    }
+  }
+  throw new Error('В JSON нет массива products')
+}
+
 export function validateProductsData(data) {
   if (!data || typeof data !== 'object') throw new Error('Некорректный JSON товаров')
   if (!Array.isArray(data.products)) throw new Error('Нет поля products')
@@ -77,11 +88,20 @@ export function normalizeImportedProduct(product, fallbackId) {
   p.id = Number(p.id) || fallbackId
   p.slug = String(p.slug || '').trim() || `product-${p.id}`
   p.name = String(p.name || '').trim()
-  p.category = String(p.category || '').trim()
+  p.category = String(p.category || '').trim() || 'other'
+  p.brand = String(p.brand || '').trim()
   p.colors = Array.isArray(p.colors) ? p.colors : []
   p.images = Array.isArray(p.images) ? p.images : []
   p.variants = Array.isArray(p.variants) ? p.variants : []
   p.stock = Array.isArray(p.stock) ? p.stock : []
+  if (!p.colors.length) {
+    p.colors = [{
+      id: 'default',
+      name: 'Стандарт',
+      hex: '#888888',
+      image: p.image || p.coverImage || p.images?.[0] || '',
+    }]
+  }
   if (!p.image && p.images[0]) p.image = p.images[0]
   if (!p.coverImage && p.image) p.coverImage = p.image
   return p

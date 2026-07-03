@@ -1,4 +1,4 @@
-import { loadStore, getMinPrice, formatPrice, badgeClass, getProductImage, hasAnyStock, getCatalogMode } from './store.js'
+import { loadStore, getMinPrice, formatPrice, badgeClass, getProductImage, hasAnyStock, isProductFullyUnavailable, getCatalogMode } from './store.js'
 import { renderHeader, renderFooter } from './layout.js'
 import { initCartUI, resetCartOverlay, showToast } from './cart-ui.js'
 
@@ -115,17 +115,26 @@ function renderProducts() {
     return
   }
 
-  els.productsGrid.innerHTML = filtered.map((p) => {
+  const sorted = [...filtered].sort((a, b) => {
+    const rank = (p) => (isProductFullyUnavailable(p) ? 1 : 0)
+    return rank(a) - rank(b)
+  })
+
+  els.productsGrid.innerHTML = sorted.map((p) => {
     const minPrice = getMinPrice(p)
     const img = getProductImage(p)
     const inStock = hasAnyStock(p)
+    const fullyUnavailable = isProductFullyUnavailable(p)
     const stockBadge = inStock ? '<span class="product-card__badge product-card__badge--stock">В наличии</span>' : ''
     const badge = p.badge && !inStock ? `<span class="${badgeClass(p.badge)}">${p.badge}</span>` : stockBadge || (p.badge ? `<span class="${badgeClass(p.badge)}">${p.badge}</span>` : '')
-    const specText = inStock ? 'Есть в наличии' : `Под заказ ${store.settings.orderDays}`
-    const specOverlay = p.showCatalogSpec ? `<span class="product-card__spec product-card__spec--overlay">${specText}</span>` : ''
+    const specText = fullyUnavailable ? 'Нет в наличии' : (inStock ? 'Есть в наличии' : `Под заказ ${store.settings.orderDays}`)
+    const specOverlay = p.showCatalogSpec ? `<span class="product-card__spec product-card__spec--overlay${fullyUnavailable ? ' product-card__spec--unavailable' : ''}">${specText}</span>` : ''
+    const priceHtml = fullyUnavailable
+      ? '<span class="product-card__price product-card__price--unavailable">Нет в наличии</span>'
+      : `<span class="product-card__price">от ${formatPrice(minPrice)}</span>`
 
     return `
-    <a href="/product#${p.id}" class="product-card product-card--link is-visible">
+    <a href="/product#${p.id}" class="product-card product-card--link is-visible${fullyUnavailable ? ' product-card--unavailable' : ''}">
       <div class="product-card__image">
         ${badge}
         ${specOverlay}
@@ -136,7 +145,7 @@ function renderProducts() {
         <h3 class="product-card__name">${p.name}</h3>
         <div class="product-card__footer">
           <div class="product-card__prices">
-            <span class="product-card__price">от ${formatPrice(minPrice)}</span>
+            ${priceHtml}
           </div>
           <span class="product-card__more">Подробнее →</span>
         </div>

@@ -261,6 +261,13 @@ export function hasAnyStock(product) {
   return product.stock?.some((s) => s.qty > 0)
 }
 
+/** Нет на складе и нельзя оформить под заказ (прайс поставщика пуст) */
+export function isProductFullyUnavailable(product) {
+  if (!usesSupplierPricing(product)) return false
+  if (hasAnyStock(product)) return false
+  return getOrderableVariants(product).length === 0
+}
+
 export const CATALOG_MODE_KEY = 'airdrop_catalog_mode'
 
 export function getCatalogMode() {

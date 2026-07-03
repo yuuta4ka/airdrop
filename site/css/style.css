@@ -629,6 +629,20 @@ img {
   letter-spacing: -0.02em;
 }
 
+.product-card__price--unavailable {
+  font-size: 0.95rem;
+  font-weight: 600;
+  color: var(--text-muted);
+}
+
+.product-card--unavailable {
+  opacity: 0.72;
+}
+
+.product-card__spec--unavailable {
+  color: #ffb4b4;
+}
+
 .product-card__old-price {
   font-size: 0.85rem;
   color: var(--text-muted);
