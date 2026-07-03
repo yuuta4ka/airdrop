@@ -397,6 +397,21 @@ body::before {
   background: linear-gradient(180deg, var(--admin-bg) 60%, transparent);
 }
 
+.admin-toolbar--products {
+  flex-wrap: wrap;
+  gap: 12px;
+}
+
+.admin-product-tabs {
+  display: flex;
+  gap: 8px;
+  flex-wrap: wrap;
+}
+
+.admin-product-row--hidden {
+  opacity: 0.72;
+}
+
 .admin-editor-title {
   font-size: 1.3rem;
   margin: 12px 0 20px;

@@ -35,7 +35,7 @@ async function init() {
 
   store = await loadStore()
   product = getProductById(store, productId)
-  if (!product) {
+  if (!product || product.hidden) {
     location.href = '/catalog'
     return
   }

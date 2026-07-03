@@ -13,6 +13,7 @@ let storeData = null
 let productsData = null
 let activeTab = 'general'
 let editingProductIdx = null
+let adminProductView = 'active'
 let draftSaveTimer = null
 
 const TITLES = {
@@ -329,13 +330,10 @@ function cleanupProductForSave(p) {
 
 function formatPdfImportStats(s) {
   const lines = []
-  if (s.productsCreated) lines.push(`Добавлено товаров: ${s.productsCreated}`)
-  if (s.productsUpdated) lines.push(`Обновлено товаров: ${s.productsUpdated}`)
-  if (s.variantsAdded) lines.push(`Добавлено конфигураций: ${s.variantsAdded}`)
-  if (s.variantsUpdated) lines.push(`Обновлено конфигураций: ${s.variantsUpdated}`)
-  if (s.variantsRemoved) lines.push(`Удалено конфигураций: ${s.variantsRemoved}`)
-  if (s.skippedVariants) lines.push(`Пропущено строк прайса: ${s.skippedVariants}`)
-  if (s.skipped) lines.push(`Не найдено в каталоге: ${s.skipped}`)
+  if (s.pricesUpdated) lines.push(`Обновлено цен: ${s.pricesUpdated}`)
+  else if (s.variantsUpdated) lines.push(`Обновлено конфигураций: ${s.variantsUpdated}`)
+  if (s.skippedVariants) lines.push(`Пропущено строк (нет в каталоге): ${s.skippedVariants}`)
+  if (s.skipped) lines.push(`Не найдено товаров: ${s.skipped}`)
   if (!lines.length) lines.push(`Обработано строк: ${s.entries ?? 0}`)
   return lines
 }
@@ -812,26 +810,54 @@ function renderTheme(c) {
 
 function renderProducts(c) {
   if (editingProductIdx !== null) { renderProductEditor(c); return }
-  const products = productsData.products
-  c.innerHTML = `<div class="admin-toolbar"><span>${products.length} товаров</span><button type="button" class="btn btn--primary" id="add-product">+ Добавить товар</button></div><div id="product-list"></div>`
-  $('product-list').innerHTML = products.map((p, i) => {
+  const all = productsData.products
+  const hiddenCount = all.filter((p) => p.hidden).length
+  const activeCount = all.length - hiddenCount
+  const products = all.filter((p) => (adminProductView === 'hidden' ? p.hidden : !p.hidden))
+  c.innerHTML = `
+    <div class="admin-toolbar admin-toolbar--products">
+      <div class="admin-product-tabs">
+        <button type="button" class="btn btn--sm ${adminProductView === 'active' ? 'btn--primary' : 'btn--ghost'}" id="products-tab-active">Товары (${activeCount})</button>
+        <button type="button" class="btn btn--sm ${adminProductView === 'hidden' ? 'btn--primary' : 'btn--ghost'}" id="products-tab-hidden">Скрытые (${hiddenCount})</button>
+      </div>
+      <button type="button" class="btn btn--primary" id="add-product">+ Добавить товар</button>
+    </div>
+    <div id="product-list"></div>`
+  $('products-tab-active').onclick = () => { adminProductView = 'active'; renderProducts(c) }
+  $('products-tab-hidden').onclick = () => { adminProductView = 'hidden'; renderProducts(c) }
+  $('product-list').innerHTML = products.map((p) => {
+    const i = all.indexOf(p)
     const markup = `${p.markupPercent ?? 15}%${p.markupFixed ? ` + ${p.markupFixed} ₽` : ''}`
+    const rowClass = p.hidden ? ' admin-product-row--hidden' : ''
     return `
-    <div class="admin-product-row">
+    <div class="admin-product-row${rowClass}">
       <img src="${p.image || 'assets/logo.png'}" alt="" />
-      <div><strong>${p.name}</strong><span>${p.brand} · ${categoryLabel(p.category)} · наценка ${markup}</span></div>
+      <div><strong>${p.name}</strong><span>${p.brand} · ${categoryLabel(p.category)} · наценка ${markup}${p.hidden ? ' · скрыт' : ''}</span></div>
       <button type="button" class="btn btn--secondary btn--sm" data-edit="${i}">Изменить</button>
+      <button type="button" class="btn btn--ghost btn--sm" data-toggle-hidden="${i}">${p.hidden ? 'Вернуть' : 'Скрыть'}</button>
       <button type="button" class="btn btn--danger btn--sm" data-del="${i}">Удалить</button>
     </div>
-  `}).join('')
+  `}).join('') || `<p class="admin-hint">${adminProductView === 'hidden' ? 'Скрытых товаров нет' : 'Товаров нет'}</p>`
   $('product-list').querySelectorAll('[data-edit]').forEach((b) => {
     b.onclick = () => { editingProductIdx = Number(b.dataset.edit); renderProducts(c) }
+  })
+  $('product-list').querySelectorAll('[data-toggle-hidden]').forEach((b) => {
+    b.onclick = async () => {
+      const idx = Number(b.dataset.toggleHidden)
+      const p = productsData.products[idx]
+      p.hidden = !p.hidden
+      renderProducts(c)
+      try {
+        await saveProducts()
+        status(p.hidden ? 'Товар скрыт с сайта' : 'Товар снова в каталоге', 'success')
+      } catch (err) { status(err.message, 'error') }
+    }
   })
   $('product-list').querySelectorAll('[data-del]').forEach((b) => {
     b.onclick = () => { if (confirm('Удалить?')) { productsData.products.splice(Number(b.dataset.del), 1); renderProducts(c) } }
   })
   $('add-product').onclick = () => {
-    const id = Math.max(0, ...products.map((p) => p.id)) + 1
+    const id = Math.max(0, ...all.map((p) => p.id)) + 1
     const defaultCat = productCategories()[0]?.id || 'iphone'
     productsData.products.push({
       id, slug: `product-${id}`, name: 'Новый товар', category: defaultCat, brand: 'Apple',
@@ -841,8 +867,10 @@ function renderProducts(c) {
       markupPercent: 15,
       markupFixed: 0,
       showCatalogSpec: false,
+      hidden: false,
     })
     editingProductIdx = productsData.products.length - 1
+    adminProductView = 'active'
     renderProducts(c)
   }
 }
@@ -867,6 +895,7 @@ function renderProductEditor(c) {
       ${field('Бейдж', 'p-badge', p.badge || '', 'text', 'Новинка, Хит — или пусто')}
     </div>
     <label class="field field--check"><input type="checkbox" id="p-showCatalogSpec" ${p.showCatalogSpec ? 'checked' : ''} /> Показывать «В наличии / Под заказ» на карточке в каталоге</label>
+    <label class="field field--check"><input type="checkbox" id="p-hidden" ${p.hidden ? 'checked' : ''} /> Скрыть с сайта (останется в разделе «Скрытые»)</label>
     ${field('Описание', 'p-desc', p.description, 'textarea')}`)}
 
     ${section('Галерея и главное фото', `
@@ -924,7 +953,12 @@ function renderProductEditor(c) {
     } catch (err) { status(err.message, 'error') }
   }
 
-  $('back-products').onclick = () => { collectProduct(); editingProductIdx = null; renderProducts(c) }
+  $('back-products').onclick = () => {
+    collectProduct()
+    adminProductView = p.hidden ? 'hidden' : 'active'
+    editingProductIdx = null
+    renderProducts(c)
+  }
 
   const uploadImage = async (file) => {
     const reader = new FileReader()
@@ -1838,6 +1872,7 @@ function collectProduct() {
   p.badge = val('p-badge') || null
   p.description = val('p-desc')
   p.showCatalogSpec = !!$('p-showCatalogSpec')?.checked
+  p.hidden = !!$('p-hidden')?.checked
 
   p.images = (p.images || []).map((_, i) => val(`gal-url-${i}`)).filter(Boolean)
   if (p.images.length) {

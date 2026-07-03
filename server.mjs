@@ -540,7 +540,7 @@ const server = http.createServer(async (req, res) => {
         : null
       const { products, stats } = buildCatalogFromPdfText(text, existing.products, markup, {
         sections: sections?.length ? sections : null,
-        pricesOnly: body.pricesOnly === true,
+        pricesOnly: body.pricesOnly !== false,
       })
 
       if (!body.dryRun) {
@@ -560,7 +560,7 @@ const server = http.createServer(async (req, res) => {
         ok: true,
         stats,
         productCount: products.length,
-        pricesOnly: body.pricesOnly === true,
+        pricesOnly: body.pricesOnly !== false,
       })
     } catch (err) {
       console.error('PDF import error:', err)

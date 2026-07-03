@@ -444,7 +444,7 @@ export function buildCatalogFromPdfText(text, existingProducts, markup = { perce
     entries = entries.filter((e) => allowed.has(e.section))
   }
 
-  const pricesOnly = options.pricesOnly === true
+  const pricesOnly = options.pricesOnly !== false
   const products = existingProducts.map((p) => {
     const copy = structuredClone(p)
     if (!Array.isArray(copy.variants)) copy.variants = []

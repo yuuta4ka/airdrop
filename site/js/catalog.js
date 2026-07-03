@@ -103,7 +103,7 @@ function renderCategories() {
 function renderProducts() {
   if (!els.productsGrid || !els.productsCount) return
 
-  const products = Array.isArray(store?.products) ? store.products : []
+  const products = (Array.isArray(store?.products) ? store.products : []).filter((p) => !p.hidden)
   const filtered = activeCategory === 'all'
     ? products
     : products.filter((p) => p.category === activeCategory)
