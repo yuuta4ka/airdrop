@@ -82,7 +82,7 @@
           "storage": "512 ГБ",
           "simType": "eSIM + SIM",
           "purchasePrice": 127200,
-          "price": 141900
+          "price": 142900
         },
         {
           "colorId": "white",
@@ -96,35 +96,35 @@
           "storage": "256 ГБ",
           "simType": "eSIM + SIM",
           "purchasePrice": 105800,
-          "price": 117900
+          "price": 118900
         },
         {
           "colorId": "orange",
           "storage": "256 ГБ",
           "simType": "eSIM only",
           "purchasePrice": 94000,
-          "price": 104900
+          "price": 105900
         },
         {
           "colorId": "blue",
           "storage": "256 ГБ",
           "simType": "eSIM + SIM",
           "purchasePrice": 106500,
-          "price": 118900
+          "price": 119900
         },
         {
           "colorId": "blue",
           "storage": "256 ГБ",
           "simType": "eSIM only",
           "purchasePrice": 95000,
-          "price": 105900
+          "price": 106900
         },
         {
           "colorId": "white",
           "storage": "256 ГБ",
           "simType": "eSIM + SIM",
           "purchasePrice": 107500,
-          "price": 119900
+          "price": 120900
         },
         {
           "colorId": "white",
@@ -138,7 +138,7 @@
           "storage": "1 ТБ",
           "simType": "eSIM only",
           "purchasePrice": 128000,
-          "price": 142900
+          "price": 143900
         },
         {
           "colorId": "blue",
@@ -152,7 +152,7 @@
           "storage": "1 ТБ",
           "simType": "eSIM only",
           "purchasePrice": 128000,
-          "price": 142900
+          "price": 143900
         },
         {
           "colorId": "orange",
@@ -168,7 +168,7 @@
       "images": [
         "assets/products/bde6fa42703171e6bb6c2c1bd235fec457b6c328ee00729c65b4b2ca9d10fd5a.jpg.webp"
       ],
-      "markupPercent": 11.3,
+      "markupPercent": 11.8,
       "markupFixed": 0,
       "coverImage": "assets/products/bde6fa42703171e6bb6c2c1bd235fec457b6c328ee00729c65b4b2ca9d10fd5a.jpg.webp",
       "hidden": false,
@@ -235,77 +235,77 @@
           "storage": "1 ТБ",
           "simType": "eSIM + SIM",
           "purchasePrice": 128500,
-          "price": 143900
+          "price": 144900
         },
         {
           "colorId": "blue",
           "storage": "1 ТБ",
           "simType": "eSIM only",
           "purchasePrice": 120500,
-          "price": 134900
+          "price": 135900
         },
         {
           "colorId": "white",
           "storage": "1 ТБ",
           "simType": "eSIM only",
           "purchasePrice": 121800,
-          "price": 135900
+          "price": 136900
         },
         {
           "colorId": "orange",
           "storage": "512 ГБ",
           "simType": "eSIM only",
           "purchasePrice": 104000,
-          "price": 115900
+          "price": 116900
         },
         {
           "colorId": "orange",
           "storage": "512 ГБ",
           "simType": "eSIM + SIM",
           "purchasePrice": 110000,
-          "price": 122900
+          "price": 123900
         },
         {
           "colorId": "blue",
           "storage": "512 ГБ",
           "simType": "eSIM + SIM",
           "purchasePrice": 112000,
-          "price": 124900
+          "price": 125900
         },
         {
           "colorId": "blue",
           "storage": "512 ГБ",
           "simType": "eSIM only",
           "purchasePrice": 103000,
-          "price": 114900
+          "price": 115900
         },
         {
           "colorId": "white",
           "storage": "512 ГБ",
           "simType": "eSIM + SIM",
           "purchasePrice": 114000,
-          "price": 126900
+          "price": 127900
         },
         {
           "colorId": "white",
           "storage": "512 ГБ",
           "simType": "eSIM only",
           "purchasePrice": 104500,
-          "price": 116900
+          "price": 117900
         },
         {
           "colorId": "orange",
           "storage": "256 ГБ",
           "simType": "eSIM + SIM",
           "purchasePrice": 95800,
-          "price": 106900
+          "price": 107900
         },
         {
           "colorId": "orange",
           "storage": "256 ГБ",
           "simType": "eSIM only",
           "purchasePrice": 84000,
-          "price": 93900
+          "price": 94900
         },
         {
           "colorId": "blue",
@@ -340,7 +340,7 @@
           "storage": "1 ТБ",
           "simType": "eSIM + SIM",
           "purchasePrice": 129500,
-          "price": 144900
+          "price": 145900
         }
       ],
       "sizes": [],
@@ -360,9 +360,11 @@
         "assets/products/21effdaf0d39332991472b810008af200c50e5574e2bc79fe451224a9475c162.jpg.webp"
       ],
       "showCatalogSpec": false,
-      "markupPercent": 11.3,
+      "markupPercent": 12,
       "markupFixed": 0,
-      "coverImage": "assets/products/3f07b1ffa9193a775d83d5a74fa818307037b9e0cf34e51a18ac31304fceefb9.jpg.webp"
+      "coverImage": "assets/products/3f07b1ffa9193a775d83d5a74fa818307037b9e0cf34e51a18ac31304fceefb9.jpg.webp",
+      "hidden": false,
+      "importNames": ""
     },
     {
       "id": 3,
@@ -478,7 +480,7 @@
           "storage": "256 ГБ",
           "simType": "eSIM + SIM",
           "purchasePrice": 67200,
-          "price": 74900
+          "price": 75900
         },
         {
           "colorId": "lavender",
@@ -527,8 +529,10 @@
       ],
       "coverImage": "assets/products/ce0e6e9a6df1808b3097c7d61fe138ab456fb5ef5f238abc52663d5de3fe2fa4.jpg.webp",
       "showCatalogSpec": false,
-      "markupPercent": 11.4,
-      "markupFixed": 0
+      "markupPercent": 11.7,
+      "markupFixed": 0,
+      "hidden": false,
+      "importNames": ""
     },
     {
       "id": 5,
@@ -598,7 +602,7 @@
       "stock": [
         {
           "colorId": "white",
-          "simType": "",
+          "simType": "eSIM + SIM",
           "storageLabel": "128 ГБ",
           "qty": 1,
           "note": "В наличии"
@@ -608,16 +612,16 @@
         {
           "colorId": "teal",
           "storage": "128 ГБ",
-          "simType": "",
+          "simType": "eSIM + SIM",
           "purchasePrice": 53700,
-          "price": 59900
+          "price": 60900
         },
         {
           "colorId": "ultramarine",
           "storage": "128 ГБ",
-          "simType": "",
+          "simType": "eSIM + SIM",
           "purchasePrice": 53700,
-          "price": 59900
+          "price": 60900
         },
         {
           "colorId": "pink",
@@ -631,14 +635,14 @@
           "storage": "128 ГБ",
           "simType": "eSIM + SIM",
           "purchasePrice": 53700,
-          "price": 59900
+          "price": 60900
         },
         {
           "colorId": "desert",
           "storage": "256 ГБ",
           "simType": "eSIM + SIM",
           "purchasePrice": 88500,
-          "price": 98900
+          "price": 99900
         }
       ],
       "images": [
@@ -651,8 +655,10 @@
       "coverImage": "assets/products/548a64f7f89c24a7211af7a31f977369c51a00a874f74a6fbd1b97548a5adb85.jpg.webp",
       "simModifiers": [],
       "showCatalogSpec": false,
-      "markupPercent": 11.4,
-      "markupFixed": 0
+      "markupPercent": 11.8,
+      "markupFixed": 0,
+      "hidden": false,
+      "importNames": ""
     },
     {
       "id": 6,
@@ -839,7 +845,7 @@
           "storage": "16/512 ГБ",
           "simType": "",
           "purchasePrice": 93000,
-          "price": 103900
+          "price": 107900
         }
       ],
       "images": [
@@ -1029,28 +1035,28 @@
           "storage": "1 ТБ",
           "simType": "",
           "purchasePrice": 70000,
-          "price": 78900
+          "price": 91900
         },
         {
           "colorId": "gray",
           "storage": "256 ГБ",
           "simType": "",
           "purchasePrice": 63500,
-          "price": 70900
+          "price": 82900
         },
         {
           "colorId": "silver",
           "storage": "256 ГБ",
           "simType": "",
           "purchasePrice": 63500,
-          "price": 70900
+          "price": 82900
         },
         {
           "colorId": "black",
           "storage": "256 ГБ",
           "simType": "",
           "purchasePrice": 63500,
-          "price": 70900
+          "price": 82900
         }
       ],
       "images": [
@@ -1064,8 +1070,10 @@
       "coverImage": "assets/products/2f23b95eec969a45ebe58b843b715fe30341aeb9f5dbb13ae1408c233a0e373e.jpg.webp",
       "simModifiers": [],
       "showCatalogSpec": false,
-      "markupPercent": 15,
-      "markupFixed": 0
+      "markupPercent": 30,
+      "markupFixed": 0,
+      "hidden": false,
+      "importNames": ""
     },
     {
       "id": 13,
@@ -1144,28 +1152,28 @@
           "storage": "256 ГБ",
           "simType": "",
           "purchasePrice": 59000,
-          "price": 65900
+          "price": 76900
         },
         {
           "colorId": "black",
           "storage": "256 ГБ",
           "simType": "",
           "purchasePrice": 59000,
-          "price": 65900
+          "price": 76900
         },
         {
           "colorId": "cobalt-violet",
           "storage": "256 ГБ",
           "simType": "",
           "purchasePrice": 59000,
-          "price": 65900
+          "price": 76900
         },
         {
           "colorId": "sky-blue",
           "storage": "256 ГБ",
           "simType": "",
           "purchasePrice": 58500,
-          "price": 65900
+          "price": 76900
         }
       ],
       "images": [
@@ -1178,9 +1186,10 @@
       "coverImage": "assets/products/54312ffdebd4e730492f5c0790df2d40fc448aa31ca0a3b33552ecf4913a383d.jpg.webp",
       "simModifiers": [],
       "showCatalogSpec": false,
-      "markupPercent": 15,
+      "markupPercent": 30,
       "markupFixed": 0,
-      "importNames": "Samsung Galaxy S26 Plus, Galaxy S26+, Samsung Galaxy S26+"
+      "importNames": "Samsung Galaxy S26 Plus, Galaxy S26+, Samsung Galaxy S26+",
+      "hidden": false
     },
     {
       "id": 14,
@@ -1254,7 +1263,7 @@
     {
       "id": 15,
       "slug": "samsung-galaxy-watch-8-ultra",
-      "name": "Samsung Galaxy Watch 8 Ultra",
+      "name": "Galaxy Watch 8 Ultra",
       "category": "galaxy-watch",
       "brand": "Samsung",
       "badge": "Новинка",
@@ -1284,14 +1293,7 @@
           "importNames": "White"
         }
       ],
-      "storage": [
-        {
-          "label": "64 ГБ LTE"
-        },
-        {
-          "label": "64 ГБ"
-        }
-      ],
+      "storage": [],
       "sizes": [],
       "stock": [],
       "variants": [
@@ -1300,42 +1302,42 @@
           "storage": "64 ГБ",
           "simType": "",
           "purchasePrice": 25000,
-          "price": 28900
+          "price": 32900
         },
         {
           "colorId": "blue",
           "storage": "64 ГБ",
           "simType": "",
           "purchasePrice": 24800,
-          "price": 28900
+          "price": 32900
         },
         {
           "colorId": "white",
           "storage": "64 ГБ",
           "simType": "",
           "purchasePrice": 23700,
-          "price": 27900
+          "price": 30900
         },
         {
           "colorId": "gray",
           "storage": "47 мм",
           "simType": "",
           "purchasePrice": 25000,
-          "price": 27900
+          "price": 32900
         },
         {
           "colorId": "blue",
           "storage": "47 мм",
           "simType": "",
           "purchasePrice": 24800,
-          "price": 27900
+          "price": 32900
         },
         {
           "colorId": "white",
           "storage": "47 мм",
           "simType": "",
           "purchasePrice": 23700,
-          "price": 26900
+          "price": 30900
         }
       ],
       "images": [
@@ -1346,8 +1348,10 @@
       "coverImage": "assets/products/ee7fa8e42db701de6eb04f3a4ce336737c97f341e8db6eeef93e5152c788f7ca.jpg.webp",
       "simModifiers": [],
       "showCatalogSpec": false,
-      "markupPercent": 15,
-      "markupFixed": 0
+      "markupPercent": 30,
+      "markupFixed": 0,
+      "hidden": false,
+      "importNames": "Galaxy Watch 8 Ultra"
     },
     {
       "id": 16,
@@ -1391,7 +1395,7 @@
           "storage": "Стандарт",
           "simType": "",
           "purchasePrice": 20500,
-          "price": 22900
+          "price": 26900
         }
       ],
       "images": [
@@ -1411,7 +1415,7 @@
       "showCatalogSpec": false,
       "hidden": false,
       "importNames": "Watch 8",
-      "markupPercent": 15,
+      "markupPercent": 30,
       "markupFixed": 0
     },
     {
@@ -1453,7 +1457,7 @@
           "storage": "Стандарт",
           "simType": "",
           "purchasePrice": 13300,
-          "price": 14900
+          "price": 17900
         }
       ],
       "images": [
@@ -1469,7 +1473,7 @@
       "showCatalogSpec": false,
       "hidden": false,
       "importNames": "Watch 8 Classic",
-      "markupPercent": 20,
+      "markupPercent": 30,
       "markupFixed": 0
     },
     {
@@ -1528,7 +1532,7 @@
           "storage": "12/256 ГБ",
           "simType": "",
           "purchasePrice": 52400,
-          "price": 58900
+          "price": 68900
         }
       ],
       "images": [
@@ -1548,7 +1552,7 @@
       "showCatalogSpec": false,
       "hidden": false,
       "importNames": "",
-      "markupPercent": 11.4,
+      "markupPercent": 30,
       "markupFixed": 0
     },
     {
@@ -2428,42 +2432,42 @@
           "storage": "46 мм",
           "simType": "",
           "purchasePrice": 30000,
-          "price": 33900
+          "price": 34900
         },
         {
           "colorId": "c1783090554849",
           "storage": "46 мм",
           "simType": "",
           "purchasePrice": 29600,
-          "price": 33900
+          "price": 34900
         },
         {
           "colorId": "c1783090702702",
           "storage": "42 мм",
           "simType": "",
           "purchasePrice": 27000,
-          "price": 30900
+          "price": 31900
         },
         {
           "colorId": "c1783090651883",
           "storage": "42 мм",
           "simType": "",
           "purchasePrice": 27000,
-          "price": 30900
+          "price": 31900
         },
         {
           "colorId": "c1783090242748",
           "storage": "42 мм",
           "simType": "",
           "purchasePrice": 27500,
-          "price": 30900
+          "price": 31900
         },
         {
           "colorId": "c1783090554849",
           "storage": "42 мм",
           "simType": "",
           "purchasePrice": 27000,
-          "price": 30900
+          "price": 31900
         }
       ],
       "markupPercent": 15,
@@ -3531,29 +3535,7 @@
         }
       ],
       "storage": [],
-      "variants": [
-        {
-          "colorId": "default",
-          "storage": "Стандарт",
-          "simType": "",
-          "purchasePrice": 12300,
-          "price": 13900
-        },
-        {
-          "colorId": "white",
-          "storage": "Стандарт",
-          "simType": "",
-          "purchasePrice": 12300,
-          "price": 13900
-        },
-        {
-          "colorId": "black",
-          "storage": "Стандарт",
-          "simType": "",
-          "purchasePrice": 18300,
-          "price": 20900
-        }
-      ],
+      "variants": [],
       "sizes": null,
       "stock": [],
       "images": [],
@@ -3781,11 +3763,7 @@
           "importNames": "Black"
         }
       ],
-      "storage": [
-        {
-          "label": "Стандарт"
-        }
-      ],
+      "storage": [],
       "variants": [
         {
           "colorId": "glacier-blue",
@@ -3815,7 +3793,8 @@
       "markupPercent": 15,
       "markupFixed": 0,
       "showCatalogSpec": false,
-      "importNames": "Redmi Note 15 Pro"
+      "importNames": "Redmi Note 15 Pro",
+      "hidden": true
     },
     {
       "id": 81,
@@ -3900,7 +3879,8 @@
       "markupPercent": 15,
       "markupFixed": 0,
       "showCatalogSpec": false,
-      "importNames": "Marshall Major 5"
+      "importNames": "Marshall Major 5",
+      "hidden": true
     },
     {
       "id": 82,
@@ -3943,7 +3923,8 @@
       "markupPercent": 15,
       "markupFixed": 0,
       "showCatalogSpec": false,
-      "importNames": "Samsung Buds 4 Pro"
+      "importNames": "Samsung Buds 4 Pro",
+      "hidden": true
     },
     {
       "id": 83,
@@ -3989,7 +3970,8 @@
       "markupPercent": 15,
       "markupFixed": 0,
       "showCatalogSpec": false,
-      "importNames": "Ray Ban Meta Headliner (Gen 2)"
+      "importNames": "Ray Ban Meta Headliner (Gen 2)",
+      "hidden": true
     },
     {
       "id": 84,
@@ -4136,7 +4118,8 @@
       "markupPercent": 15,
       "markupFixed": 0,
       "showCatalogSpec": false,
-      "importNames": "Ray Ban Meta Wayfarer (Gen 2)"
+      "importNames": "Ray Ban Meta Wayfarer (Gen 2)",
+      "hidden": true
     },
     {
       "id": 85,
@@ -4193,7 +4176,8 @@
       "markupPercent": 15,
       "markupFixed": 0,
       "showCatalogSpec": false,
-      "importNames": "Google Fitbit Air"
+      "importNames": "Google Fitbit Air",
+      "hidden": true
     }
   ]
 }
