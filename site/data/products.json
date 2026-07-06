@@ -60,22 +60,22 @@
           "colorId": "orange",
           "storage": "512 ГБ",
           "simType": "eSIM only",
-          "purchasePrice": 112500,
-          "price": 125900
+          "purchasePrice": 111000,
+          "price": 123900
         },
         {
           "colorId": "blue",
           "storage": "512 ГБ",
           "simType": "eSIM + SIM",
-          "purchasePrice": 125000,
-          "price": 139900
+          "purchasePrice": 122000,
+          "price": 136900
         },
         {
           "colorId": "blue",
           "storage": "512 ГБ",
           "simType": "eSIM only",
-          "purchasePrice": 112500,
-          "price": 125900
+          "purchasePrice": 109400,
+          "price": 121900
         },
         {
           "colorId": "white",
@@ -95,29 +95,29 @@
           "colorId": "orange",
           "storage": "256 ГБ",
           "simType": "eSIM + SIM",
-          "purchasePrice": 105800,
-          "price": 118900
+          "purchasePrice": 104500,
+          "price": 116900
         },
         {
           "colorId": "orange",
           "storage": "256 ГБ",
           "simType": "eSIM only",
-          "purchasePrice": 94000,
-          "price": 105900
+          "purchasePrice": 91700,
+          "price": 102900
         },
         {
           "colorId": "blue",
           "storage": "256 ГБ",
           "simType": "eSIM + SIM",
-          "purchasePrice": 106500,
-          "price": 119900
+          "purchasePrice": 104900,
+          "price": 116900
         },
         {
           "colorId": "blue",
           "storage": "256 ГБ",
           "simType": "eSIM only",
-          "purchasePrice": 95000,
-          "price": 106900
+          "purchasePrice": 91500,
+          "price": 102900
         },
         {
           "colorId": "white",
@@ -144,22 +144,22 @@
           "colorId": "blue",
           "storage": "1 ТБ",
           "simType": "eSIM + SIM",
-          "purchasePrice": 141000,
-          "price": 157900
+          "purchasePrice": 140500,
+          "price": 156900
         },
         {
           "colorId": "blue",
           "storage": "1 ТБ",
           "simType": "eSIM only",
-          "purchasePrice": 128000,
-          "price": 143900
+          "purchasePrice": 126700,
+          "price": 141900
         },
         {
           "colorId": "orange",
           "storage": "512 ГБ",
           "simType": "eSIM + SIM",
-          "purchasePrice": 122000,
-          "price": 136900
+          "purchasePrice": 121000,
+          "price": 134900
         }
       ],
       "sizes": [],
@@ -234,15 +234,15 @@
           "colorId": "blue",
           "storage": "1 ТБ",
           "simType": "eSIM + SIM",
-          "purchasePrice": 128500,
-          "price": 144900
+          "purchasePrice": 124500,
+          "price": 138900
         },
         {
           "colorId": "blue",
           "storage": "1 ТБ",
           "simType": "eSIM only",
           "purchasePrice": 120500,
-          "price": 135900
+          "price": 134900
         },
         {
           "colorId": "white",
@@ -255,29 +255,29 @@
           "colorId": "orange",
           "storage": "512 ГБ",
           "simType": "eSIM only",
-          "purchasePrice": 104000,
-          "price": 116900
+          "purchasePrice": 102600,
+          "price": 114900
         },
         {
           "colorId": "orange",
           "storage": "512 ГБ",
           "simType": "eSIM + SIM",
-          "purchasePrice": 110000,
-          "price": 123900
+          "purchasePrice": 109000,
+          "price": 121900
         },
         {
           "colorId": "blue",
           "storage": "512 ГБ",
           "simType": "eSIM + SIM",
-          "purchasePrice": 112000,
-          "price": 125900
+          "purchasePrice": 110700,
+          "price": 123900
         },
         {
           "colorId": "blue",
           "storage": "512 ГБ",
           "simType": "eSIM only",
-          "purchasePrice": 103000,
-          "price": 115900
+          "purchasePrice": 102500,
+          "price": 114900
         },
         {
           "colorId": "white",
@@ -297,29 +297,29 @@
           "colorId": "orange",
           "storage": "256 ГБ",
           "simType": "eSIM + SIM",
-          "purchasePrice": 95800,
-          "price": 107900
+          "purchasePrice": 94500,
+          "price": 105900
         },
         {
           "colorId": "orange",
           "storage": "256 ГБ",
           "simType": "eSIM only",
           "purchasePrice": 84000,
-          "price": 94900
+          "price": 93900
         },
         {
           "colorId": "blue",
           "storage": "256 ГБ",
           "simType": "eSIM + SIM",
-          "purchasePrice": 97000,
-          "price": 108900
+          "purchasePrice": 95300,
+          "price": 106900
         },
         {
           "colorId": "blue",
           "storage": "256 ГБ",
           "simType": "eSIM only",
-          "purchasePrice": 87200,
-          "price": 97900
+          "purchasePrice": 85400,
+          "price": 95900
         },
         {
           "colorId": "white",
@@ -339,8 +339,8 @@
           "colorId": "orange",
           "storage": "1 ТБ",
           "simType": "eSIM + SIM",
-          "purchasePrice": 129500,
-          "price": 145900
+          "purchasePrice": 126500,
+          "price": 141900
         }
       ],
       "sizes": [],
@@ -437,22 +437,22 @@
           "colorId": "black",
           "storage": "256 ГБ",
           "simType": "eSIM + SIM",
-          "purchasePrice": 67500,
-          "price": 75900
+          "purchasePrice": 65800,
+          "price": 73900
         },
         {
           "colorId": "blue",
           "storage": "256 ГБ",
           "simType": "eSIM + SIM",
-          "purchasePrice": 67400,
-          "price": 75900
+          "purchasePrice": 65700,
+          "price": 73900
         },
         {
           "colorId": "green",
           "storage": "256 ГБ",
           "simType": "eSIM + SIM",
-          "purchasePrice": 67500,
-          "price": 75900
+          "purchasePrice": 66200,
+          "price": 73900
         },
         {
           "colorId": "green",
@@ -465,22 +465,22 @@
           "colorId": "white",
           "storage": "256 ГБ",
           "simType": "eSIM + SIM",
-          "purchasePrice": 67500,
-          "price": 75900
+          "purchasePrice": 65900,
+          "price": 73900
         },
         {
           "colorId": "black",
           "storage": "256 ГБ",
           "simType": "eSIM only",
-          "purchasePrice": 63800,
-          "price": 71900
+          "purchasePrice": 69000,
+          "price": 76900
         },
         {
           "colorId": "lavender",
           "storage": "256 ГБ",
           "simType": "eSIM + SIM",
-          "purchasePrice": 67200,
-          "price": 75900
+          "purchasePrice": 66000,
+          "price": 73900
         },
         {
           "colorId": "lavender",
@@ -493,22 +493,22 @@
           "colorId": "blue",
           "storage": "256 ГБ",
           "simType": "eSIM only",
-          "purchasePrice": 63800,
-          "price": 71900
+          "purchasePrice": 67400,
+          "price": 75900
         },
         {
           "colorId": "white",
           "storage": "256 ГБ",
           "simType": "eSIM only",
-          "purchasePrice": 70400,
-          "price": 78900
+          "purchasePrice": 69500,
+          "price": 77900
         },
         {
           "colorId": "light-gold",
           "storage": "256 ГБ",
           "simType": "eSIM only",
-          "purchasePrice": 69600,
-          "price": 77900
+          "purchasePrice": 68100,
+          "price": 75900
         }
       ],
       "sizes": [],
@@ -613,22 +613,22 @@
           "colorId": "teal",
           "storage": "128 ГБ",
           "simType": "eSIM + SIM",
-          "purchasePrice": 53700,
-          "price": 60900
+          "purchasePrice": 53500,
+          "price": 59900
         },
         {
           "colorId": "ultramarine",
           "storage": "128 ГБ",
           "simType": "eSIM + SIM",
-          "purchasePrice": 53700,
-          "price": 60900
+          "purchasePrice": 53600,
+          "price": 59900
         },
         {
           "colorId": "pink",
           "storage": "128 ГБ",
           "simType": "eSIM + SIM",
-          "purchasePrice": 61500,
-          "price": 68900
+          "purchasePrice": 58000,
+          "price": 64900
         },
         {
           "colorId": "teal",
@@ -641,8 +641,15 @@
           "colorId": "desert",
           "storage": "256 ГБ",
           "simType": "eSIM + SIM",
-          "purchasePrice": 88500,
-          "price": 99900
+          "purchasePrice": 87900,
+          "price": 98900
+        },
+        {
+          "colorId": "white",
+          "storage": "128 ГБ",
+          "simType": "eSIM + SIM",
+          "purchasePrice": 70900,
+          "price": 79900
         }
       ],
       "images": [
@@ -844,8 +851,15 @@
           "colorId": "c1783086179165",
           "storage": "16/512 ГБ",
           "simType": "",
-          "purchasePrice": 93000,
-          "price": 107900
+          "purchasePrice": 93500,
+          "price": 104900
+        },
+        {
+          "colorId": "c1783086174315",
+          "storage": "16/512 ГБ",
+          "simType": "",
+          "purchasePrice": 95500,
+          "price": 106900
         }
       ],
       "images": [
@@ -955,7 +969,7 @@
           "colorId": "стандарт",
           "storage": "Стандарт",
           "simType": "",
-          "purchasePrice": 13300,
+          "purchasePrice": 13000,
           "price": 14900
         }
       ],
@@ -1041,22 +1055,22 @@
           "colorId": "gray",
           "storage": "256 ГБ",
           "simType": "",
-          "purchasePrice": 63500,
-          "price": 82900
+          "purchasePrice": 60000,
+          "price": 66900
         },
         {
           "colorId": "silver",
           "storage": "256 ГБ",
           "simType": "",
-          "purchasePrice": 63500,
-          "price": 82900
+          "purchasePrice": 61700,
+          "price": 68900
         },
         {
           "colorId": "black",
           "storage": "256 ГБ",
           "simType": "",
-          "purchasePrice": 63500,
-          "price": 82900
+          "purchasePrice": 60000,
+          "price": 66900
         }
       ],
       "images": [
@@ -1151,29 +1165,29 @@
           "colorId": "silver",
           "storage": "256 ГБ",
           "simType": "",
-          "purchasePrice": 59000,
-          "price": 76900
+          "purchasePrice": 58900,
+          "price": 65900
         },
         {
           "colorId": "black",
           "storage": "256 ГБ",
           "simType": "",
-          "purchasePrice": 59000,
-          "price": 76900
+          "purchasePrice": 58800,
+          "price": 65900
         },
         {
           "colorId": "cobalt-violet",
           "storage": "256 ГБ",
           "simType": "",
-          "purchasePrice": 59000,
-          "price": 76900
+          "purchasePrice": 58800,
+          "price": 65900
         },
         {
           "colorId": "sky-blue",
           "storage": "256 ГБ",
           "simType": "",
           "purchasePrice": 58500,
-          "price": 76900
+          "price": 65900
         }
       ],
       "images": [
@@ -1229,6 +1243,13 @@
           "hex": "#000000",
           "image": "assets/products/df2a12a0f8852836fcd6961c434c3ffaefba5f4112c8d5714a39e97d10bff756.jpg.webp",
           "importNames": "Black"
+        },
+        {
+          "id": "cobalt-violet",
+          "name": "Cobalt Violet",
+          "hex": "#888888",
+          "image": "",
+          "importNames": "Cobalt Violet"
         }
       ],
       "storage": [
@@ -1244,7 +1265,15 @@
       ],
       "sizes": [],
       "stock": [],
-      "variants": [],
+      "variants": [
+        {
+          "colorId": "cobalt-violet",
+          "storage": "256 ГБ",
+          "simType": "",
+          "purchasePrice": 50600,
+          "price": 65900
+        }
+      ],
       "images": [
         "assets/products/4bd0a2cc846a0d9421fc4eac43a1889cb2a028dd1dea06cc63db4edd8f9bb7f8.jpg.webp",
         "assets/products/664ce4d2c1661d32cd6fded492625defd3049aed48434de1fe4a834995590f7d.jpg.webp",
@@ -1255,7 +1284,7 @@
       "coverImage": "assets/products/4bd0a2cc846a0d9421fc4eac43a1889cb2a028dd1dea06cc63db4edd8f9bb7f8.jpg.webp",
       "simModifiers": [],
       "showCatalogSpec": false,
-      "markupPercent": 15,
+      "markupPercent": 30,
       "markupFixed": 0,
       "importNames": "Samsung Galaxy S26, Galaxy S26",
       "hidden": false
@@ -1323,21 +1352,21 @@
           "storage": "47 мм",
           "simType": "",
           "purchasePrice": 25000,
-          "price": 32900
+          "price": 27900
         },
         {
           "colorId": "blue",
           "storage": "47 мм",
           "simType": "",
-          "purchasePrice": 24800,
-          "price": 32900
+          "purchasePrice": 24300,
+          "price": 27900
         },
         {
           "colorId": "white",
           "storage": "47 мм",
           "simType": "",
-          "purchasePrice": 23700,
-          "price": 30900
+          "purchasePrice": 24800,
+          "price": 27900
         }
       ],
       "images": [
@@ -1395,7 +1424,7 @@
           "storage": "Стандарт",
           "simType": "",
           "purchasePrice": 20500,
-          "price": 26900
+          "price": 22900
         }
       ],
       "images": [
@@ -1532,7 +1561,7 @@
           "storage": "12/256 ГБ",
           "simType": "",
           "purchasePrice": 52400,
-          "price": 68900
+          "price": 58900
         }
       ],
       "images": [
@@ -1610,43 +1639,43 @@
           "colorId": "black",
           "storage": "12/512 ГБ",
           "simType": "",
-          "purchasePrice": 86000,
-          "price": 95900
+          "purchasePrice": 85000,
+          "price": 94900
         },
         {
           "colorId": "sky-blue",
+          "storage": "12/512 ГБ",
+          "simType": "",
+          "purchasePrice": 83000,
+          "price": 92900
+        },
+        {
+          "colorId": "black",
+          "storage": "12/256 ГБ",
+          "simType": "",
+          "purchasePrice": 69100,
+          "price": 77900
+        },
+        {
+          "colorId": "sky-blue",
+          "storage": "12/256 ГБ",
+          "simType": "",
+          "purchasePrice": 69500,
+          "price": 77900
+        },
+        {
+          "colorId": "default",
           "storage": "12/512 ГБ",
           "simType": "",
           "purchasePrice": 85000,
           "price": 94900
         },
         {
-          "colorId": "black",
-          "storage": "12/256 ГБ",
-          "simType": "",
-          "purchasePrice": 70500,
-          "price": 78900
-        },
-        {
-          "colorId": "sky-blue",
-          "storage": "12/256 ГБ",
-          "simType": "",
-          "purchasePrice": 70500,
-          "price": 78900
-        },
-        {
-          "colorId": "default",
-          "storage": "12/512 ГБ",
-          "simType": "",
-          "purchasePrice": 85500,
-          "price": 95900
-        },
-        {
           "colorId": "default",
           "storage": "12/256 ГБ",
           "simType": "",
-          "purchasePrice": 70500,
-          "price": 78900
+          "purchasePrice": 69900,
+          "price": 77900
         }
       ],
       "sizes": [],
@@ -1710,6 +1739,13 @@
           "hex": "#000000",
           "image": "assets/products/f7b433ecf3686d7c895b860459b17cdc9a51097de53dc48806b8bd717b474149.png.webp",
           "importNames": ""
+        },
+        {
+          "id": "purple",
+          "name": "Purple",
+          "hex": "#888888",
+          "image": "",
+          "importNames": "Purple"
         }
       ],
       "storage": [
@@ -1724,6 +1760,9 @@
         },
         {
           "label": "1024 ГБ"
+        },
+        {
+          "label": "128 ГБ Wi-Fi"
         }
       ],
       "sizes": [],
@@ -1739,15 +1778,15 @@
           "colorId": "black",
           "storage": "128 ГБ Wi-Fi",
           "simType": "",
-          "purchasePrice": 54500,
+          "purchasePrice": 54000,
           "price": 60900
         },
         {
           "colorId": "c1783085280329",
           "storage": "128 ГБ Wi-Fi",
           "simType": "",
-          "purchasePrice": 56000,
-          "price": 62900
+          "purchasePrice": 55500,
+          "price": 61900
         },
         {
           "colorId": "c1783085291113",
@@ -1755,6 +1794,13 @@
           "simType": "",
           "purchasePrice": 55000,
           "price": 61900
+        },
+        {
+          "colorId": "purple",
+          "storage": "128 ГБ Wi-Fi",
+          "simType": "",
+          "purchasePrice": 53000,
+          "price": 59900
         }
       ],
       "markupPercent": 15,
@@ -1829,22 +1875,22 @@
           "colorId": "c1783085351679",
           "storage": "256 ГБ Wi-Fi",
           "simType": "",
-          "purchasePrice": 39000,
-          "price": 43900
+          "purchasePrice": 38400,
+          "price": 42900
         },
         {
           "colorId": "c1783085360429",
           "storage": "256 ГБ Wi-Fi",
           "simType": "",
-          "purchasePrice": 39000,
-          "price": 43900
+          "purchasePrice": 38500,
+          "price": 42900
         },
         {
           "colorId": "c1783085366362",
           "storage": "256 ГБ Wi-Fi",
           "simType": "",
-          "purchasePrice": 39000,
-          "price": 43900
+          "purchasePrice": 38500,
+          "price": 42900
         },
         {
           "colorId": "c1783085366362",
@@ -1857,22 +1903,29 @@
           "colorId": "c1783085360429",
           "storage": "128 ГБ Wi-Fi",
           "simType": "",
-          "purchasePrice": 31900,
+          "purchasePrice": 31700,
           "price": 35900
         },
         {
           "colorId": "c1783085371712",
           "storage": "128 ГБ Wi-Fi",
           "simType": "",
-          "purchasePrice": 31400,
+          "purchasePrice": 31700,
           "price": 35900
         },
         {
           "colorId": "c1783085351679",
           "storage": "128 ГБ Wi-Fi",
           "simType": "",
-          "purchasePrice": 29900,
-          "price": 33900
+          "purchasePrice": 31600,
+          "price": 35900
+        },
+        {
+          "colorId": "c1783085371712",
+          "storage": "256 ГБ Wi-Fi",
+          "simType": "",
+          "purchasePrice": 38700,
+          "price": 43900
         }
       ],
       "markupPercent": 15,
@@ -1944,21 +1997,21 @@
           "colorId": "c1783086815762",
           "storage": "8/512 ГБ",
           "simType": "",
-          "purchasePrice": 66000,
+          "purchasePrice": 65500,
           "price": 73900
         },
         {
           "colorId": "c1783086684913",
           "storage": "8/512 ГБ",
           "simType": "",
-          "purchasePrice": 66000,
+          "purchasePrice": 65500,
           "price": 73900
         },
         {
           "colorId": "c1783086765412",
           "storage": "8/512 ГБ",
           "simType": "",
-          "purchasePrice": 66000,
+          "purchasePrice": 65500,
           "price": 73900
         },
         {
@@ -2036,6 +2089,13 @@
           "hex": "#d7c8b9",
           "image": "assets/products/33a81f956d13018c71f6fff0d46beb770dde00c31e70b5167f07b6fc80158a9d.jpg.webp",
           "importNames": "Starlight"
+        },
+        {
+          "id": "blue",
+          "name": "Blue",
+          "hex": "#888888",
+          "image": "",
+          "importNames": "Blue"
         }
       ],
       "storage": [],
@@ -2054,22 +2114,36 @@
           "colorId": "c1783088640318",
           "storage": "Стандарт",
           "simType": "",
-          "purchasePrice": 41500,
-          "price": 46900
+          "purchasePrice": 40400,
+          "price": 45900
         },
         {
           "colorId": "c1783088850034",
           "storage": "Стандарт",
           "simType": "",
-          "purchasePrice": 41600,
-          "price": 46900
+          "purchasePrice": 41000,
+          "price": 45900
         },
         {
           "colorId": "c1783088962652",
           "storage": "Стандарт",
           "simType": "",
-          "purchasePrice": 41500,
-          "price": 46900
+          "purchasePrice": 40100,
+          "price": 44900
+        },
+        {
+          "colorId": "blue",
+          "storage": "Стандарт",
+          "simType": "",
+          "purchasePrice": 40600,
+          "price": 45900
+        },
+        {
+          "colorId": "c1783088910650",
+          "storage": "Стандарт",
+          "simType": "",
+          "purchasePrice": 40000,
+          "price": 44900
         }
       ],
       "markupPercent": 15,
@@ -2140,22 +2214,22 @@
           "colorId": "c1783089148139",
           "storage": "Стандарт",
           "simType": "",
-          "purchasePrice": 40200,
-          "price": 44900
+          "purchasePrice": 36300,
+          "price": 40900
         },
         {
           "colorId": "c1783089238656",
           "storage": "Стандарт",
           "simType": "",
-          "purchasePrice": 36500,
+          "purchasePrice": 36300,
           "price": 40900
         },
         {
           "colorId": "c1783089216056",
           "storage": "Стандарт",
           "simType": "",
-          "purchasePrice": 38900,
-          "price": 43900
+          "purchasePrice": 38400,
+          "price": 42900
         }
       ],
       "markupPercent": 15,
@@ -2200,8 +2274,8 @@
           "colorId": "стандарт",
           "storage": "Стандарт",
           "simType": "",
-          "purchasePrice": 16200,
-          "price": 18900
+          "purchasePrice": 19500,
+          "price": 21900
         }
       ],
       "markupPercent": 15,
@@ -2310,8 +2384,8 @@
           "colorId": "стандарт",
           "storage": "Стандарт",
           "simType": "",
-          "purchasePrice": 13200,
-          "price": 14900
+          "purchasePrice": 17000,
+          "price": 19900
         }
       ],
       "markupPercent": 15,
@@ -2356,7 +2430,7 @@
           "colorId": "стандарт",
           "storage": "Стандарт",
           "simType": "",
-          "purchasePrice": 9300,
+          "purchasePrice": 9000,
           "price": 10900
         }
       ],
@@ -2431,43 +2505,57 @@
           "colorId": "c1783090702702",
           "storage": "46 мм",
           "simType": "",
-          "purchasePrice": 30000,
-          "price": 34900
+          "purchasePrice": 28800,
+          "price": 32900
         },
         {
           "colorId": "c1783090554849",
           "storage": "46 мм",
           "simType": "",
-          "purchasePrice": 29600,
-          "price": 34900
+          "purchasePrice": 29100,
+          "price": 32900
         },
         {
           "colorId": "c1783090702702",
           "storage": "42 мм",
           "simType": "",
           "purchasePrice": 27000,
-          "price": 31900
+          "price": 30900
         },
         {
           "colorId": "c1783090651883",
           "storage": "42 мм",
           "simType": "",
-          "purchasePrice": 27000,
-          "price": 31900
+          "purchasePrice": 26600,
+          "price": 29900
         },
         {
           "colorId": "c1783090242748",
           "storage": "42 мм",
           "simType": "",
-          "purchasePrice": 27500,
-          "price": 31900
+          "purchasePrice": 26900,
+          "price": 30900
         },
         {
           "colorId": "c1783090554849",
           "storage": "42 мм",
           "simType": "",
-          "purchasePrice": 27000,
+          "purchasePrice": 26700,
+          "price": 29900
+        },
+        {
+          "colorId": "c1783090242748",
+          "storage": "46 мм",
+          "simType": "",
+          "purchasePrice": 28500,
           "price": 31900
+        },
+        {
+          "colorId": "c1783090651883",
+          "storage": "46 мм",
+          "simType": "",
+          "purchasePrice": 29000,
+          "price": 32900
         }
       ],
       "markupPercent": 15,
@@ -2532,8 +2620,8 @@
           "colorId": "black",
           "storage": "128 ГБ",
           "simType": "",
-          "purchasePrice": 47500,
-          "price": 53900
+          "purchasePrice": 47100,
+          "price": 52900
         }
       ],
       "sizes": null,
@@ -2582,6 +2670,13 @@
         {
           "colorId": "gray",
           "storage": "Wi-Fi + Cellular",
+          "simType": "",
+          "purchasePrice": 73000,
+          "price": 81900
+        },
+        {
+          "colorId": "gray",
+          "storage": "512 ГБ Wi-Fi + Cellular",
           "simType": "",
           "purchasePrice": 73000,
           "price": 81900
@@ -2634,7 +2729,7 @@
           "colorId": "midnight-aluminum-midnig",
           "storage": "40 мм",
           "simType": "",
-          "purchasePrice": 19500,
+          "purchasePrice": 19100,
           "price": 21900
         }
       ],
@@ -2692,8 +2787,8 @@
           "colorId": "black-black-ocean-band",
           "storage": "Стандарт",
           "simType": "",
-          "purchasePrice": 57500,
-          "price": 64900
+          "purchasePrice": 57000,
+          "price": 63900
         },
         {
           "colorId": "black-ti-black-charcoal-",
@@ -3106,8 +3201,8 @@
           "colorId": "lavender-purple",
           "storage": "128 ГБ",
           "simType": "",
-          "purchasePrice": 11800,
-          "price": 13900
+          "purchasePrice": 17600,
+          "price": 19900
         },
         {
           "colorId": "green",
@@ -4178,6 +4273,123 @@
       "showCatalogSpec": false,
       "importNames": "Google Fitbit Air",
       "hidden": true
+    },
+    {
+      "id": 86,
+      "slug": "ipad-pro-11-m5-2025",
+      "name": "iPad Pro 11 M5 (2025)",
+      "category": "ipad",
+      "brand": "Apple",
+      "badge": null,
+      "image": "",
+      "coverImage": "",
+      "description": "iPad Pro 11 M5 (2025) — оригинальная техника, под заказ от 3–5 дней.",
+      "simTypes": null,
+      "simModifiers": [],
+      "colors": [
+        {
+          "id": "default",
+          "name": "Стандарт",
+          "hex": "#888888",
+          "image": "",
+          "importNames": ""
+        },
+        {
+          "id": "black",
+          "name": "Black",
+          "hex": "#888888",
+          "image": "",
+          "importNames": "Black"
+        }
+      ],
+      "storage": [
+        {
+          "label": "256 ГБ Wi-Fi"
+        }
+      ],
+      "variants": [
+        {
+          "colorId": "black",
+          "storage": "256 ГБ Wi-Fi",
+          "simType": "",
+          "purchasePrice": 90000,
+          "price": 100900
+        }
+      ],
+      "sizes": null,
+      "stock": [],
+      "images": [],
+      "markupPercent": 15,
+      "markupFixed": 0,
+      "showCatalogSpec": false,
+      "importNames": "iPad Pro 11 M5 (2025)"
+    },
+    {
+      "id": 87,
+      "slug": "xiaomi-17",
+      "name": "Xiaomi 17",
+      "category": "xiaomi",
+      "brand": "Xiaomi",
+      "badge": null,
+      "image": "",
+      "coverImage": "",
+      "description": "Xiaomi 17 — оригинальная техника, под заказ от 3–5 дней.",
+      "simTypes": null,
+      "simModifiers": [],
+      "colors": [
+        {
+          "id": "default",
+          "name": "Стандарт",
+          "hex": "#888888",
+          "image": "",
+          "importNames": ""
+        },
+        {
+          "id": "black",
+          "name": "Black",
+          "hex": "#888888",
+          "image": "",
+          "importNames": "Black"
+        },
+        {
+          "id": "deep-blue",
+          "name": "Deep Blue",
+          "hex": "#888888",
+          "image": "",
+          "importNames": "Deep Blue"
+        }
+      ],
+      "storage": [],
+      "variants": [
+        {
+          "colorId": "black",
+          "storage": "512 ГБ",
+          "simType": "",
+          "purchasePrice": 51200,
+          "price": 57900
+        },
+        {
+          "colorId": "black",
+          "storage": "256 ГБ",
+          "simType": "",
+          "purchasePrice": 47900,
+          "price": 53900
+        },
+        {
+          "colorId": "deep-blue",
+          "storage": "256 ГБ",
+          "simType": "",
+          "purchasePrice": 47900,
+          "price": 53900
+        }
+      ],
+      "sizes": null,
+      "stock": [],
+      "images": [],
+      "markupPercent": 15,
+      "markupFixed": 0,
+      "showCatalogSpec": false,
+      "importNames": "Xiaomi 17"
     }
   ]
 }
