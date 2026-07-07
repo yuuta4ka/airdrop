@@ -2497,7 +2497,7 @@ body[data-theme="dark-green"] .dolyami-widget {
   max-width: 90%;
   object-fit: contain;
   cursor: zoom-in;
-  transition: opacity 0.28s ease, transform 0.28s ease;
+  transition: opacity 0.18s ease, transform 0.18s ease;
 }
 
 .product-detail__title {
@@ -3203,6 +3203,16 @@ body.catalog--used .used-panel .container {
   opacity: 1;
   pointer-events: auto;
   transform: translateY(-50%) scale(1);
+}
+
+/* Устройства без наведения (телефоны, планшеты) — стрелки показываем всегда,
+   иначе они никогда не появляются, потому что :hover там не срабатывает. */
+@media (hover: none) {
+  .product-gallery__stage--multi .product-gallery__nav {
+    opacity: 1;
+    pointer-events: auto;
+    transform: translateY(-50%) scale(1);
+  }
 }
 
 .product-detail__photo--fade {

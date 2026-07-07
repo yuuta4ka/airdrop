@@ -1,9 +1,52 @@
+const FADE_MS = 180
+const LIGHTBOX_SWAP_MS = 280
+
+function preloadImages(urls) {
+  urls.forEach((url) => {
+    if (!url) return
+    const img = new Image()
+    img.src = url
+  })
+}
+
 export function initProductGallery({ stage, mainImg, prevBtn, nextBtn, getImages, getAlt }) {
   if (!stage || !mainImg) return { update: () => {} }
 
   let index = 0
   let lightbox = null
   let closing = false
+  let currentSrc = null
+  let hasRenderedOnce = false
+
+  function setMainImage(src, alt, { animate } = {}) {
+    if (src === currentSrc) {
+      mainImg.alt = alt || ''
+      return
+    }
+    currentSrc = src
+    if (!animate || !hasRenderedOnce) {
+      mainImg.src = src
+      mainImg.alt = alt || ''
+      hasRenderedOnce = true
+      return
+    }
+    const FADE_CLASS = 'product-detail__photo--fade'
+    mainImg.classList.add(FADE_CLASS)
+    let done = false
+    const finish = () => {
+      if (done) return
+      done = true
+      mainImg.removeEventListener('transitionend', onEnd)
+      mainImg.src = src
+      mainImg.alt = alt || ''
+      requestAnimationFrame(() => mainImg.classList.remove(FADE_CLASS))
+    }
+    const onEnd = (e) => {
+      if (e.target === mainImg && e.propertyName === 'opacity') finish()
+    }
+    mainImg.addEventListener('transitionend', onEnd)
+    setTimeout(finish, FADE_MS + 60)
+  }
 
   function ensureLightbox() {
     if (lightbox) return lightbox
@@ -84,7 +127,11 @@ export function initProductGallery({ stage, mainImg, prevBtn, nextBtn, getImages
       const frame = lightbox?.querySelector('.lightbox__frame')
       const lbImg = lightbox?.querySelector('.lightbox__img')
       frame?.classList.add('lightbox__frame--swap')
-      setTimeout(() => {
+      let done = false
+      const finish = () => {
+        if (done) return
+        done = true
+        frame?.removeEventListener('transitionend', onEnd)
         index = next
         if (lbImg) {
           lbImg.src = images[index]
@@ -93,16 +140,19 @@ export function initProductGallery({ stage, mainImg, prevBtn, nextBtn, getImages
         const counter = lightbox?.querySelector('.lightbox__counter')
         if (counter) counter.textContent = `${index + 1} / ${images.length}`
         frame?.classList.remove('lightbox__frame--swap')
-      }, 150)
+        preloadImages([images[(index + 1) % images.length], images[(index - 1 + images.length) % images.length]])
+      }
+      const onEnd = (e) => {
+        if (e.target === frame && e.propertyName === 'opacity') finish()
+      }
+      frame?.addEventListener('transitionend', onEnd)
+      setTimeout(finish, LIGHTBOX_SWAP_MS + 60)
       return
     }
 
-    mainImg.classList.add('product-detail__photo--fade')
-    setTimeout(() => {
-      index = next
-      mainImg.src = images[index]
-      mainImg.classList.remove('product-detail__photo--fade')
-    }, 150)
+    index = next
+    setMainImage(images[index], getAlt?.(), { animate: true })
+    preloadImages([images[(index + 1) % images.length], images[(index - 1 + images.length) % images.length]])
   }
 
   function render(inLightbox = false) {
@@ -121,8 +171,8 @@ export function initProductGallery({ stage, mainImg, prevBtn, nextBtn, getImages
     if (index >= images.length) index = 0
 
     if (!inLightbox) {
-      mainImg.src = images[index]
-      mainImg.alt = alt
+      setMainImage(images[index], alt, { animate: true })
+      preloadImages([images[(index + 1) % images.length], images[(index - 1 + images.length) % images.length]])
     }
 
     if (prevBtn) prevBtn.toggleAttribute('hidden', !hasMany)

@@ -28,6 +28,9 @@ function ensureStoreDefaults() {
       cat.label = DEFAULT_CATEGORY_LABELS[cat.id]
     }
   })
+  if (!storeData.categorySortModes || typeof storeData.categorySortModes !== 'object') {
+    storeData.categorySortModes = {}
+  }
 }
 
 const AUTH_KEY = 'airdrop_admin_token'
@@ -37,6 +40,7 @@ let productsData = null
 let activeTab = 'general'
 let editingProductIdx = null
 let adminProductView = 'active'
+let sortCategoryId = null
 let draftSaveTimer = null
 
 const TITLES = {
@@ -273,6 +277,10 @@ function section(title, content) {
   return `<section class="admin-section"><h3 class="admin-section__title">${title}</h3>${content}</section>`
 }
 
+function betaBadge() {
+  return '<span class="admin-badge admin-badge--beta">BETA</span>'
+}
+
 function productCategories() {
   return storeData.categories.filter((c) => c.id !== 'all')
 }
@@ -367,9 +375,21 @@ function formatPdfImportStats(s) {
   return lines
 }
 
+function formatProductSummaryLine(s) {
+  const changed = s.variantsBefore !== s.variantsAfter
+  const counts = changed ? `${s.variantsBefore} → ${s.variantsAfter} шт` : `${s.variantsAfter} шт`
+  const price = s.minPrice != null ? ` · от ${Number(s.minPrice).toLocaleString('ru-RU')} ₽` : ''
+  return `${escAttr(s.name)}: ${counts}${price}`
+}
+
 function formatImportResultHtml(s) {
   const lines = formatPdfImportStats(s)
   let html = `<strong>Импорт завершён</strong><br>${lines.map((l) => escAttr(l)).join('<br>')}`
+  if (s.productSummaries?.length) {
+    const sorted = [...s.productSummaries].sort((a, b) => a.name.localeCompare(b.name, 'ru'))
+    const rows = sorted.map((row) => `<div>${formatProductSummaryLine(row)}</div>`).join('')
+    html += `<details class="admin-import-report" open><summary>По товарам (${sorted.length})</summary>${rows}</details>`
+  }
   if (s.notFound?.length) {
     html += `<br><span class="admin-hint--warn">Нет в каталоге (${s.notFound.length}): ${escAttr(s.notFound.join(', '))}</span>`
     html += '<br><span class="admin-hint">Создайте карточку товара или укажите «Названия в прайсе» в её настройках.</span>'
@@ -849,23 +869,104 @@ function renderTheme(c) {
   renderColors()
 }
 
+function categoriesForSort() {
+  return (storeData.categories || []).filter((cat) => cat.id !== 'all')
+}
+
+function renderSortOrderList(categoryId) {
+  const wrap = $('sort-order-list')
+  if (!wrap) return
+  const items = productsData.products
+    .filter((p) => p.category === categoryId)
+    .sort((a, b) => {
+      const oa = typeof a.order === 'number' ? a.order : Infinity
+      const ob = typeof b.order === 'number' ? b.order : Infinity
+      if (oa !== ob) return oa - ob
+      return a.name.localeCompare(b.name, 'ru')
+    })
+  if (!items.length) {
+    wrap.innerHTML = '<p class="admin-hint">В этой категории пока нет товаров.</p>'
+    return
+  }
+  wrap.innerHTML = `<p class="admin-hint">Перетащите товары, чтобы задать порядок отображения в каталоге.</p>` +
+    items.map((p, i) => `
+      <div class="admin-card admin-card--drag" draggable="true" data-order-idx="${i}">
+        <span class="drag-handle">⠿</span>
+        <img src="${p.image || 'assets/logo.png'}" alt="" class="admin-sort-order-list__img" />
+        <span class="admin-sort-order-list__name">${escAttr(p.name)}${p.hidden ? ' <em>(скрыт)</em>' : ''}</span>
+      </div>
+    `).join('')
+  let dragIdx = null
+  wrap.querySelectorAll('[data-order-idx]').forEach((card) => {
+    card.ondragstart = () => { dragIdx = Number(card.dataset.orderIdx) }
+    card.ondragover = (e) => e.preventDefault()
+    card.ondrop = async () => {
+      const drop = Number(card.dataset.orderIdx)
+      if (dragIdx === null || dragIdx === drop) return
+      const [item] = items.splice(dragIdx, 1)
+      items.splice(drop, 0, item)
+      items.forEach((p, idx) => { p.order = idx })
+      renderSortOrderList(categoryId)
+      try { await saveProducts() } catch (err) { status(err.message, 'error') }
+    }
+  })
+}
+
 function renderProducts(c) {
   if (editingProductIdx !== null) { renderProductEditor(c); return }
   const all = productsData.products
   const hiddenCount = all.filter((p) => p.hidden).length
+  const newCount = all.filter((p) => p.isNew).length
   const activeCount = all.length - hiddenCount
-  const products = all.filter((p) => (adminProductView === 'hidden' ? p.hidden : !p.hidden))
+  const products = all.filter((p) => {
+    if (adminProductView === 'hidden') return p.hidden
+    if (adminProductView === 'new') return p.isNew
+    return !p.hidden
+  })
+  const sortCats = categoriesForSort()
+  if (!sortCategoryId || !sortCats.some((cat) => cat.id === sortCategoryId)) {
+    sortCategoryId = sortCats[0]?.id || null
+  }
+  const sortMode = sortCategoryId ? (storeData.categorySortModes?.[sortCategoryId] === 'manual' ? 'manual' : 'auto') : 'auto'
   c.innerHTML = `
     <div class="admin-toolbar admin-toolbar--products">
       <div class="admin-product-tabs">
         <button type="button" class="btn btn--sm ${adminProductView === 'active' ? 'btn--primary' : 'btn--ghost'}" id="products-tab-active">Товары (${activeCount})</button>
         <button type="button" class="btn btn--sm ${adminProductView === 'hidden' ? 'btn--primary' : 'btn--ghost'}" id="products-tab-hidden">Скрытые (${hiddenCount})</button>
+        ${newCount ? `<button type="button" class="btn btn--sm ${adminProductView === 'new' ? 'btn--primary' : 'btn--ghost'}" id="products-tab-new">Новые (${newCount})</button>` : ''}
       </div>
       <button type="button" class="btn btn--primary" id="add-product">+ Добавить товар</button>
     </div>
+    <div class="admin-sort-bar">
+      <label class="admin-sort-bar__cat">Порядок в категории
+        <select id="sort-cat-select">${sortCats.map((cat) => `<option value="${cat.id}" ${cat.id === sortCategoryId ? 'selected' : ''}>${escAttr(cat.label)}</option>`).join('')}</select>
+      </label>
+      <div class="admin-sort-bar__modes">
+        <button type="button" class="btn btn--sm ${sortMode === 'auto' ? 'btn--primary' : 'btn--ghost'}" id="sort-mode-auto">Авто · по цене</button>
+        <button type="button" class="btn btn--sm ${sortMode === 'manual' ? 'btn--primary' : 'btn--ghost'}" id="sort-mode-manual">Ручной порядок</button>
+      </div>
+    </div>
+    ${sortMode === 'manual' ? '<div id="sort-order-list" class="admin-sort-order-list"></div>' : ''}
     <div id="product-list"></div>`
   $('products-tab-active').onclick = () => { adminProductView = 'active'; renderProducts(c) }
   $('products-tab-hidden').onclick = () => { adminProductView = 'hidden'; renderProducts(c) }
+  if ($('products-tab-new')) $('products-tab-new').onclick = () => { adminProductView = 'new'; renderProducts(c) }
+  if (sortCats.length) {
+    $('sort-cat-select').onchange = (e) => { sortCategoryId = e.target.value; renderProducts(c) }
+    $('sort-mode-auto').onclick = async () => {
+      storeData.categorySortModes = storeData.categorySortModes || {}
+      storeData.categorySortModes[sortCategoryId] = 'auto'
+      renderProducts(c)
+      try { await saveStore() } catch (err) { status(err.message, 'error') }
+    }
+    $('sort-mode-manual').onclick = async () => {
+      storeData.categorySortModes = storeData.categorySortModes || {}
+      storeData.categorySortModes[sortCategoryId] = 'manual'
+      renderProducts(c)
+      try { await saveStore() } catch (err) { status(err.message, 'error') }
+    }
+    if (sortMode === 'manual') renderSortOrderList(sortCategoryId)
+  }
   $('product-list').innerHTML = products.map((p) => {
     const i = all.indexOf(p)
     const markup = `${p.markupPercent ?? 15}%${p.markupFixed ? ` + ${p.markupFixed} ₽` : ''}`
@@ -873,12 +974,12 @@ function renderProducts(c) {
     return `
     <div class="admin-product-row${rowClass}">
       <img src="${p.image || 'assets/logo.png'}" alt="" />
-      <div><strong>${p.name}</strong><span>${p.brand} · ${categoryLabel(p.category)} · наценка ${markup}${p.hidden ? ' · скрыт' : ''}</span></div>
+      <div><strong>${p.name}${p.isNew ? ' <span class="admin-badge admin-badge--new">Новое</span>' : ''}</strong><span>${p.brand} · ${categoryLabel(p.category)} · наценка ${markup}${p.hidden ? ' · скрыт' : ''}</span></div>
       <button type="button" class="btn btn--secondary btn--sm" data-edit="${i}">Изменить</button>
       <button type="button" class="btn btn--ghost btn--sm" data-toggle-hidden="${i}">${p.hidden ? 'Вернуть' : 'Скрыть'}</button>
       <button type="button" class="btn btn--danger btn--sm" data-del="${i}">Удалить</button>
     </div>
-  `}).join('') || `<p class="admin-hint">${adminProductView === 'hidden' ? 'Скрытых товаров нет' : 'Товаров нет'}</p>`
+  `}).join('') || `<p class="admin-hint">${adminProductView === 'hidden' ? 'Скрытых товаров нет' : adminProductView === 'new' ? 'Новых товаров нет' : 'Товаров нет'}</p>`
   $('product-list').querySelectorAll('[data-edit]').forEach((b) => {
     b.onclick = () => { editingProductIdx = Number(b.dataset.edit); renderProducts(c) }
   })
@@ -887,6 +988,7 @@ function renderProducts(c) {
       const idx = Number(b.dataset.toggleHidden)
       const p = productsData.products[idx]
       p.hidden = !p.hidden
+      if (!p.hidden) p.isNew = false
       renderProducts(c)
       try {
         await saveProducts()
@@ -1195,21 +1297,28 @@ function renderProductEditor(c) {
       ? p.variants.filter((v) => isMeaningfulStorageLabel(v.storage))
       : p.variants
 
+    const showSimColumn = showSim
+    const showStorageColumn = !(storageLabels.length <= 1 && storageLabels[0] === 'Стандарт')
+    const storageColumnLabel = isWatchCategory(p.category) ? 'Размер' : 'Память'
+
     $('variant-list').innerHTML = displayVariants.map((v) => {
       const i = p.variants.indexOf(v)
       const retail = v.purchasePrice > 0 ? calcRetailFromPurchase(v.purchasePrice, markup) : (v.price || 0)
       const colorName = p.colors.find((c) => c.id === v.colorId)?.name || v.colorId
+      const hintParts = [colorName]
+      if (showStorageColumn) hintParts.push(v.storage)
+      if (showSimColumn && v.simType) hintParts.push(v.simType)
       return `
       <div class="admin-card admin-card--compact admin-variant-row">
         <div class="admin-grid admin-grid--variant">
           <label class="field"><span>Цвет</span><select id="var-color-${i}">${p.colors.map((c) => `<option value="${c.id}"${v.colorId === c.id ? ' selected' : ''}>${escAttr(c.name)}</option>`).join('')}</select></label>
-          <label class="field"><span>Память</span><select id="var-storage-${i}">${storageLabels.map((l) => `<option value="${escAttr(l)}"${v.storage === l ? ' selected' : ''}>${escAttr(l)}</option>`).join('')}</select></label>
-          <label class="field"><span>SIM</span><select id="var-sim-${i}">${simList.map((s) => `<option value="${escAttr(s)}"${(v.simType || '') === s ? ' selected' : ''}>${escAttr(s || '—')}</option>`).join('')}</select></label>
+          ${showStorageColumn ? `<label class="field"><span>${storageColumnLabel}</span><select id="var-storage-${i}">${storageLabels.map((l) => `<option value="${escAttr(l)}"${v.storage === l ? ' selected' : ''}>${escAttr(l)}</option>`).join('')}</select></label>` : ''}
+          ${showSimColumn ? `<label class="field"><span>SIM</span><select id="var-sim-${i}">${simList.map((s) => `<option value="${escAttr(s)}"${(v.simType || '') === s ? ' selected' : ''}>${escAttr(s || '—')}</option>`).join('')}</select></label>` : ''}
           <label class="field"><span>Закупка ₽</span><input type="number" id="var-purchase-${i}" value="${v.purchasePrice || 0}" min="0" /></label>
           <label class="field"><span>Розница</span><input type="text" id="var-retail-${i}" value="${retail ? retail.toLocaleString('ru-RU') + ' ₽' : '—'}" readonly /></label>
           <button type="button" class="btn btn--danger btn--sm" data-del-var="${i}">✕</button>
         </div>
-        <small class="admin-hint">${escAttr(colorName)} · ${escAttr(v.storage)}${v.simType ? ` · ${escAttr(v.simType)}` : ''}</small>
+        <small class="admin-hint">${hintParts.map((part) => escAttr(part)).join(' · ')}</small>
       </div>
     `}).join('') || '<p class="admin-hint">Вставьте прайс поставщика выше или добавьте позиции вручную</p>'
 
@@ -1240,8 +1349,10 @@ function renderProductEditor(c) {
     const storageErr = validateProductStorage(p)
     const msgs = []
     if (result.merged) msgs.push(`Импортировано: ${result.merged}`)
+    if (result.removed) msgs.push(`Удалено устаревших: ${result.removed}`)
     if (result.skipped) msgs.push(`Пропущено (другая модель): ${result.skipped}`)
     if (result.errors.length) msgs.push(`Ошибки: ${result.errors.length}`)
+    if (typeof result.variantsAfter === 'number') msgs.push(`Всего конфигураций: ${result.variantsAfter}`)
     $('import-result').textContent = msgs.join(' · ')
     if (result.errors.length) {
       $('import-result').innerHTML = msgs.join(' · ') + '<br>' + result.errors.map((e) => `⚠ ${e.title}: ${e.message}`).join('<br>')
@@ -1472,7 +1583,7 @@ function renderPriceImport(c) {
     </div>
   `).join('')
 
-  c.innerHTML = section('Импорт прайса PDF (THLS)', `
+  c.innerHTML = section(`Импорт прайса PDF (THLS) ${betaBadge()}`, `
     <p class="admin-hint admin-hint--muted">Экспериментальный режим — может работать нестабильно. Рекомендуем текстовый импорт ниже.</p>
     <div class="admin-grid">
       <label class="field"><span>Наценка при импорте, %</span><input type="number" id="pi-markup" value="${pi.markupPercent ?? 15}" min="0" step="0.1" /></label>
@@ -1653,7 +1764,7 @@ function renderPriceImport(c) {
 function renderConfig(c) {
   const stamp = new Date().toISOString().slice(0, 10)
   c.innerHTML = `
-    ${section('Каталог для коллеги (товары + фото)', `
+    ${section(`Каталог для коллеги (товары + фото) ${betaBadge()}`, `
       <p class="admin-hint">Скачайте ZIP и передайте человеку, который наполняет карточки и загружает фото. Он работает в своей локальной админке, потом отдаёт ZIP обратно — вы импортируете сюда.</p>
       <p class="admin-hint"><strong>Слияние</strong> — обновить существующие товары по id/slug и добавить новые. <strong>Заменить всё</strong> — полностью перезаписать каталог.</p>
       <div class="admin-row admin-row--actions">

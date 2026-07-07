@@ -100,6 +100,51 @@ function renderCategories() {
   })
 }
 
+function getCategorySortMode(categoryId) {
+  return store?.categorySortModes?.[categoryId] === 'manual' ? 'manual' : 'auto'
+}
+
+function compareByPriceDesc(a, b) {
+  return getMinPrice(b) - getMinPrice(a)
+}
+
+function compareByManualOrder(a, b) {
+  const oa = typeof a.order === 'number' ? a.order : Infinity
+  const ob = typeof b.order === 'number' ? b.order : Infinity
+  if (oa !== ob) return oa - ob
+  return compareByPriceDesc(a, b)
+}
+
+function sortWithinCategory(products, categoryId) {
+  const cmp = getCategorySortMode(categoryId) === 'manual' ? compareByManualOrder : compareByPriceDesc
+  return [...products].sort((a, b) => {
+    const ua = isProductFullyUnavailable(a) ? 1 : 0
+    const ub = isProductFullyUnavailable(b) ? 1 : 0
+    if (ua !== ub) return ua - ub
+    return cmp(a, b)
+  })
+}
+
+function sortForAllCategories(products) {
+  const catOrder = (store?.categories || []).filter((c) => c.id !== 'all').map((c) => c.id)
+  const byCategory = new Map()
+  for (const p of products) {
+    if (!byCategory.has(p.category)) byCategory.set(p.category, [])
+    byCategory.get(p.category).push(p)
+  }
+  const result = []
+  for (const catId of catOrder) {
+    const group = byCategory.get(catId)
+    if (!group) continue
+    result.push(...sortWithinCategory(group, catId))
+    byCategory.delete(catId)
+  }
+  for (const [catId, group] of byCategory) {
+    result.push(...sortWithinCategory(group, catId))
+  }
+  return result
+}
+
 function renderProducts() {
   if (!els.productsGrid || !els.productsCount) return
 
@@ -115,10 +160,9 @@ function renderProducts() {
     return
   }
 
-  const sorted = [...filtered].sort((a, b) => {
-    const rank = (p) => (isProductFullyUnavailable(p) ? 1 : 0)
-    return rank(a) - rank(b)
-  })
+  const sorted = activeCategory === 'all'
+    ? sortForAllCategories(filtered)
+    : sortWithinCategory(filtered, activeCategory)
 
   els.productsGrid.innerHTML = sorted.map((p) => {
     const minPrice = getMinPrice(p)

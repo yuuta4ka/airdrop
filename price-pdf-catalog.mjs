@@ -634,6 +634,8 @@ function createEmptyProduct(name, meta, id) {
     markupFixed: 0,
     showCatalogSpec: false,
     importNames: name,
+    hidden: true,
+    isNew: true,
   }
 }
 
@@ -811,6 +813,7 @@ export function buildCatalogFromEntries(rawEntries, existingProducts, markup = {
     notFoundSet: new Set(),
     skippedVariantSamples: [],
     errors: [],
+    productSummaries: [],
   }
 
   const productMap = new Map()
@@ -832,6 +835,12 @@ export function buildCatalogFromEntries(rawEntries, existingProducts, markup = {
 
   let nextId = Math.max(0, ...products.map((p) => p.id)) + 1
   const touchedProducts = new Set()
+  // Несколько строк прайса (например «iPhone 17» и «iPhone 17 Air» без своей карточки)
+  // могут через нечёткое сопоставление указывать на один и тот же товар — копим
+  // ключи вариантов и «было/стало» по product.id, а не по группе, иначе при удалении
+  // устаревших вариантов группы будут затирать варианты друг друга.
+  const importedVariantKeysByProduct = new Map()
+  const variantsBeforeByProduct = new Map()
 
   for (const { productName, meta, entries: groupEntries } of byProduct.values()) {
     const sampleLine = groupEntries[0]?.name || ''
@@ -849,7 +858,13 @@ export function buildCatalogFromEntries(rawEntries, existingProducts, markup = {
       stats.productsCreated += 1
     }
 
-    const pdfVariantKeys = new Set()
+    if (!variantsBeforeByProduct.has(product.id)) {
+      variantsBeforeByProduct.set(product.id, product.variants.length)
+    }
+    if (!importedVariantKeysByProduct.has(product.id)) {
+      importedVariantKeysByProduct.set(product.id, new Set())
+    }
+    const importedVariantKeys = importedVariantKeysByProduct.get(product.id)
 
     for (const entry of groupEntries) {
       try {
@@ -864,6 +879,7 @@ export function buildCatalogFromEntries(rawEntries, existingProducts, markup = {
             if (stats.skippedVariantSamples.length < 12) stats.skippedVariantSamples.push(entry.name)
             continue
           }
+          importedVariantKeys.add(variantKey(variant))
           const idx = product.variants.findIndex((v) => variantKey(v) === variantKey(variant))
           if (idx < 0) {
             if (options.upsertVariants) {
@@ -895,7 +911,7 @@ export function buildCatalogFromEntries(rawEntries, existingProducts, markup = {
           stats.skippedVariants += 1
           continue
         }
-        pdfVariantKeys.add(variantKey(variant))
+        importedVariantKeys.add(variantKey(variant))
         const action = upsertVariant(product, variant, entry.price, markup)
         if (action === 'added') stats.variantsAdded += 1
         else stats.variantsUpdated += 1
@@ -905,10 +921,26 @@ export function buildCatalogFromEntries(rawEntries, existingProducts, markup = {
       }
     }
 
-    if (!pricesOnly && pdfVariantKeys.size) {
+  }
+
+  const replaceVariants = options.replaceVariants !== false
+  for (const product of products) {
+    const importedVariantKeys = importedVariantKeysByProduct.get(product.id)
+    if (!importedVariantKeys) continue
+    if (replaceVariants && importedVariantKeys.size) {
       const before = product.variants.length
-      product.variants = product.variants.filter((v) => pdfVariantKeys.has(variantKey(v)))
+      product.variants = product.variants.filter((v) => importedVariantKeys.has(variantKey(v)))
       stats.variantsRemoved += before - product.variants.length
+    }
+    if (touchedProducts.has(product.id)) {
+      const prices = product.variants.map((v) => Number(v.price)).filter((n) => n > 0)
+      stats.productSummaries.push({
+        name: product.name,
+        category: product.category,
+        variantsBefore: variantsBeforeByProduct.get(product.id) ?? 0,
+        variantsAfter: product.variants.length,
+        minPrice: prices.length ? Math.min(...prices) : null,
+      })
     }
   }
 

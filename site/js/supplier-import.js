@@ -228,21 +228,24 @@ export function parseSupplierPriceList(text, product) {
   return { imported, errors, skipped, total: pairs.length }
 }
 
+function variantMatchKey(v) {
+  return `${v.colorId}::${v.storage}::${v.simType || ''}`
+}
+
 export function applySupplierImport(product, text, markup = {}) {
   const { imported, errors, skipped, total } = parseSupplierPriceList(text, product)
   if (!imported.length) {
-    return { product, errors, skipped, total, merged: 0 }
+    return { product, errors, skipped, total, merged: 0, removed: 0 }
   }
 
   if (!product.variants) product.variants = []
+  const variantsBefore = product.variants.length
   let merged = 0
+  const importedKeys = new Set()
 
   for (const row of imported) {
-    const idx = product.variants.findIndex((v) =>
-      v.colorId === row.colorId &&
-      v.storage === row.storage &&
-      (v.simType || '') === (row.simType || '')
-    )
+    importedKeys.add(variantMatchKey(row))
+    const idx = product.variants.findIndex((v) => variantMatchKey(v) === variantMatchKey(row))
     const price = calcRetailFromPurchase(row.purchasePrice, markup)
     if (idx >= 0) {
       product.variants[idx].purchasePrice = row.purchasePrice
@@ -254,5 +257,9 @@ export function applySupplierImport(product, text, markup = {}) {
     merged += 1
   }
 
-  return { product, errors, skipped, total, merged }
+  const beforeFilter = product.variants.length
+  product.variants = product.variants.filter((v) => importedKeys.has(variantMatchKey(v)))
+  const removed = beforeFilter - product.variants.length
+
+  return { product, errors, skipped, total, merged, removed, variantsBefore, variantsAfter: product.variants.length }
 }
