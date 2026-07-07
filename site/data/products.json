@@ -193,35 +193,35 @@
           "storage": "1 ТБ",
           "simType": "eSIM + SIM",
           "purchasePrice": 124500,
-          "price": 138900
+          "price": 139900
         },
         {
           "colorId": "blue",
           "storage": "1 ТБ",
           "simType": "eSIM only",
           "purchasePrice": 120500,
-          "price": 134900
+          "price": 135900
         },
         {
           "colorId": "orange",
           "storage": "512 ГБ",
           "simType": "eSIM only",
           "purchasePrice": 102600,
-          "price": 114900
+          "price": 115900
         },
         {
           "colorId": "orange",
           "storage": "512 ГБ",
           "simType": "eSIM + SIM",
           "purchasePrice": 109000,
-          "price": 121900
+          "price": 122900
         },
         {
           "colorId": "blue",
           "storage": "512 ГБ",
           "simType": "eSIM + SIM",
           "purchasePrice": 110700,
-          "price": 123900
+          "price": 124900
         },
         {
           "colorId": "blue",
@@ -242,7 +242,7 @@
           "storage": "256 ГБ",
           "simType": "eSIM only",
           "purchasePrice": 84000,
-          "price": 93900
+          "price": 94900
         },
         {
           "colorId": "blue",
@@ -338,13 +338,6 @@
           "hex": "#b8a8d8",
           "image": "assets/products/aaf891bb9bd2e85d9f42c857050d91c87a1cc49830176911f7c6c261e6294098.jpg.webp",
           "importNames": ""
-        },
-        {
-          "id": "light-gold",
-          "name": "Light Gold",
-          "hex": "#888888",
-          "image": "",
-          "importNames": "Light Gold"
         }
       ],
       "storage": [
@@ -375,7 +368,7 @@
           "storage": "256 ГБ",
           "simType": "eSIM + SIM",
           "purchasePrice": 66200,
-          "price": 73900
+          "price": 74900
         },
         {
           "colorId": "green",
@@ -396,7 +389,7 @@
           "storage": "256 ГБ",
           "simType": "eSIM only",
           "purchasePrice": 69000,
-          "price": 76900
+          "price": 77900
         },
         {
           "colorId": "lavender",
@@ -424,7 +417,7 @@
           "storage": "256 ГБ",
           "simType": "eSIM only",
           "purchasePrice": 68100,
-          "price": 75900
+          "price": 76900
         }
       ],
       "sizes": [],
@@ -432,6 +425,20 @@
         {
           "colorId": "green",
           "simType": "eSIM + SIM",
+          "storageLabel": "256 ГБ",
+          "qty": 1,
+          "note": "В наличии"
+        },
+        {
+          "colorId": "white",
+          "simType": "eSIM only",
+          "storageLabel": "256 ГБ",
+          "qty": 1,
+          "note": "В наличии"
+        },
+        {
+          "colorId": "lavender",
+          "simType": "eSIM only",
           "storageLabel": "256 ГБ",
           "qty": 1,
           "note": "В наличии"
@@ -497,13 +504,6 @@
           "hex": "#888888",
           "image": "assets/products/0dfebbfdb98e7d9d5a716fcc2ae849859267a29a5fca9078bb42c9ad5d6ee9fe.jpg.webp",
           "importNames": "Ultramarine"
-        },
-        {
-          "id": "desert",
-          "name": "Desert",
-          "hex": "#888888",
-          "image": "",
-          "importNames": "Desert"
         }
       ],
       "storage": [
@@ -522,6 +522,20 @@
           "storageLabel": "128 ГБ",
           "qty": 1,
           "note": "В наличии"
+        },
+        {
+          "colorId": "black",
+          "simType": "eSIM + SIM",
+          "storageLabel": "128 ГБ",
+          "qty": 1,
+          "note": "В наличии"
+        },
+        {
+          "colorId": "black",
+          "simType": "eSIM + SIM",
+          "storageLabel": "256 ГБ",
+          "qty": 1,
+          "note": "В наличии"
         }
       ],
       "variants": [
@@ -537,7 +551,7 @@
           "storage": "128 ГБ",
           "simType": "eSIM + SIM",
           "purchasePrice": 53600,
-          "price": 59900
+          "price": 60900
         },
         {
           "colorId": "pink",
@@ -552,20 +566,6 @@
           "simType": "eSIM + SIM",
           "purchasePrice": 53700,
           "price": 60900
-        },
-        {
-          "colorId": "desert",
-          "storage": "256 ГБ",
-          "simType": "eSIM + SIM",
-          "purchasePrice": 87900,
-          "price": 98900
-        },
-        {
-          "colorId": "white",
-          "storage": "128 ГБ",
-          "simType": "eSIM + SIM",
-          "purchasePrice": 70900,
-          "price": 79900
         }
       ],
       "images": [
@@ -1127,17 +1127,17 @@
       "colors": [
         {
           "id": "icy",
-          "name": "Icy Blue",
+          "name": "Sky Blue",
           "hex": "#c8dce8",
           "image": "assets/products/4bd0a2cc846a0d9421fc4eac43a1889cb2a028dd1dea06cc63db4edd8f9bb7f8.jpg.webp",
           "importNames": "Icy Blue"
         },
         {
           "id": "navy",
-          "name": "Navy",
+          "name": "Cobalt Violet",
           "hex": "#2a3a5c",
           "image": "assets/products/ff6693a8bedb119ae141c5d0dc6a068ab8db269ce9c91b31822dc1552e33212b.jpg.webp",
-          "importNames": "Navy"
+          "importNames": "Cobalt Violet"
         },
         {
           "id": "silver",
@@ -1152,13 +1152,6 @@
           "hex": "#000000",
           "image": "assets/products/df2a12a0f8852836fcd6961c434c3ffaefba5f4112c8d5714a39e97d10bff756.jpg.webp",
           "importNames": "Black"
-        },
-        {
-          "id": "cobalt-violet",
-          "name": "Cobalt Violet",
-          "hex": "#888888",
-          "image": "",
-          "importNames": "Cobalt Violet"
         }
       ],
       "storage": [
@@ -1180,7 +1173,7 @@
           "storage": "256 ГБ",
           "simType": "",
           "purchasePrice": 50600,
-          "price": 56900
+          "price": 65900
         }
       ],
       "images": [
