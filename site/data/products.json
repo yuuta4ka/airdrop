@@ -599,8 +599,8 @@
           "colorId": "teal",
           "storage": "128 ГБ",
           "simType": "eSIM + SIM",
-          "purchasePrice": 53700,
-          "price": 60900
+          "purchasePrice": 52700,
+          "price": 58900
         },
         {
           "colorId": "ultramarine",
@@ -2944,7 +2944,7 @@
           "storage": "40 мм",
           "simType": "",
           "purchasePrice": 18500,
-          "price": 21900
+          "price": 20900
         }
       ],
       "sizes": [
@@ -3056,38 +3056,31 @@
       "category": "samsung",
       "brand": "Samsung",
       "badge": null,
-      "image": "",
-      "coverImage": "",
+      "image": "assets/products/1-mrgn8ngf-8agxlc.webp",
+      "coverImage": "assets/products/1-mrgn8ngf-8agxlc.webp",
       "description": "Galaxy Z Fold 7 — оригинальная техника, под заказ от 3–5 дней.",
       "simTypes": null,
       "simModifiers": [],
       "colors": [
         {
-          "id": "default",
-          "name": "Стандарт",
-          "hex": "#888888",
-          "image": "",
-          "importNames": ""
-        },
-        {
           "id": "blue-shadow",
-          "name": "Blue Shadow",
-          "hex": "#888888",
-          "image": "",
+          "name": "Синий",
+          "hex": "#283661",
+          "image": "assets/products/cce212091eaccd4e4fbc062c00c87970c965c0c625c8f0bd59af328e1dd8205c.jpg-mrgna4kc-flgv4j.webp",
           "importNames": "Blue Shadow"
         },
         {
           "id": "silver-shadow",
-          "name": "Silver Shadow",
-          "hex": "#888888",
-          "image": "",
+          "name": "Серый",
+          "hex": "#a7a7a7",
+          "image": "assets/products/1-mrgn8u5u-6y04mh.webp",
           "importNames": "Silver Shadow"
         },
         {
           "id": "jet-black",
-          "name": "Jet Black",
-          "hex": "#888888",
-          "image": "",
+          "name": "Черный",
+          "hex": "#2a292d",
+          "image": "assets/products/7f6292bc8736f5d5fd8fc543ad61f4ed25fca8d3b1184ff3f5b0e3da8ad32420.jpg-mrgn9si2-bbw87m.webp",
           "importNames": "Jet Black"
         }
       ],
@@ -3102,30 +3095,46 @@
           "storage": "256 ГБ",
           "simType": "",
           "purchasePrice": 90500,
-          "price": 100900
+          "price": 117900
         },
         {
           "colorId": "silver-shadow",
           "storage": "256 ГБ",
           "simType": "",
           "purchasePrice": 90500,
-          "price": 100900
+          "price": 117900
         },
         {
           "colorId": "jet-black",
           "storage": "256 ГБ",
           "simType": "",
           "purchasePrice": 90500,
-          "price": 100900
+          "price": 117900
         }
       ],
-      "sizes": null,
+      "sizes": [],
       "stock": [],
-      "images": [],
-      "markupPercent": 15,
+      "images": [
+        "assets/products/1-mrgn8ngf-8agxlc.webp",
+        "assets/products/2-mrgn8ngl-315tub.webp",
+        "assets/products/3-mrgn8ngp-2oravq.webp",
+        "assets/products/4-mrgn8ngt-kutjt6.webp",
+        "assets/products/5-mrgn8ngy-aklqhy.webp",
+        "assets/products/6-mrgn8nh3-51a6zf.webp",
+        "assets/products/7.jpg-mrgn8nh7-6x1gp7.webp",
+        "assets/products/8-mrgn8nh9-g7ynvd.webp",
+        "assets/products/9.jpg-mrgn8nhd-n2p8u8.webp",
+        "assets/products/10-mrgn8nhg-m3i39l.webp",
+        "assets/products/11-mrgn8nhl-fc7jn9.webp",
+        "assets/products/12-mrgn8nhv-lwirvz.webp",
+        "assets/products/13-mrgn8ni4-rc7da4.webp",
+        "assets/products/14-mrgn8nin-9pqsuq.webp",
+        "assets/products/15-mrgn8nis-iljxph.webp"
+      ],
+      "markupPercent": 30,
       "markupFixed": 0,
       "showCatalogSpec": false,
-      "importNames": "Galaxy Z Fold 7",
+      "importNames": "Samsung Galaxy Z Fold 7\"",
       "hidden": false,
       "isNew": false
     },
@@ -4718,25 +4727,25 @@
           "colorId": "c1783788416254",
           "storage": "256 ГБ",
           "simType": "eSIM only",
+          "purchasePrice": 68400,
+          "price": 78900
+        },
+        {
+          "colorId": "c1783788419371",
+          "storage": "256 ГБ",
+          "simType": "eSIM only",
           "purchasePrice": 67800,
           "price": 78900
         },
         {
-          "colorId": "c1783788416254",
+          "colorId": "c1783788417287",
           "storage": "256 ГБ",
           "simType": "eSIM only",
           "purchasePrice": 67000,
           "price": 77900
         },
         {
-          "colorId": "c1783788416254",
-          "storage": "256 ГБ",
-          "simType": "eSIM only",
-          "purchasePrice": 67000,
-          "price": 77900
-        },
-        {
-          "colorId": "c1783788416254",
+          "colorId": "c1783788418120",
           "storage": "256 ГБ",
           "simType": "eSIM only",
           "purchasePrice": 68400,

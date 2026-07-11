@@ -3,7 +3,7 @@ import fs from 'node:fs'
 import path from 'node:path'
 import { fileURLToPath } from 'node:url'
 import { buildCatalogFromPdfText, extractTextFromPdfBuffer } from './price-pdf-catalog.mjs'
-import { buildCatalogFromPriceText, PRICE_JSONL_PROMPT } from './price-text-import.mjs'
+import { buildCatalogFromPriceText, buildPriceJsonlPrompt, defaultPromptCategoryRows } from './price-text-import.mjs'
 import {
   buildBackupPayload,
   mergeProducts,
@@ -13,6 +13,7 @@ import {
 import { applyCatalogZip, buildCatalogZip } from './catalog-zip.mjs'
 
 const __dirname = path.dirname(fileURLToPath(import.meta.url))
+const SERVER_STARTED_AT = new Date().toISOString()
 const SITE_DIR = path.join(__dirname, 'site')
 const STORE_FILE = path.join(SITE_DIR, 'data', 'store.json')
 const PRODUCTS_FILE = path.join(SITE_DIR, 'data', 'products.json')
@@ -510,18 +511,42 @@ const server = http.createServer(async (req, res) => {
   }
 
   if (p === '/api/ping' && req.method === 'GET') {
+    const store = readStore()
     return sendJson(res, 200, {
       ok: true,
       importPdf: true,
       importPriceText: true,
       importCatalogZip: true,
       domPolyfill: true,
+      startedAt: SERVER_STARTED_AT,
+      lastTextImportAt: store.priceImport?.lastTextImportAt || null,
+      lastPdfImportAt: store.priceImport?.lastImportAt || null,
     })
   }
 
-  if (p === '/api/price-jsonl-prompt' && req.method === 'GET') {
+  if (p === '/api/price-jsonl-prompt' && (req.method === 'GET' || req.method === 'POST')) {
     if (!checkAuth(req)) return sendJson(res, 401, { error: 'Неверный пароль' })
-    return sendJson(res, 200, { prompt: PRICE_JSONL_PROMPT })
+    let categories = []
+    if (req.method === 'POST') {
+      try {
+        const body = JSON.parse(await readBody(req))
+        categories = Array.isArray(body.categories) ? body.categories : []
+      } catch {
+        return sendJson(res, 400, { error: 'Некорректный JSON' })
+      }
+    } else {
+      const store = readStore()
+      categories = (store.priceImport?.promptCategories || [])
+        .filter((row) => row?.selected && row?.name)
+        .map((row) => row.name)
+      if (!categories.length) {
+        categories = defaultPromptCategoryRows().filter((r) => r.selected).map((r) => r.name)
+      }
+    }
+    return sendJson(res, 200, {
+      prompt: buildPriceJsonlPrompt(categories),
+      categories,
+    })
   }
 
   if (p === '/api/import-price-pdf' && req.method === 'POST') {
@@ -711,14 +736,23 @@ const server = http.createServer(async (req, res) => {
     if (!checkAuth(req)) return sendJson(res, 401, { error: 'Неверный пароль' })
     try {
       const { filename, data } = JSON.parse(await readBody(req))
-      const safe = path.basename(filename).replace(/[^a-zA-Z0-9._-]/g, '_')
-      const dir = path.join(SITE_DIR, 'assets', 'products')
-      fs.mkdirSync(dir, { recursive: true })
       const match = data.match(/^data:image\/(\w+);base64,(.+)$/)
       if (!match) return sendJson(res, 400, { error: 'Некорректное изображение' })
-      const out = path.join(dir, safe)
+
+      const mimeExt = String(match[1] || '').toLowerCase().replace('jpeg', 'jpg')
+      const rawName = path.basename(String(filename || 'image'))
+      const safeBase = rawName.replace(/[^a-zA-Z0-9._-]/g, '_')
+      const fromName = path.extname(safeBase)
+      const ext = (fromName || (mimeExt ? `.${mimeExt}` : '.jpg')).toLowerCase()
+      const stem = (fromName ? path.basename(safeBase, fromName) : safeBase).slice(0, 80) || 'image'
+      // Уникальное имя: старые файлы не трогаем, одинаковые исходные имена не перезаписывают друг друга
+      const unique = `${stem}-${Date.now().toString(36)}-${Math.random().toString(36).slice(2, 8)}${ext}`
+
+      const dir = path.join(SITE_DIR, 'assets', 'products')
+      fs.mkdirSync(dir, { recursive: true })
+      const out = path.join(dir, unique)
       fs.writeFileSync(out, Buffer.from(match[2], 'base64'))
-      return sendJson(res, 200, { path: `assets/products/${safe}` })
+      return sendJson(res, 200, { path: `assets/products/${unique}` })
     } catch {
       return sendJson(res, 400, { error: 'Ошибка загрузки' })
     }

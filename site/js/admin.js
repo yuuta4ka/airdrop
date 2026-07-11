@@ -21,6 +21,64 @@ const DEFAULT_CATEGORY_LABELS = {
   huawei: 'Huawei',
 }
 
+const DEFAULT_PROMPT_CATEGORY_ROWS = [
+  { name: 'iPhone 17 Pro Max', selected: true },
+  { name: 'iPhone 17 Pro', selected: true },
+  { name: 'iPhone 17', selected: true },
+  { name: 'iPhone 17 Air', selected: true },
+  { name: 'iPhone 16', selected: true },
+  { name: 'iPhone 15 / 14 / 13', selected: true },
+  { name: 'Apple iPad', selected: true },
+  { name: 'Apple MacBook', selected: true },
+  { name: 'Apple Watch S / SE', selected: true },
+  { name: 'Apple Watch Ultra', selected: true },
+  { name: 'Apple AirPods / Marshall', selected: true },
+  { name: 'Apple iPhone (обменки в коробке, не активирован)', selected: false },
+  { name: 'Samsung Серия Z', selected: true },
+  { name: 'Samsung Серия S26', selected: true },
+  { name: 'Samsung Серия S25', selected: true },
+  { name: 'Samsung Серия S25Fe', selected: true },
+  { name: 'Samsung Серия A', selected: true },
+  { name: 'Умные очки Ray Ban', selected: true },
+  { name: 'Аксессуары Apple Original', selected: false },
+  { name: 'Премиум Аксессуры Pitaka', selected: false },
+  { name: 'PlayStation', selected: false },
+  { name: 'Игры на PlayStation', selected: false },
+  { name: 'Яндекс Станции', selected: false },
+  { name: 'Xiaomi', selected: true },
+  { name: 'Poco', selected: true },
+  { name: 'Huawei', selected: true },
+  { name: 'Умные устройства Huawei', selected: true },
+  { name: 'Honor', selected: true },
+  { name: 'Redmi 15', selected: true },
+  { name: 'Наушники Китай', selected: true },
+  { name: 'Google', selected: true },
+  { name: 'Samsung Watch', selected: true },
+  { name: 'JBL и Marshall Колонки', selected: true },
+  { name: 'Samsung Buds', selected: true },
+  { name: 'Redmi 14', selected: true },
+  { name: 'OnePlus', selected: true },
+  { name: 'Защитные Стекла', selected: false },
+  { name: 'Планшеты', selected: true },
+  { name: 'Провода и блоки', selected: false },
+  { name: 'Doogee', selected: false },
+  { name: 'Камера', selected: false },
+  { name: 'Муляжи', selected: false },
+  { name: 'Кнопочные Телефоны', selected: false },
+  { name: 'Коробки и пакеты', selected: false },
+  { name: 'AirPods (запчасти)', selected: false },
+  { name: 'Микрофоны', selected: false },
+  { name: 'Карты Памяти', selected: false },
+  { name: 'USB', selected: false },
+  { name: 'SSD', selected: false },
+  { name: 'Кнопочные Телефоны Nokia', selected: false },
+  { name: 'Power Bank', selected: false },
+  { name: 'Проекторы Umiio', selected: false },
+  { name: 'Наушники', selected: true },
+  { name: 'Мини Телефоны', selected: false },
+  { name: 'Ноутбуки', selected: false },
+]
+
 function ensureStoreDefaults() {
   if (!storeData) return
   storeData.categories?.forEach((cat) => {
@@ -30,6 +88,12 @@ function ensureStoreDefaults() {
   })
   if (!storeData.categorySortModes || typeof storeData.categorySortModes !== 'object') {
     storeData.categorySortModes = {}
+  }
+  if (!storeData.priceImport || typeof storeData.priceImport !== 'object') {
+    storeData.priceImport = { markupPercent: 15, markupFixed: 0 }
+  }
+  if (!Array.isArray(storeData.priceImport.promptCategories) || !storeData.priceImport.promptCategories.length) {
+    storeData.priceImport.promptCategories = DEFAULT_PROMPT_CATEGORY_ROWS.map((r) => ({ ...r }))
   }
 }
 
@@ -52,6 +116,7 @@ const TITLES = {
   categories: 'Категории',
   products: 'Товары',
   'price-import': 'Импорт прайса',
+  'price-prompt': 'Промпт для прайса',
   theme: 'Темы и цвета',
   installment: 'Рассрочка',
   orders: 'Заказы',
@@ -178,11 +243,13 @@ async function saveProducts() {
 
 function scrollAdminToTop() {
   const content = $('admin-content')
+  if (content) {
+    content.scrollTop = 0
+    content.scrollTo?.(0, 0)
+  }
+  window.scrollTo(0, 0)
   requestAnimationFrame(() => {
-    if (content) {
-      content.scrollTop = 0
-      content.focus({ preventScroll: true })
-    }
+    if (content) content.scrollTop = 0
     window.scrollTo(0, 0)
   })
 }
@@ -210,7 +277,7 @@ function showApp() {
     b.classList.toggle('admin-nav__btn--active', b.dataset.tab === activeTab)
   })
   $('tab-title').textContent = TITLES[activeTab] || TITLES.general
-  $('btn-save').style.display = activeTab === 'config' ? 'none' : ''
+  $('btn-save').style.display = (activeTab === 'config' || activeTab === 'orders') ? 'none' : ''
   renderTab()
   scrollAdminToTop()
 }
@@ -576,10 +643,31 @@ document.querySelectorAll('.admin-nav__btn').forEach((btn) => {
     editingProductIdx = null
     document.querySelectorAll('.admin-nav__btn').forEach((b) => b.classList.toggle('admin-nav__btn--active', b === btn))
     $('tab-title').textContent = TITLES[activeTab]
-    $('btn-save').style.display = activeTab === 'config' ? 'none' : ''
+    $('btn-save').style.display = (activeTab === 'config' || activeTab === 'orders') ? 'none' : ''
     renderTab()
   })
 })
+
+function formatRelativeAgo(iso) {
+  if (!iso) return ''
+  const t = new Date(iso).getTime()
+  if (Number.isNaN(t)) return ''
+  const diffSec = Math.max(0, Math.floor((Date.now() - t) / 1000))
+  if (diffSec < 60) return 'только что'
+  const mins = Math.floor(diffSec / 60)
+  if (mins < 60) return `${mins} мин. назад`
+  const hours = Math.floor(mins / 60)
+  if (hours < 24) return `${hours} ч. назад`
+  const days = Math.floor(hours / 24)
+  return `${days} дн. назад`
+}
+
+function formatWhenWithAgo(iso) {
+  if (!iso) return 'ещё не было'
+  const abs = new Date(iso).toLocaleString('ru-RU')
+  const ago = formatRelativeAgo(iso)
+  return ago ? `${ago} · ${abs}` : abs
+}
 
 // ─── Render tabs ───
 function renderTab() {
@@ -592,6 +680,7 @@ function renderTab() {
   else if (activeTab === 'categories') renderCategories(c)
   else if (activeTab === 'products') renderProducts(c)
   else if (activeTab === 'price-import') renderPriceImport(c)
+  else if (activeTab === 'price-prompt') renderPricePrompt(c)
   else if (activeTab === 'theme') renderTheme(c)
   else if (activeTab === 'installment') renderInstallment(c)
   else if (activeTab === 'orders') renderOrders(c)
@@ -602,7 +691,14 @@ function renderTab() {
 
 function renderGeneral(c) {
   const s = storeData.settings
-  c.innerHTML = section('Магазин', `
+  const pi = storeData.priceImport || {}
+  c.innerHTML = section('Статус сервера', `
+    <div class="admin-status-panel" id="server-status-panel">
+      <div class="admin-status-row"><span>Сайт поднят</span><strong id="server-started-at">загрузка…</strong></div>
+      <div class="admin-status-row"><span>Последний текстовый импорт прайса</span><strong>${escAttr(formatWhenWithAgo(pi.lastTextImportAt))}</strong></div>
+      <div class="admin-status-row"><span>Последний PDF-импорт прайса</span><strong>${escAttr(formatWhenWithAgo(pi.lastImportAt))}</strong></div>
+    </div>
+  `) + section('Магазин', `
     <div class="admin-grid">${field('Название', 'g-name', s.name)}${field('Слоган', 'g-tagline', s.tagline)}${field('Логотип (путь к файлу)', 'g-logo', s.logo)}${field('Бренд для отзывов', 'g-reviewBrand', s.reviewBrand)}</div>
   `) + section('Безопасность', `
     ${passwordField('Текущий пароль', 'g-password-view', storeData.adminPassword, { hint: 'Нажмите 👁 чтобы показать или скрыть' })}
@@ -620,6 +716,17 @@ function renderGeneral(c) {
     </div>
   `)
   bindPasswordToggles(c)
+
+  fetch('/api/ping')
+    .then((r) => r.json())
+    .then((data) => {
+      const el = $('server-started-at')
+      if (el && data?.startedAt) el.textContent = formatWhenWithAgo(data.startedAt)
+    })
+    .catch(() => {
+      const el = $('server-started-at')
+      if (el) el.textContent = 'не удалось получить'
+    })
 
   $('btn-request-change-code').onclick = async () => {
     try {
@@ -914,6 +1021,7 @@ function renderSortOrderList(categoryId) {
 
 function renderProducts(c) {
   if (editingProductIdx !== null) { renderProductEditor(c); return }
+  scrollAdminToTop()
   const all = productsData.products
   const hiddenCount = all.filter((p) => p.hidden).length
   const newCount = all.filter((p) => p.isNew).length
@@ -1020,6 +1128,7 @@ function renderProducts(c) {
 }
 
 function renderProductEditor(c) {
+  scrollAdminToTop()
   const p = productsData.products[editingProductIdx]
   if (!p.images) p.images = p.image ? [p.image] : []
   const showStorage = !isAccessoryCategory(p.category) || getDisplayStorage(p).length > 0
@@ -1127,10 +1236,13 @@ function renderProductEditor(c) {
     })
   }
 
-  const renderGallery = () => {
-    if ($('gallery-list')?.childElementCount) {
-      p.images = (p.images || []).map((_, i) => val(`gal-url-${i}`) || p.images[i]).filter(Boolean)
-    }
+  const syncGalleryFromDom = () => {
+    if (!$('gallery-list')?.childElementCount) return
+    p.images = (p.images || []).map((_, i) => val(`gal-url-${i}`) || p.images[i]).filter(Boolean)
+  }
+
+  const renderGallery = (opts = {}) => {
+    if (!opts.skipCollect) syncGalleryFromDom()
     if (!p.coverImage) p.coverImage = p.image || p.images?.[0] || ''
     $('gallery-list').innerHTML = p.images.map((src, i) => {
       const isCover = p.coverImage && src === p.coverImage
@@ -1154,7 +1266,7 @@ function renderProductEditor(c) {
         if (src) {
           p.coverImage = src
           p.image = src
-          renderGallery()
+          renderGallery({ skipCollect: true })
           const colorMatch = p.colors?.find((c) => c.image === src || c.images?.includes(src))
           status(colorMatch
             ? `Главное фото выбрано (цвет «${colorMatch.name}»)`
@@ -1164,20 +1276,26 @@ function renderProductEditor(c) {
     })
 
     $('gallery-list').querySelectorAll('[data-del-gal]').forEach((b) => {
-      b.onclick = () => { p.images.splice(Number(b.dataset.delGal), 1); renderGallery() }
+      b.onclick = () => {
+        syncGalleryFromDom()
+        p.images.splice(Number(b.dataset.delGal), 1)
+        renderGallery({ skipCollect: true })
+      }
     })
     $('gallery-list').querySelectorAll('[data-gal-up]').forEach((b) => {
       b.onclick = () => {
+        syncGalleryFromDom()
         const i = Number(b.dataset.galUp)
         ;[p.images[i - 1], p.images[i]] = [p.images[i], p.images[i - 1]]
-        renderGallery()
+        renderGallery({ skipCollect: true })
       }
     })
     $('gallery-list').querySelectorAll('[data-gal-down]').forEach((b) => {
       b.onclick = () => {
+        syncGalleryFromDom()
         const i = Number(b.dataset.galDown)
         ;[p.images[i + 1], p.images[i]] = [p.images[i], p.images[i + 1]]
-        renderGallery()
+        renderGallery({ skipCollect: true })
       }
     })
   }
@@ -1192,14 +1310,14 @@ function renderProductEditor(c) {
         const path = await uploadImage(file)
         p.images.push(path)
       }
-      renderGallery()
+      renderGallery({ skipCollect: true })
       status('Фото добавлены в галерею', 'success')
     } catch (err) { status(err.message, 'error') }
     e.target.value = ''
   }
 
-  const renderColors = () => {
-    if ($('color-list')?.childElementCount) collectProductColorsStorageSim(p)
+  const renderColors = (opts = {}) => {
+    if (!opts.skipCollect && $('color-list')?.childElementCount) collectProductColorsStorageSim(p)
     $('color-list').innerHTML = p.colors.map((col, i) => `
       <div class="admin-card admin-card--compact">
         <div class="admin-grid admin-grid--4">
@@ -1209,14 +1327,28 @@ function renderProductEditor(c) {
           <button type="button" class="btn btn--danger btn--sm" data-del-col="${i}">Удалить</button>
         </div>
         <div class="admin-row admin-row--color-photo">
-          <label class="field field--grow"><span>Фото цвета (URL)</span><input type="text" id="col-image-${i}" value="${escAttr(col.image || '')}" placeholder="assets/products/..." /></label>
-          <label class="btn btn--secondary admin-upload-btn btn--sm">Загрузить<input type="file" id="col-upload-${i}" accept="image/*" hidden /></label>
+          ${col.image
+            ? `<img src="${escAttr(col.image)}" alt="" class="admin-color-preview" />`
+            : '<span class="admin-hint" style="margin:0">Нет фото</span>'}
+          <label class="btn btn--secondary admin-upload-btn btn--sm">Загрузить фото<input type="file" id="col-upload-${i}" accept="image/*" hidden /></label>
+          ${col.image ? `<button type="button" class="btn btn--ghost btn--sm" data-clear-col-img="${i}">Убрать</button>` : ''}
         </div>
-        ${col.image ? `<img src="${escAttr(col.image)}" alt="" class="admin-color-preview" />` : ''}
       </div>
     `).join('')
     $('color-list').querySelectorAll('[data-del-col]').forEach((b) => {
-      b.onclick = () => { p.colors.splice(Number(b.dataset.delCol), 1); renderColors() }
+      b.onclick = () => {
+        collectProductColorsStorageSim(p)
+        p.colors.splice(Number(b.dataset.delCol), 1)
+        renderColors({ skipCollect: true })
+      }
+    })
+    $('color-list').querySelectorAll('[data-clear-col-img]').forEach((b) => {
+      b.onclick = () => {
+        collectProductColorsStorageSim(p)
+        const idx = Number(b.dataset.clearColImg)
+        if (p.colors[idx]) p.colors[idx].image = ''
+        renderColors({ skipCollect: true })
+      }
     })
     p.colors.forEach((_, i) => {
       const upload = $(`col-upload-${i}`)
@@ -1224,28 +1356,23 @@ function renderProductEditor(c) {
       upload.onchange = async (e) => {
         const file = e.target.files[0]
         if (!file) return
-        const reader = new FileReader()
-        reader.onload = async () => {
-          try {
-            const res = await fetch('/api/upload', {
-              method: 'POST',
-              headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${getToken()}` },
-              body: JSON.stringify({ filename: file.name, data: reader.result }),
-            })
-            const data = await res.json()
-            if (!res.ok) throw new Error(data.error)
-            p.colors[i].image = data.path
-            $(`col-image-${i}`).value = data.path
-            renderColors()
-            status('Фото цвета загружено', 'success')
-          } catch (err) { status(err.message, 'error') }
-        }
-        reader.readAsDataURL(file)
+        try {
+          collectProductColorsStorageSim(p)
+          const path = await uploadImage(file)
+          p.colors[i].image = path
+          renderColors({ skipCollect: true })
+          status('Фото цвета загружено', 'success')
+        } catch (err) { status(err.message, 'error') }
+        e.target.value = ''
       }
     })
   }
   renderColors()
-  $('add-color').onclick = () => { p.colors.push({ id: `c${Date.now()}`, name: '', hex: '#888888', image: '', importNames: '' }); renderColors() }
+  $('add-color').onclick = () => {
+    if ($('color-list')?.childElementCount) collectProductColorsStorageSim(p)
+    p.colors.push({ id: `c${Date.now()}`, name: '', hex: '#888888', image: '', importNames: '' })
+    renderColors({ skipCollect: true })
+  }
 
   const renderStorage = () => {
     if (!$('storage-list')) return
@@ -1257,7 +1384,12 @@ function renderProductEditor(c) {
       </div>
     `).join('')
     $('storage-list').querySelectorAll('[data-del-stor]').forEach((b) => {
-      b.onclick = () => { p.storage.splice(Number(b.dataset.delStor), 1); renderStorage(); renderVariants() }
+      b.onclick = () => {
+        syncStorageFromEditor(p)
+        p.storage.splice(Number(b.dataset.delStor), 1)
+        renderStorage()
+        renderVariants({ skipCollect: true })
+      }
     })
     $('storage-list').querySelectorAll('input').forEach((inp) => {
       inp.oninput = () => { syncStorageFromEditor(p); renderVariants() }
@@ -1279,8 +1411,8 @@ function renderProductEditor(c) {
     fixed: num('p-markup-fixed') || p.markupFixed || 0,
   })
 
-  const renderVariants = () => {
-    if ($('variant-list')?.querySelector('.admin-variant-row')) collectProductVariants(p)
+  const renderVariants = (opts = {}) => {
+    if (!opts.skipCollect && $('variant-list')?.querySelector('.admin-variant-row')) collectProductVariants(p)
     const markup = getMarkup()
     const storageLabels = (() => {
       const labels = getStorageLabelsFromEditor(p)
@@ -1323,7 +1455,11 @@ function renderProductEditor(c) {
     `}).join('') || '<p class="admin-hint">Вставьте прайс поставщика выше или добавьте позиции вручную</p>'
 
     $('variant-list').querySelectorAll('[data-del-var]').forEach((b) => {
-      b.onclick = () => { p.variants.splice(Number(b.dataset.delVar), 1); renderVariants() }
+      b.onclick = () => {
+        collectProductVariants(p)
+        p.variants.splice(Number(b.dataset.delVar), 1)
+        renderVariants({ skipCollect: true })
+      }
     })
 
     p.variants.forEach((_, i) => {
@@ -1378,7 +1514,11 @@ function renderProductEditor(c) {
     })
     renderVariants()
   }
-  $('recalc-variants').onclick = () => { collectProductVariants(p); renderVariants(); status('Цены пересчитаны', 'success') }
+  $('recalc-variants').onclick = () => {
+    collectProductVariants(p)
+    renderVariants({ skipCollect: true })
+    status('Цены пересчитаны', 'success')
+  }
   $('p-markup')?.addEventListener('input', () => renderVariants())
   $('p-markup-fixed')?.addEventListener('input', () => renderVariants())
 
@@ -1393,7 +1533,11 @@ function renderProductEditor(c) {
         </div>
       `).join('')
       $('sim-list').querySelectorAll('[data-del-sim]').forEach((b) => {
-        b.onclick = () => { p.simTypes.splice(Number(b.dataset.delSim), 1); renderSim() }
+        b.onclick = () => {
+          p.simTypes = p.simTypes.map((_, i) => val(`sim-type-${i}`))
+          p.simTypes.splice(Number(b.dataset.delSim), 1)
+          renderSim()
+        }
       })
     }
     renderSim()
@@ -1596,42 +1740,21 @@ function renderPriceImport(c) {
     <div class="pdf-import-sections">${sectionChecks}</div>
     <label class="btn btn--secondary admin-upload-btn">Выбрать PDF и импортировать<input type="file" id="import-pdf-file" accept=".pdf,application/pdf" hidden /></label>
     <p class="admin-hint" id="pdf-import-status"></p>
-    <p class="admin-hint" id="pdf-import-result">${pi.lastImportAt ? `Последний PDF: ${new Date(pi.lastImportAt).toLocaleString('ru-RU')}` : ''}</p>
+    <p class="admin-hint" id="pdf-import-result">${pi.lastImportAt ? `Последний PDF: ${escAttr(formatWhenWithAgo(pi.lastImportAt))}` : ''}</p>
   `) + section('Импорт прайса текстом', `
     <p class="admin-hint">Формат JSONL — по одному JSON на строку. Поля: <code>product</code>, <code>storage</code>, <code>color</code>, <code>sim</code>, <code>size</code>, <code>price</code>.</p>
     <p class="admin-hint">Пример: <code>{"product":"iPhone 16 Pro","storage":"128Gb","color":"Desert","sim":"Sim+eSim","price":98000}</code></p>
-    <div class="admin-row admin-row--actions" style="margin-bottom:12px">
-      <button type="button" class="btn btn--secondary" id="copy-price-jsonl-prompt">Скопировать промпт для PDF</button>
-    </div>
-    <p class="admin-hint admin-hint--muted">Промпт можно вставить в ChatGPT / Claude вместе с файлом <code>price.pdf</code> — получите готовый JSONL для вставки ниже.</p>
+    <p class="admin-hint admin-hint--muted">Промпт для LLM — во вкладке <strong>Промпт для прайса</strong>.</p>
     <label class="field"><span>Прайс (JSONL)</span>
       <textarea id="price-text-import" class="admin-textarea" rows="14" placeholder='{"product":"iPhone 17 Pro Max","storage":"256Gb","color":"Orange","sim":"eSim+eSim","price":90000}'></textarea>
     </label>
     <button type="button" class="btn btn--primary" id="import-price-text">Импортировать текст</button>
-    <p class="admin-hint" id="text-import-result">${pi.lastTextImportAt ? `Последний текстовый импорт: ${new Date(pi.lastTextImportAt).toLocaleString('ru-RU')}` : ''}</p>
+    <p class="admin-hint" id="text-import-result">${pi.lastTextImportAt ? `Последний текстовый импорт: ${escAttr(formatWhenWithAgo(pi.lastTextImportAt))}` : ''}</p>
   `)
 
   if (pi.lastTextImport && $('price-text-import')) {
     $('price-text-import').value = pi.lastTextImport
   }
-
-  $('copy-price-jsonl-prompt')?.addEventListener('click', async () => {
-    const btn = $('copy-price-jsonl-prompt')
-    try {
-      const res = await fetch('/api/price-jsonl-prompt', {
-        headers: { Authorization: `Bearer ${getToken()}` },
-      })
-      const data = await parseApiJson(res)
-      if (!res.ok) throw new Error(data?.error || 'Не удалось получить промпт')
-      await navigator.clipboard.writeText(data.prompt)
-      const prev = btn.textContent
-      btn.textContent = 'Скопировано'
-      status('Промпт скопирован — вставьте в чат вместе с price.pdf', 'success')
-      setTimeout(() => { btn.textContent = prev }, 2000)
-    } catch (err) {
-      status(err.message, 'error')
-    }
-  })
 
   const sectionInputs = () => [...c.querySelectorAll('.pdf-import-section')]
   const getSelectedSections = () => sectionInputs().filter((el) => el.checked).map((el) => el.value)
@@ -1782,6 +1905,180 @@ function renderPriceImport(c) {
       status(err.message, 'error')
     }
   }
+}
+
+function getPromptCategories() {
+  ensureStoreDefaults()
+  return storeData.priceImport.promptCategories
+}
+
+function syncPromptCategoriesFromDom() {
+  if (!$('prompt-categories-list')) return
+  const rows = [...document.querySelectorAll('.prompt-cat-row')].map((row) => ({
+    name: row.dataset.name || '',
+    selected: !!row.querySelector('.prompt-cat-check')?.checked,
+  })).filter((r) => r.name)
+  storeData.priceImport = storeData.priceImport || {}
+  storeData.priceImport.promptCategories = rows
+}
+
+function renderPricePrompt(c) {
+  ensureStoreDefaults()
+  const cats = getPromptCategories()
+  const selectedCount = cats.filter((r) => r.selected).length
+
+  const listHtml = cats.length
+    ? cats.map((row, idx) => `
+      <div class="prompt-cat-row" data-name="${escAttr(row.name)}" data-idx="${idx}">
+        <label class="prompt-cat-label">
+          <input type="checkbox" class="prompt-cat-check" ${row.selected ? 'checked' : ''} />
+          <span>${escAttr(row.name)}</span>
+        </label>
+        <button type="button" class="btn btn--ghost btn--sm prompt-cat-remove" data-idx="${idx}" title="Удалить">✕</button>
+      </div>
+    `).join('')
+    : '<p class="admin-hint">Список пуст — добавьте категории ниже.</p>'
+
+  c.innerHTML = section('Категории для промпта', `
+    <p class="admin-hint">Отметьте секции прайса, которые нейросеть должна извлечь. Неотмеченные в промпт не попадут.</p>
+    <p class="admin-hint admin-hint--muted">Выбрано: <strong id="prompt-selected-count">${selectedCount}</strong> из ${cats.length}</p>
+    <div class="admin-row admin-row--actions" style="margin-bottom:12px">
+      <button type="button" class="btn btn--ghost btn--sm" id="prompt-select-all">Выбрать все</button>
+      <button type="button" class="btn btn--ghost btn--sm" id="prompt-select-none">Снять все</button>
+      <button type="button" class="btn btn--ghost btn--sm" id="prompt-clear-all">Удалить все</button>
+      <button type="button" class="btn btn--ghost btn--sm" id="prompt-reset-defaults">Сбросить к списку по умолчанию</button>
+    </div>
+    <div class="prompt-categories-list" id="prompt-categories-list">${listHtml}</div>
+    <div class="prompt-cat-add">
+      <label class="field"><span>Добавить категории (через запятую)</span>
+        <input type="text" id="prompt-cat-input" placeholder="Xiaomi, Poco, Honor" />
+      </label>
+      <button type="button" class="btn btn--secondary" id="prompt-cat-add-btn">Добавить</button>
+    </div>
+  `) + section('Скопировать промпт', `
+    <p class="admin-hint">Промпт учитывает только выбранные категории. Вставьте его в ChatGPT / Claude вместе с файлом <code>price.pdf</code>.</p>
+    <button type="button" class="btn btn--primary" id="copy-price-jsonl-prompt">Скопировать промпт</button>
+  `)
+
+  const updateSelectedCount = () => {
+    const el = $('prompt-selected-count')
+    if (!el) return
+    const n = c.querySelectorAll('.prompt-cat-check:checked').length
+    el.textContent = String(n)
+  }
+
+  c.querySelectorAll('.prompt-cat-check').forEach((el) => {
+    el.addEventListener('change', () => {
+      syncPromptCategoriesFromDom()
+      updateSelectedCount()
+      scheduleDraftSave()
+    })
+  })
+
+  c.querySelectorAll('.prompt-cat-remove').forEach((btn) => {
+    btn.addEventListener('click', () => {
+      syncPromptCategoriesFromDom()
+      const idx = Number(btn.dataset.idx)
+      storeData.priceImport.promptCategories.splice(idx, 1)
+      renderTab()
+      scheduleDraftSave()
+    })
+  })
+
+  $('prompt-select-all')?.addEventListener('click', () => {
+    c.querySelectorAll('.prompt-cat-check').forEach((el) => { el.checked = true })
+    syncPromptCategoriesFromDom()
+    updateSelectedCount()
+    scheduleDraftSave()
+  })
+
+  $('prompt-select-none')?.addEventListener('click', () => {
+    c.querySelectorAll('.prompt-cat-check').forEach((el) => { el.checked = false })
+    syncPromptCategoriesFromDom()
+    updateSelectedCount()
+    scheduleDraftSave()
+  })
+
+  $('prompt-clear-all')?.addEventListener('click', () => {
+    if (!confirm('Удалить все категории из списка?')) return
+    storeData.priceImport.promptCategories = []
+    renderTab()
+    scheduleDraftSave()
+  })
+
+  $('prompt-reset-defaults')?.addEventListener('click', () => {
+    if (!confirm('Заменить список категориями по умолчанию?')) return
+    storeData.priceImport.promptCategories = DEFAULT_PROMPT_CATEGORY_ROWS.map((r) => ({ ...r }))
+    renderTab()
+    scheduleDraftSave()
+  })
+
+  const addCategoriesFromInput = () => {
+    const raw = val('prompt-cat-input')
+    if (!raw) {
+      status('Введите хотя бы одну категорию', 'error')
+      return
+    }
+    syncPromptCategoriesFromDom()
+    const existing = new Set(
+      storeData.priceImport.promptCategories.map((r) => r.name.trim().toLowerCase()),
+    )
+    const parts = raw.split(',').map((s) => s.trim()).filter(Boolean)
+    let added = 0
+    for (const name of parts) {
+      const key = name.toLowerCase()
+      if (existing.has(key)) continue
+      existing.add(key)
+      storeData.priceImport.promptCategories.push({ name, selected: true })
+      added += 1
+    }
+    if (!added) {
+      status('Такие категории уже есть', 'info')
+      return
+    }
+    renderTab()
+    scheduleDraftSave()
+    status(`Добавлено: ${added}`, 'success')
+  }
+
+  $('prompt-cat-add-btn')?.addEventListener('click', addCategoriesFromInput)
+  $('prompt-cat-input')?.addEventListener('keydown', (e) => {
+    if (e.key === 'Enter') {
+      e.preventDefault()
+      addCategoriesFromInput()
+    }
+  })
+
+  $('copy-price-jsonl-prompt')?.addEventListener('click', async () => {
+    const btn = $('copy-price-jsonl-prompt')
+    try {
+      syncPromptCategoriesFromDom()
+      const categories = storeData.priceImport.promptCategories
+        .filter((r) => r.selected && r.name)
+        .map((r) => r.name)
+      if (!categories.length) {
+        status('Выберите хотя бы одну категорию', 'error')
+        return
+      }
+      const res = await fetch('/api/price-jsonl-prompt', {
+        method: 'POST',
+        headers: {
+          Authorization: `Bearer ${getToken()}`,
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({ categories }),
+      })
+      const data = await parseApiJson(res)
+      if (!res.ok) throw new Error(data?.error || 'Не удалось получить промпт')
+      await navigator.clipboard.writeText(data.prompt)
+      const prev = btn.textContent
+      btn.textContent = 'Скопировано'
+      status(`Промпт скопирован (${categories.length} категорий)`, 'success')
+      setTimeout(() => { btn.textContent = prev }, 2000)
+    } catch (err) {
+      status(err.message, 'error')
+    }
+  })
 }
 
 function renderConfig(c) {
@@ -2006,6 +2303,11 @@ function collectTab() {
   else if (activeTab === 'installment') collectInstallment()
   else if (activeTab === 'reviews') collectReviews()
   else if (activeTab === 'price-import') collectPriceImport()
+  else if (activeTab === 'price-prompt') collectPricePrompt()
+}
+
+function collectPricePrompt() {
+  syncPromptCategoriesFromDom()
 }
 
 function collectPriceImport() {
@@ -2097,7 +2399,7 @@ function collectProductColorsStorageSim(p) {
     id: col.id || `c${i}`,
     name: val(`col-name-${i}`),
     hex: $(`col-hex-${i}`)?.value || '#000',
-    image: val(`col-image-${i}`) || '',
+    image: col.image || '',
     importNames: val(`col-import-${i}`) || '',
   }))
   if ($('storage-list')) {
@@ -2158,7 +2460,7 @@ function collectProduct() {
     id: col.id || `c${i}`,
     name: val(`col-name-${i}`),
     hex: $(`col-hex-${i}`)?.value || '#000',
-    image: val(`col-image-${i}`) || '',
+    image: col.image || '',
     importNames: val(`col-import-${i}`) || '',
   }))
 

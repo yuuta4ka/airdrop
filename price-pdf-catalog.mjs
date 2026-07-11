@@ -862,7 +862,8 @@ export function variantFromStructuredFields(fields, product, meta) {
   let colorName = String(fields.color || '').trim()
   let storageRaw = String(fields.storage || fields.size || '').trim()
   if (storageRaw === '—' || storageRaw === '-') storageRaw = ''
-  const simRaw = String(fields.sim || '').trim()
+  // Для iPhone без указанной SIM (15/16 и т.п.) по умолчанию Sim+eSim
+  const simRaw = String(fields.sim || '').trim() || (meta.type === 'iphone' ? 'Sim+eSim' : '')
 
   // Ray-Ban и похожие: размер S50/S53 часто приходит в конце цвета
   if (!storageRaw && colorName) {
