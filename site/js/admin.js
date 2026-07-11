@@ -1598,9 +1598,14 @@ function renderPriceImport(c) {
     <p class="admin-hint" id="pdf-import-status"></p>
     <p class="admin-hint" id="pdf-import-result">${pi.lastImportAt ? `Последний PDF: ${new Date(pi.lastImportAt).toLocaleString('ru-RU')}` : ''}</p>
   `) + section('Импорт прайса текстом', `
-    <p class="admin-hint">Формат: <code>Название конфигурации = 128 000 ₽</code> — по одной строке. Обновляет цены; если конфигурации ещё нет в карточке — добавит её.</p>
-    <label class="field"><span>Прайс</span>
-      <textarea id="price-text-import" class="admin-textarea" rows="14" placeholder="iPhone 17 Pro Max 256Gb Orange (eSim+eSim) = 128 000 ₽"></textarea>
+    <p class="admin-hint">Формат JSONL — по одному JSON на строку. Поля: <code>product</code>, <code>storage</code>, <code>color</code>, <code>sim</code>, <code>size</code>, <code>price</code>.</p>
+    <p class="admin-hint">Пример: <code>{"product":"iPhone 16 Pro","storage":"128Gb","color":"Desert","sim":"Sim+eSim","price":98000}</code></p>
+    <div class="admin-row admin-row--actions" style="margin-bottom:12px">
+      <button type="button" class="btn btn--secondary" id="copy-price-jsonl-prompt">Скопировать промпт для PDF</button>
+    </div>
+    <p class="admin-hint admin-hint--muted">Промпт можно вставить в ChatGPT / Claude вместе с файлом <code>price.pdf</code> — получите готовый JSONL для вставки ниже.</p>
+    <label class="field"><span>Прайс (JSONL)</span>
+      <textarea id="price-text-import" class="admin-textarea" rows="14" placeholder='{"product":"iPhone 17 Pro Max","storage":"256Gb","color":"Orange","sim":"eSim+eSim","price":90000}'></textarea>
     </label>
     <button type="button" class="btn btn--primary" id="import-price-text">Импортировать текст</button>
     <p class="admin-hint" id="text-import-result">${pi.lastTextImportAt ? `Последний текстовый импорт: ${new Date(pi.lastTextImportAt).toLocaleString('ru-RU')}` : ''}</p>
@@ -1609,6 +1614,24 @@ function renderPriceImport(c) {
   if (pi.lastTextImport && $('price-text-import')) {
     $('price-text-import').value = pi.lastTextImport
   }
+
+  $('copy-price-jsonl-prompt')?.addEventListener('click', async () => {
+    const btn = $('copy-price-jsonl-prompt')
+    try {
+      const res = await fetch('/api/price-jsonl-prompt', {
+        headers: { Authorization: `Bearer ${getToken()}` },
+      })
+      const data = await parseApiJson(res)
+      if (!res.ok) throw new Error(data?.error || 'Не удалось получить промпт')
+      await navigator.clipboard.writeText(data.prompt)
+      const prev = btn.textContent
+      btn.textContent = 'Скопировано'
+      status('Промпт скопирован — вставьте в чат вместе с price.pdf', 'success')
+      setTimeout(() => { btn.textContent = prev }, 2000)
+    } catch (err) {
+      status(err.message, 'error')
+    }
+  })
 
   const sectionInputs = () => [...c.querySelectorAll('.pdf-import-section')]
   const getSelectedSections = () => sectionInputs().filter((el) => el.checked).map((el) => el.value)

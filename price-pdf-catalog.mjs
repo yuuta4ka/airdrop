@@ -774,6 +774,68 @@ function resolveProduct(productName, meta, productMap, products, lineName = '') 
   return null
 }
 
+/** Точный поиск для JSON-импорта: без includes()/fuzzy, чтобы iPhone 16 Pro ≠ iPhone 16. */
+export function resolveProductExact(productName, meta, productMap, products) {
+  const candidates = [
+    productName,
+    normalizeProductKeyAlias(productName),
+  ]
+  if (meta.category === 'samsung') {
+    candidates.push(productName.replace(/^Samsung\s+Galaxy\s+/i, 'Galaxy '))
+    candidates.push(productName.replace(/^Samsung\s+/i, ''))
+    candidates.push(`Samsung Galaxy ${productName.replace(/^Galaxy\s+/i, '')}`)
+  }
+  if (meta.category === 'apple-watch') {
+    candidates.push(productName.replace(/^Watch\s+/i, 'Apple Watch '))
+    candidates.push(productName.replace(/^Apple\s+Watch\s+/i, 'Watch '))
+  }
+  if (meta.category === 'airpods') {
+    candidates.push(productName.replace(/^Apple\s+/i, ''))
+  }
+  if (meta.category === 'macbook' || meta.category === 'ipad') {
+    candidates.push(productName.replace(/^Apple\s+/i, ''))
+  }
+
+  const seen = new Set()
+  for (const cand of candidates) {
+    const name = String(cand || '').trim()
+    if (!name || seen.has(name.toLowerCase())) continue
+    seen.add(name.toLowerCase())
+    const keys = [
+      `${meta.category}::${name.toLowerCase()}`,
+      `${meta.category}::${normalizeProductName(name)}`,
+      `${meta.category}::${slugify(name)}`,
+    ]
+    for (const k of keys) {
+      if (productMap.has(k)) return productMap.get(k)
+    }
+  }
+
+  const norm = normalizeProductName(productName)
+  const exact = products.filter((p) => p.category === meta.category && normalizeProductName(p.name) === norm)
+  if (exact.length === 1) return exact[0]
+
+  // Точное совпадение alias/importNames (равенство, без includes)
+  let best = null
+  let bestLen = 0
+  for (const p of products) {
+    if (p.category !== meta.category) continue
+    for (const alias of productImportAliases(p)) {
+      const an = normalizeProductName(alias)
+      if (an === norm && an.length > bestLen) {
+        best = p
+        bestLen = an.length
+      }
+    }
+  }
+  return best
+}
+
+function normalizeProductKeyAlias(name) {
+  // локальный лёгкий alias-слой; основной — в price-text-import
+  return String(name || '').trim()
+}
+
 function upsertVariant(product, variant, purchasePrice, markup) {
   if (!Array.isArray(product.variants)) product.variants = []
   const price = calcRetailFromPurchase(purchasePrice, markup)
@@ -782,6 +844,88 @@ function upsertVariant(product, variant, purchasePrice, markup) {
   if (idx >= 0) product.variants[idx] = row
   else product.variants.push(row)
   return idx >= 0 ? 'updated' : 'added'
+}
+
+function formatMacbookStorage(raw) {
+  return String(raw)
+    .replace(/\s*(Gb|GB|ГБ)\b/gi, ' ГБ')
+    .replace(/\s*(Tb|TB|ТБ)\b/gi, ' ТБ')
+    .replace(/\s+/g, ' ')
+    .trim()
+}
+
+/** Вариант из явных полей JSON-импорта (без угадывания из свободной строки). */
+export function variantFromStructuredFields(fields, product, meta) {
+  if (!product.colors) product.colors = []
+  if (!product.storage) product.storage = []
+
+  let colorName = String(fields.color || '').trim()
+  let storageRaw = String(fields.storage || fields.size || '').trim()
+  if (storageRaw === '—' || storageRaw === '-') storageRaw = ''
+  const simRaw = String(fields.sim || '').trim()
+
+  // Ray-Ban и похожие: размер S50/S53 часто приходит в конце цвета
+  if (!storageRaw && colorName) {
+    const sizeM = colorName.match(/\s+(S\d{2})$/i)
+    if (sizeM) {
+      storageRaw = sizeM[1].toUpperCase()
+      colorName = colorName.slice(0, sizeM.index).trim()
+    }
+  }
+
+  const colorId = !colorName
+    ? ensureColor(product, 'Стандарт')
+    : (findExactColorId(colorName, product.colors) || ensureColor(product, colorName))
+
+  const isWatchLike = ['watch', 'watch-ultra', 'samsung-watch'].includes(meta.type)
+    || (meta.type === 'huawei' && (fields.size !== undefined && fields.size !== null) && !fields.storage)
+
+  let storageLabel = 'Стандарт'
+  if (isWatchLike) {
+    const sizeLabel = storageRaw ? normalizeWatchSizeLabel(storageRaw) || storageRaw : 'Стандарт'
+    storageLabel = resolveWatchStorageLabel(sizeLabel, product, meta) || sizeLabel
+    if (storageLabel && storageLabel !== 'Стандарт') {
+      ensureStorage(product, storageLabel)
+      if (!Array.isArray(product.sizes)) product.sizes = []
+      if (!product.sizes.some((s) => normalizeSizeKey(s.label) === normalizeSizeKey(storageLabel))) {
+        product.sizes.push({ label: storageLabel })
+      }
+    }
+  } else if (meta.type === 'airpods') {
+    storageLabel = storageRaw
+      ? (resolveStorageLabel(storageRaw, product, meta) || storageRaw)
+      : 'Стандарт'
+    if (storageLabel && storageLabel !== 'Стандарт') ensureStorage(product, storageLabel)
+  } else if (meta.type === 'macbook') {
+    const formatted = storageRaw ? formatMacbookStorage(storageRaw) : 'Стандарт'
+    storageLabel = resolveStorageLabel(formatted, product, meta) || formatted
+    if (storageLabel && storageLabel !== 'Стандарт' && storageLabel === formatted) {
+      const prefix = formatted.replace(/\s/g, '').toLowerCase()
+      const byPrefix = product.storage?.find((s) => s.label.replace(/\s/g, '').toLowerCase().startsWith(prefix))
+      if (byPrefix) storageLabel = byPrefix.label
+    }
+    if (storageLabel && storageLabel !== 'Стандарт') ensureStorage(product, storageLabel)
+  } else if (storageRaw) {
+    let formatted = storageRaw
+    if (/\d+\s*\/\s*\d+/.test(storageRaw)) {
+      formatted = normalizeSamsungPhoneStorage(storageRaw, product)
+    } else {
+      formatted = normalizeStorage(storageRaw) || storageRaw.replace(/\s*Gb/i, ' ГБ').trim()
+    }
+    storageLabel = resolveStorageLabel(formatted, product, meta) || formatted
+    if (storageLabel && storageLabel !== 'Стандарт') ensureStorage(product, storageLabel)
+  } else {
+    storageLabel = 'Стандарт'
+  }
+
+  let simType = ''
+  if (meta.type === 'iphone') {
+    simType = ensureSimTypes(product, normalizeSim(simRaw)) || ''
+  } else if (!product.simTypes?.length) {
+    product.simTypes = null
+  }
+
+  return { colorId, storage: storageLabel || 'Стандарт', simType }
 }
 
 export function buildCatalogFromEntries(rawEntries, existingProducts, markup = { percent: 15, fixed: 0 }, options = {}) {
@@ -844,8 +988,9 @@ export function buildCatalogFromEntries(rawEntries, existingProducts, markup = {
 
   for (const { productName, meta, entries: groupEntries } of byProduct.values()) {
     const sampleLine = groupEntries[0]?.name || ''
-    let product = options.findProduct?.(productName, meta, groupEntries, productMap, products)
-      || resolveProduct(productName, meta, productMap, products, sampleLine)
+    let product = options.findProduct
+      ? options.findProduct(productName, meta, groupEntries, productMap, products)
+      : resolveProduct(productName, meta, productMap, products, sampleLine)
     if (!product) {
       if (pricesOnly && !options.upsertProducts) {
         stats.skipped += groupEntries.length
@@ -868,11 +1013,16 @@ export function buildCatalogFromEntries(rawEntries, existingProducts, markup = {
 
     for (const entry of groupEntries) {
       try {
-        const variantName = options.getVariantName ? options.getVariantName(entry, meta) : entry.name
         if (pricesOnly) {
-          let variant = parseVariantForUpdate(variantName, product, meta)
-          if (!variant && options.upsertVariants) {
-            variant = parseVariant({ name: variantName }, product, meta)
+          let variant = null
+          if (entry.fields) {
+            variant = variantFromStructuredFields(entry.fields, product, meta)
+          } else {
+            const variantName = options.getVariantName ? options.getVariantName(entry, meta) : entry.name
+            variant = parseVariantForUpdate(variantName, product, meta)
+            if (!variant && options.upsertVariants) {
+              variant = parseVariant({ name: variantName }, product, meta)
+            }
           }
           if (!variant) {
             stats.skippedVariants += 1
@@ -882,7 +1032,7 @@ export function buildCatalogFromEntries(rawEntries, existingProducts, markup = {
           importedVariantKeys.add(variantKey(variant))
           const idx = product.variants.findIndex((v) => variantKey(v) === variantKey(variant))
           if (idx < 0) {
-            if (options.upsertVariants) {
+            if (options.upsertVariants || entry.fields) {
               upsertVariant(product, variant, entry.price, markup)
               stats.variantsAdded += 1
               stats.pricesUpdated += 1
@@ -906,7 +1056,9 @@ export function buildCatalogFromEntries(rawEntries, existingProducts, markup = {
           continue
         }
 
-        const variant = parseVariant(entry, product, meta)
+        const variant = entry.fields
+          ? variantFromStructuredFields(entry.fields, product, meta)
+          : parseVariant(entry, product, meta)
         if (!variant) {
           stats.skippedVariants += 1
           continue
@@ -930,6 +1082,10 @@ export function buildCatalogFromEntries(rawEntries, existingProducts, markup = {
     if (replaceVariants && importedVariantKeys.size) {
       const before = product.variants.length
       product.variants = product.variants.filter((v) => importedVariantKeys.has(variantKey(v)))
+      // Убираем дубликаты с одинаковым ключом (оставляем последний)
+      const seen = new Map()
+      for (const v of product.variants) seen.set(variantKey(v), v)
+      product.variants = [...seen.values()]
       stats.variantsRemoved += before - product.variants.length
     }
     if (touchedProducts.has(product.id)) {

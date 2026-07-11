@@ -3,7 +3,7 @@ import fs from 'node:fs'
 import path from 'node:path'
 import { fileURLToPath } from 'node:url'
 import { buildCatalogFromPdfText, extractTextFromPdfBuffer } from './price-pdf-catalog.mjs'
-import { buildCatalogFromPriceText } from './price-text-import.mjs'
+import { buildCatalogFromPriceText, PRICE_JSONL_PROMPT } from './price-text-import.mjs'
 import {
   buildBackupPayload,
   mergeProducts,
@@ -517,6 +517,11 @@ const server = http.createServer(async (req, res) => {
       importCatalogZip: true,
       domPolyfill: true,
     })
+  }
+
+  if (p === '/api/price-jsonl-prompt' && req.method === 'GET') {
+    if (!checkAuth(req)) return sendJson(res, 401, { error: 'Неверный пароль' })
+    return sendJson(res, 200, { prompt: PRICE_JSONL_PROMPT })
   }
 
   if (p === '/api/import-price-pdf' && req.method === 'POST') {
