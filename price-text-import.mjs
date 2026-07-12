@@ -22,7 +22,7 @@ function detectSection(name) {
   if (/^Watch\s+Ultra|^Apple\s+Watch\s+Ultra/i.test(n)) return 'Apple Watch Ultra'
   if (/^Watch\b|^Apple\s+Watch/i.test(n)) return 'Apple Watch S / SE'
   if (/^AirPods\b|^Marshall\b|^JBL\b|^Apple\s+AirPods/i.test(n)) return 'Apple AirPods / Marshall'
-  if (/^Samsung\s+Buds|^Galaxy\s+Buds/i.test(n)) return 'Samsung Buds'
+  if (/^Samsung\s+(?:Galaxy\s+)?Buds|^Galaxy\s+Buds/i.test(n)) return 'Samsung Buds'
   if (/^Ray[-\s]?Ban\s+Meta/i.test(n)) return 'Ray Ban Meta'
   if (/^Google\s+Fitbit|^Fitbit\b/i.test(n)) return 'Google Fitbit'
   if (/^Samsung\s+Galaxy\s+Z|^Galaxy\s+Z\b/i.test(n)) return 'Samsung Серия Z'
@@ -32,6 +32,57 @@ function detectSection(name) {
   if (/^(Redmi|Poco|OnePlus|Xiaomi)\b/i.test(n)) return 'Xiaomi'
   if (/^Huawei\s+Watch/i.test(n)) return 'Умные устройства Huawei'
   if (/^(HUAWEI|Huawei|Honor)\b/i.test(n)) return 'Huawei'
+  return null
+}
+
+/** Если regex-секция не сработала — ищем товар по точному имени/importNames и берём подходящую секцию. */
+function detectSectionFromProducts(name, products) {
+  if (!Array.isArray(products) || !products.length) return null
+  const raw = String(name || '').trim()
+  if (!raw) return null
+  const norm = raw.toLowerCase().replace(/\s+/g, ' ')
+  let hit = null
+  let hitLen = 0
+  for (const p of products) {
+    const aliases = [p.name, ...(String(p.importNames || '').split(/[,;]+/))]
+      .map((s) => String(s || '').trim())
+      .filter(Boolean)
+    for (const alias of aliases) {
+      const a = alias.toLowerCase().replace(/\s+/g, ' ')
+      if (a === norm && alias.length >= hitLen) {
+        hit = p
+        hitLen = alias.length
+      }
+    }
+  }
+  if (!hit) return null
+
+  // Подбираем секцию по категории/бренду карточки
+  if (hit.category === 'samsung' && /buds/i.test(`${hit.name} ${hit.importNames || ''}`)) return 'Samsung Buds'
+  if (hit.category === 'airpods' && /ray/i.test(`${hit.brand || ''} ${hit.name}`)) return 'Ray Ban Meta'
+  if (hit.category === 'airpods') return 'Apple AirPods / Marshall'
+  if (hit.category === 'iphone') {
+    if (/17\s+Pro\s+Max/i.test(hit.name)) return 'iPhone 17 Pro Max'
+    if (/17\s+Pro/i.test(hit.name)) return 'iPhone 17 Pro'
+    if (/17/i.test(hit.name)) return 'iPhone 17'
+    return 'iPhone 16'
+  }
+  if (hit.category === 'ipad') return 'Apple iPad'
+  if (hit.category === 'macbook') return 'Apple MacBook'
+  if (hit.category === 'apple-watch') {
+    return /ultra/i.test(hit.name) ? 'Apple Watch Ultra' : 'Apple Watch S / SE'
+  }
+  if (hit.category === 'galaxy-watch') return 'Samsung Watch'
+  if (hit.category === 'samsung') {
+    if (/z\s+fold|z\s+flip/i.test(hit.name)) return 'Samsung Серия Z'
+    if (/s26/i.test(hit.name)) return 'Samsung Серия S26'
+    if (/s25/i.test(hit.name)) return 'Samsung Серия S25'
+    return 'Samsung Серия S25'
+  }
+  if (hit.category === 'xiaomi') return 'Xiaomi'
+  if (hit.category === 'huawei') {
+    return /watch/i.test(hit.name) ? 'Умные устройства Huawei' : 'Huawei'
+  }
   return null
 }
 
@@ -180,7 +231,8 @@ function looksLikeJsonLine(line) {
   return line.startsWith('{') && line.includes('"product"')
 }
 
-export function parseTextPriceLines(text) {
+export function parseTextPriceLines(text, options = {}) {
+  const products = options.products || []
   const entries = []
   const skipped = []
   let jsonMode = null
@@ -197,7 +249,7 @@ export function parseTextPriceLines(text) {
         skipped.push(line.slice(0, 120))
         continue
       }
-      const section = detectSection(row.product)
+      const section = detectSection(row.product) || detectSectionFromProducts(row.product, products)
       if (!section) {
         skipped.push(row.product)
         continue
@@ -231,7 +283,7 @@ export function parseTextPriceLines(text) {
       continue
     }
 
-    const section = detectSection(name)
+    const section = detectSection(name) || detectSectionFromProducts(name, products)
     if (!section) {
       skipped.push(name)
       continue
@@ -244,7 +296,7 @@ export function parseTextPriceLines(text) {
 }
 
 export function buildCatalogFromPriceText(text, existingProducts, markup = { percent: 15, fixed: 0 }, options = {}) {
-  const { entries, skipped, format } = parseTextPriceLines(text)
+  const { entries, skipped, format } = parseTextPriceLines(text, { products: existingProducts })
   const isJson = format === 'jsonl'
   const result = buildCatalogFromEntries(entries, existingProducts, markup, {
     pricesOnly: true,
@@ -263,14 +315,38 @@ export function buildCatalogFromPriceText(text, existingProducts, markup = { per
     ...options,
   })
   result.stats.unrecognized = skipped.length
+  result.stats.unrecognizedNames = [...new Set(skipped.map((s) => String(s || '').trim()).filter(Boolean))].slice(0, 40)
   result.stats.importFormat = isJson ? 'jsonl' : 'legacy'
   if (skipped.length && isJson) {
     result.stats.skippedVariantSamples = [
       ...(result.stats.skippedVariantSamples || []),
-      ...skipped.slice(0, 8),
+      ...result.stats.unrecognizedNames.slice(0, 8),
     ].slice(0, 12)
   }
   return result
+}
+
+/** Сколько карточек каталога попадает под каждую категорию промпта (по имени/importNames). */
+export function promptCategoryProductCounts(products, categoryNames = []) {
+  const names = (categoryNames.length
+    ? categoryNames
+    : DEFAULT_PRICE_PROMPT_CATEGORIES).map((n) => String(n || '').trim()).filter(Boolean)
+  const counts = Object.fromEntries(names.map((n) => [n, 0]))
+
+  for (const product of products || []) {
+    const aliases = [
+      product.name,
+      ...(String(product.importNames || '').split(/[,;]+/)),
+    ].map((s) => String(s || '').trim()).filter(Boolean)
+
+    const matched = new Set()
+    for (const alias of aliases) {
+      const section = detectSection(alias) || detectSectionFromProducts(alias, [product])
+      if (section && Object.prototype.hasOwnProperty.call(counts, section)) matched.add(section)
+    }
+    for (const section of matched) counts[section] += 1
+  }
+  return counts
 }
 
 /** Категории секций из PDF-прайса (можно дополнять в админке). */

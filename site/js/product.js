@@ -95,6 +95,16 @@ function getSelectionContext() {
   }
 }
 
+function getAvailabilityStorageLabels() {
+  const sizes = getSizeLabels()
+  if (sizes.length) return sizes
+  const visible = getDisplayStorage(product).map((s) => s.label).filter(Boolean)
+  if (visible.length) return visible
+  // У AirPods и т.п. память в UI скрыта, но в прайсе — «Стандарт»
+  const resolved = getCurrentStorageLabel()
+  return resolved ? [resolved] : ['Стандарт']
+}
+
 function ensureValidSelection() {
   if (!usesSupplierPricing(product)) return
   const orderable = isComboOrderable(
@@ -105,9 +115,7 @@ function ensureValidSelection() {
   )
   if (orderable) return
 
-  const storages = getSizeLabels().length
-    ? getSizeLabels()
-    : getDisplayStorage(product).map((s) => s.label)
+  const storages = getAvailabilityStorageLabels()
 
   for (const ci of product.colors.keys()) {
     for (const storageLabel of storages) {
@@ -225,14 +233,8 @@ function isColorFullyUnavailable(colorId) {
   if (!usesSupplierPricing(product)) return false
   if (product.stock?.some((s) => s.colorId === colorId && s.qty > 0)) return false
 
-  const storages = getSizeLabels().length
-    ? getSizeLabels()
-    : getDisplayStorage(product).map((s) => s.label)
-
+  const storages = getAvailabilityStorageLabels()
   const sims = product.simTypes?.length ? product.simTypes : [null]
-  if (!storages.length) {
-    return !sims.some((sim) => isComboOrderable(product, colorId, '', sim))
-  }
 
   for (const storageLabel of storages) {
     for (const sim of sims) {
@@ -368,7 +370,10 @@ function updateUI(resetGallery = false) {
 
     btn.classList.toggle('color-swatch--active', isActive)
     btn.classList.toggle('color-swatch--instock', !!hasStock)
-    btn.classList.toggle('color-swatch--unavailable', unavailable || (!isActive && inactiveUnavailable))
+    // Не зачёркиваем активный доступный цвет; «недоступен» — только если реально нельзя заказать ни в какой комбинации
+    // или цвет несовместим с текущими памятью/SIM (и не выбран)
+    const showUnavailable = unavailable || (!isActive && inactiveUnavailable)
+    btn.classList.toggle('color-swatch--unavailable', showUnavailable)
     btn.classList.toggle('color-swatch--active-unavailable', selectedUnavailable)
     btn.setAttribute('aria-pressed', isActive ? 'true' : 'false')
     btn.setAttribute(

@@ -5,6 +5,7 @@ import { applySupplierImport } from './supplier-import.js'
 import { PDF_IMPORT_SECTIONS, groupPdfImportSections } from './pdf-import-sections.js'
 import {
   getDisplayStorage, isPhoneCategory, isWatchCategory, isAccessoryCategory, isMeaningfulStorageLabel,
+  productUsesPhoneStorage,
   normalizeWatchSizeLabel,
 } from './product-options.js'
 
@@ -421,7 +422,7 @@ function syncStorageFromEditor(p) {
 function cleanupProductForSave(p) {
   if (p.storage) {
     p.storage = p.storage.map((s) => ({ label: String(s.label || '').trim() })).filter((s) => s.label)
-    if (isPhoneCategory(p.category)) {
+    if (productUsesPhoneStorage(p)) {
       p.storage = p.storage.filter((s) => isMeaningfulStorageLabel(s.label))
       p.variants = (p.variants || []).filter((v) => isMeaningfulStorageLabel(v.storage))
     }
@@ -430,9 +431,12 @@ function cleanupProductForSave(p) {
 
 function formatPdfImportStats(s) {
   const lines = []
+  if (s.dryRun) lines.push('Режим: проверка без записи')
+  if (s.importFormat) lines.push(`Формат: ${s.importFormat}`)
   if (s.pricesUpdated) lines.push(`Обновлено цен: ${s.pricesUpdated}`)
   if (s.variantsAdded) lines.push(`Добавлено конфигураций: ${s.variantsAdded}`)
   else if (s.variantsUpdated) lines.push(`Обновлено конфигураций: ${s.variantsUpdated}`)
+  if (s.variantsRemoved) lines.push(`Удалено устаревших конфигураций: ${s.variantsRemoved}`)
   if (s.productsCreated) lines.push(`Создано карточек: ${s.productsCreated}`)
   if (s.productsUpdated) lines.push(`Товаров затронуто: ${s.productsUpdated}`)
   if (s.skippedVariants) lines.push(`Не сопоставлено конфигураций: ${s.skippedVariants}`)
@@ -449,22 +453,89 @@ function formatProductSummaryLine(s) {
   return `${escAttr(s.name)}: ${counts}${price}`
 }
 
-function formatImportResultHtml(s) {
-  const lines = formatPdfImportStats(s)
-  let html = `<strong>Импорт завершён</strong><br>${lines.map((l) => escAttr(l)).join('<br>')}`
+function productSelectOptions(selectedId = '') {
+  const list = [...(productsData?.products || [])]
+    .sort((a, b) => String(a.name).localeCompare(String(b.name), 'ru'))
+  return [
+    '<option value="">— выбрать товар —</option>',
+    ...list.map((p) => `<option value="${p.id}"${String(p.id) === String(selectedId) ? ' selected' : ''}>${escAttr(p.name)} (${escAttr(p.category)})</option>`),
+  ].join('')
+}
+
+function formatImportResultHtml(s, opts = {}) {
+  const dry = !!opts.dryRun || !!s.dryRun
+  const lines = formatPdfImportStats({ ...s, dryRun: dry })
+  let html = `<div class="admin-import-summary${dry ? ' admin-import-summary--dry' : ''}">`
+  html += `<strong>${dry ? 'Проверка (каталог не изменён)' : 'Импорт завершён'}</strong>`
+  html += `<div class="admin-import-summary__lines">${lines.map((l) => `<div>${escAttr(l)}</div>`).join('')}</div>`
+  html += '</div>'
+
   if (s.productSummaries?.length) {
     const sorted = [...s.productSummaries].sort((a, b) => a.name.localeCompare(b.name, 'ru'))
     const rows = sorted.map((row) => `<div>${formatProductSummaryLine(row)}</div>`).join('')
     html += `<details class="admin-import-report" open><summary>По товарам (${sorted.length})</summary>${rows}</details>`
   }
-  if (s.notFound?.length) {
-    html += `<br><span class="admin-hint--warn">Нет в каталоге (${s.notFound.length}): ${escAttr(s.notFound.join(', '))}</span>`
-    html += '<br><span class="admin-hint">Создайте карточку товара или укажите «Названия в прайсе» в её настройках.</span>'
+
+  const unresolved = [
+    ...(s.unrecognizedNames || []),
+    ...(s.notFound || []),
+  ].filter(Boolean)
+  const uniqueUnresolved = [...new Set(unresolved)]
+
+  if (uniqueUnresolved.length) {
+    html += `<details class="admin-import-report admin-import-report--warn" open>
+      <summary>Не распознано / нет в каталоге (${uniqueUnresolved.length})</summary>
+      <p class="admin-hint">Привяжите имя из прайса к карточке — оно добавится в «Названия в прайсе». После этого повторите импорт.</p>
+      ${uniqueUnresolved.map((name) => `
+        <div class="admin-import-bind-row" data-bind-name="${escAttr(name)}">
+          <code class="admin-import-bind-name">${escAttr(name)}</code>
+          <select class="admin-import-bind-select">${productSelectOptions()}</select>
+          <button type="button" class="btn btn--secondary btn--sm admin-import-bind-btn">Привязать</button>
+        </div>
+      `).join('')}
+    </details>`
   }
-  if (s.skippedVariantSamples?.length) {
-    html += `<br><span class="admin-hint--warn">Примеры несопоставленных конфигураций:</span><br>${s.skippedVariantSamples.slice(0, 8).map((n) => escAttr(n)).join('<br>')}`
+
+  if (s.skippedVariantSamples?.length && !uniqueUnresolved.length) {
+    html += `<details class="admin-import-report"><summary>Примеры несопоставленных конфигураций</summary>${s.skippedVariantSamples.slice(0, 8).map((n) => `<div>${escAttr(n)}</div>`).join('')}</details>`
   }
   return html
+}
+
+function bindImportSkipHandlers(rootEl) {
+  rootEl?.querySelectorAll('.admin-import-bind-btn').forEach((btn) => {
+    btn.onclick = async () => {
+      const row = btn.closest('.admin-import-bind-row')
+      const name = row?.dataset.bindName || ''
+      const productId = Number(row?.querySelector('.admin-import-bind-select')?.value)
+      if (!name || !productId) {
+        status('Выберите товар для привязки', 'error')
+        return
+      }
+      const product = productsData.products.find((p) => p.id === productId)
+      if (!product) {
+        status('Товар не найден', 'error')
+        return
+      }
+      const aliases = String(product.importNames || '')
+        .split(/[,;]+/)
+        .map((s) => s.trim())
+        .filter(Boolean)
+      if (!aliases.some((a) => a.toLowerCase() === name.toLowerCase())) {
+        aliases.push(name)
+        product.importNames = aliases.join(', ')
+      }
+      try {
+        await saveProducts()
+        row.classList.add('admin-import-bind-row--done')
+        btn.textContent = 'Готово'
+        btn.disabled = true
+        status(`Привязано к «${product.name}» — можно повторить импорт`, 'success')
+      } catch (err) {
+        status(err.message, 'error')
+      }
+    }
+  })
 }
 
 function validateProductStorage(p) {
@@ -1079,10 +1150,15 @@ function renderProducts(c) {
     const i = all.indexOf(p)
     const markup = `${p.markupPercent ?? 15}%${p.markupFixed ? ` + ${p.markupFixed} ₽` : ''}`
     const rowClass = p.hidden ? ' admin-product-row--hidden' : ''
+    const touchedIds = storeData.priceImport?.lastTouchedProductIds || []
+    const inLastImport = touchedIds.includes(p.id)
+    const importBadge = p.lastPriceImportAt
+      ? `<span class="admin-badge admin-badge--import" title="${escAttr(new Date(p.lastPriceImportAt).toLocaleString('ru-RU'))}">Импорт ${escAttr(formatRelativeAgo(p.lastPriceImportAt))}</span>`
+      : (inLastImport ? '<span class="admin-badge admin-badge--import">В последнем импорте</span>' : '')
     return `
     <div class="admin-product-row${rowClass}">
       <img src="${p.image || 'assets/logo.png'}" alt="" />
-      <div><strong>${p.name}${p.isNew ? ' <span class="admin-badge admin-badge--new">Новое</span>' : ''}</strong><span>${p.brand} · ${categoryLabel(p.category)} · наценка ${markup}${p.hidden ? ' · скрыт' : ''}</span></div>
+      <div><strong>${p.name}${p.isNew ? ' <span class="admin-badge admin-badge--new">Новое</span>' : ''}${importBadge ? ` ${importBadge}` : ''}</strong><span>${p.brand} · ${categoryLabel(p.category)} · наценка ${markup}${p.hidden ? ' · скрыт' : ''}</span></div>
       <button type="button" class="btn btn--secondary btn--sm" data-edit="${i}">Изменить</button>
       <button type="button" class="btn btn--ghost btn--sm" data-toggle-hidden="${i}">${p.hidden ? 'Вернуть' : 'Скрыть'}</button>
       <button type="button" class="btn btn--danger btn--sm" data-del="${i}">Удалить</button>
@@ -1163,7 +1239,7 @@ function renderProductEditor(c) {
     `)}
 
     ${section('Цвета', `<div id="color-list"></div><button type="button" class="btn btn--secondary" id="add-color">+ Цвет</button>
-    <p class="admin-hint">В «Названия в прайсе» — как у поставщика (Silver, Deep Blue…), через запятую.</p>`)}
+    <p class="admin-hint">Перетащите цвет за ⠿, чтобы изменить порядок на сайте. В «Названиях в прайсе» — как у поставщика.</p>`)}
 
     ${showStorage ? section('Память', `<div id="storage-list"></div><button type="button" class="btn btn--secondary" id="add-storage">+ Объём</button>
     <p class="admin-hint">256 ГБ, 512 ГБ, 1 ТБ. Цены — в блоке прайса ниже.</p>`) : ''}
@@ -1183,9 +1259,10 @@ function renderProductEditor(c) {
       <label class="field"><span>Вставить прайс (только этот товар)</span>
         <textarea id="p-supplier-paste" rows="6" placeholder="17 Pro Max 256Gb Silver (eSim+eSim) = 98 800 ₽"></textarea>
       </label>
-      <p class="admin-hint">Формат: <code>256Gb Silver (eSim+eSim) = 98 800 ₽</code> или название и цена на двух строках.</p>
+      <p class="admin-hint">Импорт обновит цены из прайса и <strong>удалит комбинации, которых в прайсе больше нет</strong> (их нельзя заказать).</p>
       <div class="admin-row admin-row--actions">
-        <button type="button" class="btn btn--primary" id="import-supplier">Импортировать в этот товар</button>
+        <button type="button" class="btn btn--primary" id="import-supplier">Импортировать и убрать лишние</button>
+        <button type="button" class="btn btn--ghost" id="clear-variants">Очистить все цены</button>
         <button type="button" class="btn btn--ghost" id="recalc-variants">Пересчитать розницу</button>
       </div>
       <p class="admin-hint" id="import-result"></p>
@@ -1318,13 +1395,18 @@ function renderProductEditor(c) {
 
   const renderColors = (opts = {}) => {
     if (!opts.skipCollect && $('color-list')?.childElementCount) collectProductColorsStorageSim(p)
-    $('color-list').innerHTML = p.colors.map((col, i) => `
-      <div class="admin-card admin-card--compact">
-        <div class="admin-grid admin-grid--4">
-          <label class="field"><span>Название</span><input type="text" id="col-name-${i}" value="${escAttr(col.name)}" /></label>
-          <label class="field"><span>Цвет</span><input type="color" id="col-hex-${i}" value="${col.hex || '#000000'}" /></label>
-          <label class="field"><span>Названия в прайсе</span><input type="text" id="col-import-${i}" value="${escAttr(col.importNames || '')}" placeholder="Silver, Deep Blue" /></label>
-          <button type="button" class="btn btn--danger btn--sm" data-del-col="${i}">Удалить</button>
+    if (!Array.isArray(p.colors)) p.colors = []
+    const wrap = $('color-list')
+    wrap.innerHTML = p.colors.map((col, i) => `
+      <div class="admin-card admin-card--compact admin-color-card" data-col="${i}">
+        <div class="admin-color-card__row">
+          <span class="drag-handle" draggable="true" data-col-drag="${i}" title="Перетащите">⠿</span>
+          <div class="admin-grid admin-grid--4 admin-color-card__fields">
+            <label class="field"><span>Название</span><input type="text" id="col-name-${i}" value="${escAttr(col.name)}" /></label>
+            <label class="field"><span>Цвет</span><input type="color" id="col-hex-${i}" value="${col.hex || '#000000'}" /></label>
+            <label class="field"><span>Названия в прайсе</span><input type="text" id="col-import-${i}" value="${escAttr(col.importNames || '')}" placeholder="Silver, Deep Blue" /></label>
+            <button type="button" class="btn btn--danger btn--sm" data-del-col="${i}">Удалить</button>
+          </div>
         </div>
         <div class="admin-row admin-row--color-photo">
           ${col.image
@@ -1335,14 +1417,49 @@ function renderProductEditor(c) {
         </div>
       </div>
     `).join('')
-    $('color-list').querySelectorAll('[data-del-col]').forEach((b) => {
+
+    let dragIdx = null
+    wrap.querySelectorAll('[data-col-drag]').forEach((handle) => {
+      handle.ondragstart = (e) => {
+        dragIdx = Number(handle.dataset.colDrag)
+        e.dataTransfer.effectAllowed = 'move'
+        handle.closest('.admin-color-card')?.classList.add('admin-color-card--dragging')
+      }
+      handle.ondragend = () => {
+        wrap.querySelectorAll('.admin-color-card--dragging, .admin-color-card--dragover').forEach((el) => {
+          el.classList.remove('admin-color-card--dragging', 'admin-color-card--dragover')
+        })
+        dragIdx = null
+      }
+    })
+    wrap.querySelectorAll('[data-col]').forEach((card) => {
+      card.ondragover = (e) => {
+        e.preventDefault()
+        e.dataTransfer.dropEffect = 'move'
+        card.classList.add('admin-color-card--dragover')
+      }
+      card.ondragleave = () => card.classList.remove('admin-color-card--dragover')
+      card.ondrop = (e) => {
+        e.preventDefault()
+        card.classList.remove('admin-color-card--dragover')
+        const drop = Number(card.dataset.col)
+        if (dragIdx === null || Number.isNaN(drop) || dragIdx === drop) return
+        collectProductColorsStorageSim(p)
+        const [item] = p.colors.splice(dragIdx, 1)
+        p.colors.splice(drop, 0, item)
+        renderColors({ skipCollect: true })
+        renderVariants({ skipCollect: true })
+      }
+    })
+
+    wrap.querySelectorAll('[data-del-col]').forEach((b) => {
       b.onclick = () => {
         collectProductColorsStorageSim(p)
         p.colors.splice(Number(b.dataset.delCol), 1)
         renderColors({ skipCollect: true })
       }
     })
-    $('color-list').querySelectorAll('[data-clear-col-img]').forEach((b) => {
+    wrap.querySelectorAll('[data-clear-col-img]').forEach((b) => {
       b.onclick = () => {
         collectProductColorsStorageSim(p)
         const idx = Number(b.dataset.clearColImg)
@@ -1414,10 +1531,11 @@ function renderProductEditor(c) {
   const renderVariants = (opts = {}) => {
     if (!opts.skipCollect && $('variant-list')?.querySelector('.admin-variant-row')) collectProductVariants(p)
     const markup = getMarkup()
+    const phoneStorage = productUsesPhoneStorage(p)
     const storageLabels = (() => {
       const labels = getStorageLabelsFromEditor(p)
       if (labels.length) return labels
-      if (!isPhoneCategory(p.category)) {
+      if (!phoneStorage) {
         const fromVariants = [...new Set((p.variants || []).map((v) => v.storage).filter(Boolean))]
         return fromVariants.length ? fromVariants : ['Стандарт']
       }
@@ -1425,12 +1543,12 @@ function renderProductEditor(c) {
     })()
     const simList = p.simTypes?.length ? p.simTypes : ['']
 
-    const displayVariants = isPhoneCategory(p.category)
+    const displayVariants = phoneStorage
       ? p.variants.filter((v) => isMeaningfulStorageLabel(v.storage))
       : p.variants
 
     const showSimColumn = showSim
-    const showStorageColumn = !(storageLabels.length <= 1 && storageLabels[0] === 'Стандарт')
+    const showStorageColumn = phoneStorage || !(storageLabels.length <= 1 && storageLabels[0] === 'Стандарт')
     const storageColumnLabel = isWatchCategory(p.category) ? 'Размер' : 'Память'
 
     $('variant-list').innerHTML = displayVariants.map((v) => {
@@ -1496,23 +1614,55 @@ function renderProductEditor(c) {
     if (storageErr) {
       $('import-result').innerHTML += `<br><span class="admin-hint--warn">${escAttr(storageErr)}</span>`
     }
-    renderVariants()
-    status(result.merged ? `Импортировано ${result.merged} позиций` : 'Ничего не импортировано', result.merged ? 'success' : 'error')
+    renderVariants({ skipCollect: true })
+    status(
+      result.merged
+        ? (result.removed ? `Импортировано ${result.merged}, удалено ${result.removed}` : `Импортировано ${result.merged} позиций`)
+        : 'Ничего не импортировано',
+      result.merged ? 'success' : 'error',
+    )
+  }
+
+  $('clear-variants').onclick = () => {
+    if (!p.variants?.length) {
+      status('Прайс уже пуст', 'info')
+      return
+    }
+    if (!confirm(`Удалить все ${p.variants.length} позиций прайса у этого товара?`)) return
+    p.variants = []
+    renderVariants({ skipCollect: true })
+    $('import-result').textContent = 'Все цены очищены'
+    status('Цены удалены', 'success')
   }
 
   $('add-variant').onclick = () => {
+    if (!Array.isArray(p.variants)) p.variants = []
+    if ($('variant-list')?.querySelector('.admin-variant-row')) collectProductVariants(p)
+
+    if (!p.colors?.length) {
+      p.colors = [{ id: `c${Date.now()}`, name: 'Стандарт', hex: '#888888', image: '', importNames: '' }]
+    }
+
+    const phoneStorage = productUsesPhoneStorage(p)
     const storages = getDisplayStorage(p)
-    const defaultStorage = storages[0]?.label
-      || p.sizes?.[0]?.label
-      || (isPhoneCategory(p.category) ? '' : 'Стандарт')
+    const defaultStorage = phoneStorage
+      ? (storages[0]?.label || '')
+      : (p.sizes?.[0]?.label || storages[0]?.label || 'Стандарт')
+
+    if (phoneStorage && !defaultStorage) {
+      status('Сначала добавьте объём памяти, затем позицию', 'error')
+      return
+    }
+
     p.variants.push({
-      colorId: p.colors[0]?.id || '',
+      colorId: p.colors[0].id,
       storage: defaultStorage,
       simType: p.simTypes?.[0] || '',
       purchasePrice: 0,
       price: 0,
     })
-    renderVariants()
+    renderVariants({ skipCollect: true })
+    status('Позиция добавлена', 'success')
   }
   $('recalc-variants').onclick = () => {
     collectProductVariants(p)
@@ -1748,13 +1898,86 @@ function renderPriceImport(c) {
     <label class="field"><span>Прайс (JSONL)</span>
       <textarea id="price-text-import" class="admin-textarea" rows="14" placeholder='{"product":"iPhone 17 Pro Max","storage":"256Gb","color":"Orange","sim":"eSim+eSim","price":90000}'></textarea>
     </label>
-    <button type="button" class="btn btn--primary" id="import-price-text">Импортировать текст</button>
-    <p class="admin-hint" id="text-import-result">${pi.lastTextImportAt ? `Последний текстовый импорт: ${escAttr(formatWhenWithAgo(pi.lastTextImportAt))}` : ''}</p>
+    <div class="admin-import-modes">
+      <p class="admin-hint">Если комбинации (цвет/память/SIM) нет в новом прайсе — её нельзя заказать, значит старую цену нужно убрать.</p>
+    </div>
+    <div class="admin-row admin-row--actions">
+      <button type="button" class="btn btn--secondary" id="preview-price-text">Проверить без записи</button>
+      <button type="button" class="btn btn--primary" id="import-price-text">Импортировать и убрать лишние</button>
+      <button type="button" class="btn btn--ghost" id="import-price-text-keep">Только обновить цены</button>
+    </div>
+    <div id="text-import-result" class="admin-hint">${pi.lastTextImportAt ? `Последний текстовый импорт: ${escAttr(formatWhenWithAgo(pi.lastTextImportAt))}` : ''}</div>
   `)
 
   if (pi.lastTextImport && $('price-text-import')) {
     $('price-text-import').value = pi.lastTextImport
   }
+
+  const runTextImport = async ({ dryRun, replaceVariants }) => {
+    const text = $('price-text-import')?.value || ''
+    const resultEl = $('text-import-result')
+    if (!text.trim()) {
+      status('Вставьте прайс в текстовое поле', 'error')
+      return
+    }
+    resultEl.textContent = dryRun ? 'Проверка…' : 'Импорт…'
+    try {
+      const res = await fetch('/api/import-price-text', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${getToken()}` },
+        body: JSON.stringify({
+          text,
+          dryRun: !!dryRun,
+          replaceVariants: !!replaceVariants,
+          markupPercent: num('pi-markup'),
+          markupFixed: num('pi-markup-fixed'),
+        }),
+      })
+      const data = await parseApiJson(res)
+      if (!res.ok) throw new Error(data?.error || 'Ошибка импорта')
+      const s = { ...data.stats, dryRun: !!data.dryRun, importFormat: data.stats?.importFormat }
+      resultEl.innerHTML = formatImportResultHtml(s, { dryRun: !!data.dryRun })
+      bindImportSkipHandlers(resultEl)
+
+      if (!dryRun) {
+        storeData.priceImport = {
+          ...storeData.priceImport,
+          markupPercent: num('pi-markup'),
+          markupFixed: num('pi-markup-fixed'),
+          lastTextImportAt: new Date().toISOString(),
+          lastTextImport: text,
+          lastTextImportMode: replaceVariants ? 'replace' : 'keep',
+          lastTouchedProductIds: data.stats?.touchedProductIds || [],
+        }
+        invalidateStore()
+        productsData = await (await fetch('/api/products')).json()
+        const removed = s.variantsRemoved || 0
+        status(
+          removed
+            ? `Обновлено цен: ${s.pricesUpdated || 0}, удалено устаревших: ${removed}`
+            : `Обновлено цен: ${s.pricesUpdated || 0}`,
+          'success',
+        )
+      } else {
+        const warns = (s.unrecognized || 0) + (s.notFound?.length || 0) + (s.skippedVariants || 0)
+        const removed = s.variantsRemoved || 0
+        status(
+          removed
+            ? `Проверка: будет удалено устаревших конфигураций: ${removed}`
+            : (warns ? `Проверка: есть замечания (${warns})` : 'Проверка: всё сопоставилось'),
+          removed || warns ? 'info' : 'success',
+        )
+      }
+    } catch (err) {
+      resultEl.textContent = err.message
+      status(err.message, 'error')
+    }
+  }
+
+  // Превью всегда показывает режим «убрать лишние» — это основная логика
+  $('preview-price-text')?.addEventListener('click', () => runTextImport({ dryRun: true, replaceVariants: true }))
+  $('import-price-text')?.addEventListener('click', () => runTextImport({ dryRun: false, replaceVariants: true }))
+  $('import-price-text-keep')?.addEventListener('click', () => runTextImport({ dryRun: false, replaceVariants: false }))
 
   const sectionInputs = () => [...c.querySelectorAll('.pdf-import-section')]
   const getSelectedSections = () => sectionInputs().filter((el) => el.checked).map((el) => el.value)
@@ -1843,6 +2066,7 @@ function renderPriceImport(c) {
         if (!res.ok) throw new Error(data?.error || 'Ошибка импорта')
         const s = data.stats
         resultEl.innerHTML = formatImportResultHtml(s)
+        bindImportSkipHandlers(resultEl)
         if (s.errors?.length) {
           resultEl.innerHTML += '<br>' + s.errors.slice(0, 5).map((e) => `⚠ ${escAttr(e.name)}: ${escAttr(e.error)}`).join('<br>')
         }
@@ -1866,44 +2090,6 @@ function renderPriceImport(c) {
       e.target.value = ''
     }
     reader.readAsDataURL(file)
-  }
-
-  $('import-price-text').onclick = async () => {
-    const text = $('price-text-import')?.value || ''
-    const resultEl = $('text-import-result')
-    if (!text.trim()) {
-      status('Вставьте прайс в текстовое поле', 'error')
-      return
-    }
-    resultEl.textContent = 'Импорт…'
-    try {
-      const res = await fetch('/api/import-price-text', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${getToken()}` },
-        body: JSON.stringify({
-          text,
-          markupPercent: num('pi-markup'),
-          markupFixed: num('pi-markup-fixed'),
-        }),
-      })
-      const data = await parseApiJson(res)
-      if (!res.ok) throw new Error(data?.error || 'Ошибка импорта')
-        const s = data.stats
-        resultEl.innerHTML = formatImportResultHtml(s)
-      storeData.priceImport = {
-        ...storeData.priceImport,
-        markupPercent: num('pi-markup'),
-        markupFixed: num('pi-markup-fixed'),
-        lastTextImportAt: new Date().toISOString(),
-        lastTextImport: text,
-      }
-      invalidateStore()
-      productsData = await (await fetch('/api/products')).json()
-      status(`Обновлено цен: ${s.pricesUpdated || 0}`, 'success')
-    } catch (err) {
-      resultEl.textContent = err.message
-      status(err.message, 'error')
-    }
   }
 }
 
@@ -1933,6 +2119,7 @@ function renderPricePrompt(c) {
         <label class="prompt-cat-label">
           <input type="checkbox" class="prompt-cat-check" ${row.selected ? 'checked' : ''} />
           <span>${escAttr(row.name)}</span>
+          <em class="prompt-cat-coverage" data-coverage-for="${escAttr(row.name)}">…</em>
         </label>
         <button type="button" class="btn btn--ghost btn--sm prompt-cat-remove" data-idx="${idx}" title="Удалить">✕</button>
       </div>
@@ -1941,7 +2128,7 @@ function renderPricePrompt(c) {
 
   c.innerHTML = section('Категории для промпта', `
     <p class="admin-hint">Отметьте секции прайса, которые нейросеть должна извлечь. Неотмеченные в промпт не попадут.</p>
-    <p class="admin-hint admin-hint--muted">Выбрано: <strong id="prompt-selected-count">${selectedCount}</strong> из ${cats.length}</p>
+    <p class="admin-hint admin-hint--muted">Выбрано: <strong id="prompt-selected-count">${selectedCount}</strong> из ${cats.length}. Справа — сколько карточек в каталоге уже связано с секцией.</p>
     <div class="admin-row admin-row--actions" style="margin-bottom:12px">
       <button type="button" class="btn btn--ghost btn--sm" id="prompt-select-all">Выбрать все</button>
       <button type="button" class="btn btn--ghost btn--sm" id="prompt-select-none">Снять все</button>
@@ -1959,6 +2146,26 @@ function renderPricePrompt(c) {
     <p class="admin-hint">Промпт учитывает только выбранные категории. Вставьте его в ChatGPT / Claude вместе с файлом <code>price.pdf</code>.</p>
     <button type="button" class="btn btn--primary" id="copy-price-jsonl-prompt">Скопировать промпт</button>
   `)
+
+  fetch('/api/prompt-category-coverage', {
+    headers: { Authorization: `Bearer ${getToken()}` },
+  })
+    .then((r) => parseApiJson(r))
+    .then((data) => {
+      const coverage = data?.coverage || {}
+      c.querySelectorAll('[data-coverage-for]').forEach((el) => {
+        const name = el.dataset.coverageFor
+        const n = Number(coverage[name] || 0)
+        el.textContent = n > 0 ? `${n} в каталоге` : 'нет карточек'
+        el.classList.toggle('prompt-cat-coverage--ok', n > 0)
+        el.classList.toggle('prompt-cat-coverage--empty', n === 0)
+      })
+    })
+    .catch(() => {
+      c.querySelectorAll('[data-coverage-for]').forEach((el) => {
+        el.textContent = ''
+      })
+    })
 
   const updateSelectedCount = () => {
     const el = $('prompt-selected-count')
@@ -2431,7 +2638,18 @@ function collectProductVariants(p) {
       purchasePrice,
       price,
     }
-  }).filter((v) => v.colorId && (v.storage || !isPhoneCategory(p.category)))
+  }).filter((v) => {
+    if (!v.colorId) return false
+    if (productUsesPhoneStorage(p)) return isMeaningfulStorageLabel(v.storage)
+    return true
+  })
+
+  // Нормализуем пустую память у аксессуаров/наушников в «Стандарт»
+  if (!productUsesPhoneStorage(p)) {
+    p.variants.forEach((v) => {
+      if (!v.storage) v.storage = 'Стандарт'
+    })
+  }
 
   recalcAllVariants(p)
 }

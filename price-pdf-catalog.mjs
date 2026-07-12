@@ -780,10 +780,16 @@ export function resolveProductExact(productName, meta, productMap, products) {
     productName,
     normalizeProductKeyAlias(productName),
   ]
-  if (meta.category === 'samsung') {
+  if (meta.category === 'samsung' || meta.type === 'airpods') {
     candidates.push(productName.replace(/^Samsung\s+Galaxy\s+/i, 'Galaxy '))
+    candidates.push(productName.replace(/^Samsung\s+Galaxy\s+/i, ''))
     candidates.push(productName.replace(/^Samsung\s+/i, ''))
+    candidates.push(productName.replace(/^Galaxy\s+/i, ''))
     candidates.push(`Samsung Galaxy ${productName.replace(/^Galaxy\s+/i, '')}`)
+    if (/Buds/i.test(productName)) {
+      candidates.push(String(productName).replace(/^Samsung\s+(?:Galaxy\s+)?/i, ''))
+      candidates.push(String(productName).replace(/^.*?\b(Buds\s+\d+(?:\s+Pro)?)\b.*$/i, '$1'))
+    }
   }
   if (meta.category === 'apple-watch') {
     candidates.push(productName.replace(/^Watch\s+/i, 'Apple Watch '))
@@ -815,7 +821,7 @@ export function resolveProductExact(productName, meta, productMap, products) {
   const exact = products.filter((p) => p.category === meta.category && normalizeProductName(p.name) === norm)
   if (exact.length === 1) return exact[0]
 
-  // Точное совпадение alias/importNames (равенство, без includes)
+  // Точное совпадение alias/importNames в той же категории
   let best = null
   let bestLen = 0
   for (const p of products) {
@@ -823,6 +829,33 @@ export function resolveProductExact(productName, meta, productMap, products) {
     for (const alias of productImportAliases(p)) {
       const an = normalizeProductName(alias)
       if (an === norm && an.length > bestLen) {
+        best = p
+        bestLen = an.length
+      }
+    }
+  }
+  if (best) return best
+
+  // Fallback: точное имя/importNames в любой категории (Buds в samsung и т.п.)
+  return resolveProductExactAnyCategory(productName, products, candidates)
+}
+
+/** Точное совпадение по имени/importNames без привязки к категории секции прайса. */
+function resolveProductExactAnyCategory(productName, products, extraCandidates = []) {
+  const names = [productName, ...extraCandidates]
+    .map((n) => String(n || '').trim())
+    .filter(Boolean)
+  const norms = new Set(names.map((n) => normalizeProductName(n)).filter(Boolean))
+  const lowers = new Set(names.map((n) => n.toLowerCase()))
+
+  let best = null
+  let bestLen = 0
+  for (const p of products) {
+    for (const alias of productImportAliases(p)) {
+      const raw = alias.trim()
+      const an = normalizeProductName(raw)
+      const hit = lowers.has(raw.toLowerCase()) || norms.has(an)
+      if (hit && an.length >= bestLen) {
         best = p
         bestLen = an.length
       }
@@ -1092,6 +1125,7 @@ export function buildCatalogFromEntries(rawEntries, existingProducts, markup = {
     if (touchedProducts.has(product.id)) {
       const prices = product.variants.map((v) => Number(v.price)).filter((n) => n > 0)
       stats.productSummaries.push({
+        id: product.id,
         name: product.name,
         category: product.category,
         variantsBefore: variantsBeforeByProduct.get(product.id) ?? 0,
@@ -1102,6 +1136,7 @@ export function buildCatalogFromEntries(rawEntries, existingProducts, markup = {
   }
 
   stats.productsUpdated = touchedProducts.size
+  stats.touchedProductIds = [...touchedProducts]
   stats.notFound = [...stats.notFoundSet]
   delete stats.notFoundSet
   return { products, stats }

@@ -126,7 +126,7 @@ export const CATALOG_SECTIONS = new Map([
   ['Xiaomi', { category: 'xiaomi', brand: 'Xiaomi', type: 'xiaomi' }],
   ['Huawei', { category: 'huawei', brand: 'Huawei', type: 'huawei' }],
   ['Умные устройства Huawei', { category: 'huawei', brand: 'Huawei', type: 'huawei' }],
-  ['Samsung Buds', { category: 'airpods', brand: 'Samsung', type: 'airpods' }],
+  ['Samsung Buds', { category: 'samsung', brand: 'Samsung', type: 'airpods' }],
   ['Ray Ban Meta', { category: 'airpods', brand: 'Ray-Ban', type: 'airpods' }],
   ['Google Fitbit', { category: 'airpods', brand: 'Google', type: 'airpods' }],
 ])

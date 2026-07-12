@@ -13,6 +13,14 @@ export function isAccessoryCategory(category) {
   return category === 'airpods'
 }
 
+/** Есть ли у товара реальные объёмы памяти (не «Стандарт») — тогда UI как у телефона */
+export function productUsesPhoneStorage(product) {
+  if (!product || !isPhoneCategory(product.category)) return false
+  const fromStorage = (product.storage || []).some((s) => isMeaningfulStorageLabel(s.label))
+  if (fromStorage) return true
+  return (product.variants || []).some((v) => isMeaningfulStorageLabel(v.storage))
+}
+
 export function isMeaningfulStorageLabel(label) {
   if (!label) return false
   if (label === 'Стандарт') return false

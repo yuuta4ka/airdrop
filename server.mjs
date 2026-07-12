@@ -3,7 +3,7 @@ import fs from 'node:fs'
 import path from 'node:path'
 import { fileURLToPath } from 'node:url'
 import { buildCatalogFromPdfText, extractTextFromPdfBuffer } from './price-pdf-catalog.mjs'
-import { buildCatalogFromPriceText, buildPriceJsonlPrompt, defaultPromptCategoryRows } from './price-text-import.mjs'
+import { buildCatalogFromPriceText, buildPriceJsonlPrompt, defaultPromptCategoryRows, promptCategoryProductCounts } from './price-text-import.mjs'
 import {
   buildBackupPayload,
   mergeProducts,
@@ -524,6 +524,19 @@ const server = http.createServer(async (req, res) => {
     })
   }
 
+  if (p === '/api/prompt-category-coverage' && req.method === 'GET') {
+    if (!checkAuth(req)) return sendJson(res, 401, { error: 'Неверный пароль' })
+    const store = readStore()
+    const names = (store.priceImport?.promptCategories?.length
+      ? store.priceImport.promptCategories
+      : defaultPromptCategoryRows()
+    ).map((row) => row.name).filter(Boolean)
+    const products = readProducts().products || []
+    return sendJson(res, 200, {
+      coverage: promptCategoryProductCounts(products, names),
+    })
+  }
+
   if (p === '/api/price-jsonl-prompt' && (req.method === 'GET' || req.method === 'POST')) {
     if (!checkAuth(req)) return sendJson(res, 401, { error: 'Неверный пароль' })
     let categories = []
@@ -612,23 +625,36 @@ const server = http.createServer(async (req, res) => {
         percent: Number(body.markupPercent ?? store.priceImport?.markupPercent ?? 15),
         fixed: Number(body.markupFixed ?? store.priceImport?.markupFixed ?? 0),
       }
+      const dryRun = !!body.dryRun
+      const replaceVariants = body.replaceVariants !== false
 
       const existing = readProducts()
-      const { products, stats } = buildCatalogFromPriceText(String(text), existing.products, markup)
+      const { products, stats } = buildCatalogFromPriceText(String(text), existing.products, markup, {
+        replaceVariants,
+      })
 
-      if (!body.dryRun) {
+      if (!dryRun) {
+        const importedAt = new Date().toISOString()
+        const touched = new Set(stats.touchedProductIds || [])
+        for (const product of products) {
+          if (touched.has(product.id)) product.lastPriceImportAt = importedAt
+        }
         writeProducts({ products })
         store.priceImport = {
           ...store.priceImport,
           markupPercent: markup.percent,
           markupFixed: markup.fixed,
-          lastTextImportAt: new Date().toISOString(),
+          lastTextImportAt: importedAt,
+          lastTextImportMode: replaceVariants ? 'replace' : 'keep',
+          lastTouchedProductIds: [...touched],
         }
         writeStore(store)
       }
 
       return sendJson(res, 200, {
         ok: true,
+        dryRun,
+        replaceVariants,
         stats,
         productCount: products.length,
       })
