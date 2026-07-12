@@ -1,4 +1,4 @@
-import { invalidateStore } from './store.js'
+import { invalidateStore, assetUrl } from './store.js'
 import { THEME_LABELS, getThemeVarKeys } from './theme.js'
 import { calcRetailFromPurchase, recalcAllVariants, getMarkupSettings } from './pricing.js'
 import { applySupplierImport } from './supplier-import.js'
@@ -7,6 +7,9 @@ import {
   getDisplayStorage, isPhoneCategory, isWatchCategory, isAccessoryCategory, isMeaningfulStorageLabel,
   productUsesPhoneStorage,
   normalizeWatchSizeLabel,
+  normalizeStorageLabel,
+  sortStorageEntries,
+  compareStorageLabels,
 } from './product-options.js'
 
 const DEFAULT_CATEGORY_LABELS = {
@@ -107,6 +110,12 @@ let editingProductIdx = null
 let adminProductView = 'active'
 let sortCategoryId = null
 let draftSaveTimer = null
+let isDirty = false
+let savingInFlight = false
+let productEditBaseline = null
+let editingProductIsNew = false
+const SAVE_BTN_LABEL = 'Сохранить изменения'
+const SAVE_PRODUCT_LABEL = 'Сохранить товар'
 
 const TITLES = {
   general: 'Основное',
@@ -135,6 +144,39 @@ function clearToken() { sessionStorage.removeItem(AUTH_KEY) }
 
 function clearDraft() { sessionStorage.removeItem(DRAFT_KEY) }
 
+function updateDirtyUI() {
+  const btn = $('btn-save')
+  if (btn && !savingInFlight) {
+    btn.textContent = isDirty ? `${SAVE_BTN_LABEL} ●` : SAVE_BTN_LABEL
+    btn.classList.toggle('admin-save--dirty', isDirty)
+    btn.title = isDirty ? 'Есть несохранённые изменения' : 'Все изменения сохранены на сервере'
+  }
+  const sp = $('save-product')
+  if (sp && !savingInFlight) {
+    sp.textContent = isDirty ? `${SAVE_PRODUCT_LABEL} ●` : SAVE_PRODUCT_LABEL
+    sp.classList.toggle('admin-save--dirty', isDirty)
+  }
+}
+
+function markDirty() {
+  if ($('admin-app')?.hidden) return
+  if (!isDirty) {
+    isDirty = true
+    updateDirtyUI()
+  }
+  scheduleDraftSave()
+}
+
+function markClean() {
+  isDirty = false
+  updateDirtyUI()
+}
+
+function confirmDiscardIfDirty(message) {
+  if (!isDirty) return true
+  return confirm(message || 'Есть несохранённые изменения. Уйти без сохранения на сервер?')
+}
+
 function persistDraft() {
   if (!storeData || $('admin-app')?.hidden) return
   try {
@@ -145,6 +187,7 @@ function persistDraft() {
       activeTab,
       editingProductIdx,
       savedAt: Date.now(),
+      dirty: isDirty,
     }))
   } catch { /* quota */ }
 }
@@ -159,6 +202,28 @@ function flushDraft() {
   persistDraft()
 }
 
+async function runSave(fn) {
+  if (savingInFlight) return false
+  savingInFlight = true
+  const buttons = [$('btn-save'), $('save-product')].filter(Boolean)
+  const prev = buttons.map((b) => ({ text: b.textContent, disabled: b.disabled }))
+  buttons.forEach((b) => {
+    b.disabled = true
+    b.textContent = 'Сохранение…'
+  })
+  try {
+    await fn()
+    return true
+  } finally {
+    savingInFlight = false
+    buttons.forEach((b, i) => {
+      b.disabled = prev[i].disabled
+      b.textContent = prev[i].text
+    })
+    updateDirtyUI()
+  }
+}
+
 function restoreDraft() {
   try {
     const raw = sessionStorage.getItem(DRAFT_KEY)
@@ -170,6 +235,12 @@ function restoreDraft() {
     if (draft.activeTab) activeTab = draft.activeTab
     editingProductIdx = draft.editingProductIdx ?? null
     ensureStoreDefaults()
+    isDirty = draft.dirty !== false
+    if (editingProductIdx != null && productsData.products[editingProductIdx]) {
+      productEditBaseline = cloneProduct(productsData.products[editingProductIdx])
+      editingProductIsNew = false
+    }
+    updateDirtyUI()
     return true
   } catch {
     return false
@@ -225,6 +296,7 @@ async function saveStore() {
   })
   if (!res.ok) throw new Error((await res.json()).error || 'Ошибка сохранения')
   invalidateStore()
+  markClean()
   clearDraft()
   status('Настройки сохранены!', 'success')
 }
@@ -238,6 +310,7 @@ async function saveProducts() {
   })
   if (!res.ok) throw new Error((await res.json()).error || 'Ошибка сохранения товаров')
   invalidateStore()
+  markClean()
   clearDraft()
   status('Товары сохранены!', 'success')
 }
@@ -419,9 +492,27 @@ function syncStorageFromEditor(p) {
   })
 }
 
+function normalizeAndSortProductStorage(p) {
+  if (!p.storage) return
+  const prev = [...p.storage]
+  const rename = new Map()
+  prev.forEach((s) => {
+    const next = normalizeStorageLabel(s.label)
+    if (s.label && next && s.label !== next) rename.set(s.label, next)
+  })
+  p.storage = sortStorageEntries(
+    prev.map((s) => ({ label: normalizeStorageLabel(s.label) })).filter((s) => s.label),
+  )
+  if (rename.size) {
+    for (const v of p.variants || []) {
+      if (rename.has(v.storage)) v.storage = rename.get(v.storage)
+    }
+  }
+}
+
 function cleanupProductForSave(p) {
   if (p.storage) {
-    p.storage = p.storage.map((s) => ({ label: String(s.label || '').trim() })).filter((s) => s.label)
+    normalizeAndSortProductStorage(p)
     if (productUsesPhoneStorage(p)) {
       p.storage = p.storage.filter((s) => isMeaningfulStorageLabel(s.label))
       p.variants = (p.variants || []).filter((v) => isMeaningfulStorageLabel(v.storage))
@@ -453,6 +544,66 @@ function formatProductSummaryLine(s) {
   return `${escAttr(s.name)}: ${counts}${price}`
 }
 
+function cloneProduct(p) {
+  try {
+    return structuredClone(p)
+  } catch {
+    return JSON.parse(JSON.stringify(p))
+  }
+}
+
+function beginProductEdit(idx, { isNew = false } = {}) {
+  editingProductIdx = idx
+  editingProductIsNew = !!isNew
+  const p = productsData.products[idx]
+  productEditBaseline = p ? cloneProduct(p) : null
+}
+
+function discardProductEditsAndExit(c) {
+  if (editingProductIdx == null) return
+  const idx = editingProductIdx
+  if (editingProductIsNew) {
+    productsData.products.splice(idx, 1)
+  } else if (productEditBaseline) {
+    productsData.products[idx] = cloneProduct(productEditBaseline)
+  }
+  const wasHidden = !editingProductIsNew && productEditBaseline?.hidden
+  productEditBaseline = null
+  editingProductIsNew = false
+  editingProductIdx = null
+  markClean()
+  clearDraft()
+  // если были другие несохранённые правки вне товара — draft уже очищен;
+  // markDirty снова появится при следующем изменении
+  adminProductView = wasHidden ? 'hidden' : 'active'
+  status('Правки товара отменены', 'info')
+  renderProducts(c)
+}
+
+function exitProductEditor(c, p) {
+  productEditBaseline = null
+  editingProductIsNew = false
+  adminProductView = p?.hidden ? 'hidden' : 'active'
+  editingProductIdx = null
+  renderProducts(c)
+}
+
+function openProductEditorById(productId) {
+  const idx = productsData.products.findIndex((p) => p.id === Number(productId))
+  if (idx < 0) {
+    status('Товар не найден', 'error')
+    return
+  }
+  activeTab = 'products'
+  beginProductEdit(idx)
+  document.querySelectorAll('.admin-nav__btn').forEach((b) => {
+    b.classList.toggle('admin-nav__btn--active', b.dataset.tab === 'products')
+  })
+  $('tab-title').textContent = TITLES.products
+  $('btn-save').style.display = ''
+  renderTab()
+}
+
 function productSelectOptions(selectedId = '') {
   const list = [...(productsData?.products || [])]
     .sort((a, b) => String(a.name).localeCompare(String(b.name), 'ru'))
@@ -472,7 +623,12 @@ function formatImportResultHtml(s, opts = {}) {
 
   if (s.productSummaries?.length) {
     const sorted = [...s.productSummaries].sort((a, b) => a.name.localeCompare(b.name, 'ru'))
-    const rows = sorted.map((row) => `<div>${formatProductSummaryLine(row)}</div>`).join('')
+    const rows = sorted.map((row) => `
+      <div class="admin-import-product-row">
+        <span>${formatProductSummaryLine(row)}</span>
+        ${row.id != null && !dry ? `<button type="button" class="btn btn--ghost btn--sm" data-open-product="${row.id}">Изменить</button>` : ''}
+      </div>
+    `).join('')
     html += `<details class="admin-import-report" open><summary>По товарам (${sorted.length})</summary>${rows}</details>`
   }
 
@@ -503,6 +659,9 @@ function formatImportResultHtml(s, opts = {}) {
 }
 
 function bindImportSkipHandlers(rootEl) {
+  rootEl?.querySelectorAll('[data-open-product]').forEach((btn) => {
+    btn.onclick = () => openProductEditorById(btn.dataset.openProduct)
+  })
   rootEl?.querySelectorAll('.admin-import-bind-btn').forEach((btn) => {
     btn.onclick = async () => {
       const row = btn.closest('.admin-import-bind-row')
@@ -526,7 +685,7 @@ function bindImportSkipHandlers(rootEl) {
         product.importNames = aliases.join(', ')
       }
       try {
-        await saveProducts()
+        await runSave(async () => { await saveProducts() })
         row.classList.add('admin-import-bind-row--done')
         btn.textContent = 'Готово'
         btn.disabled = true
@@ -557,7 +716,7 @@ function getStorageLabelsFromEditor(p) {
     return (inp ? inp.value : s.label || '').trim()
   }).filter((l) => l && (isPhoneCategory(p.category) ? isMeaningfulStorageLabel(l) : true))
   const fromVariants = (p.variants || []).map((v) => v.storage).filter(Boolean)
-  return [...new Set([...labels, ...fromVariants])]
+  return [...new Set([...labels, ...fromVariants])].sort(compareStorageLabels)
 }
 
 function readFileAsBase64(file) {
@@ -657,15 +816,20 @@ $('login-form').addEventListener('submit', async (e) => {
 bindPasswordToggles()
 
 document.addEventListener('input', (e) => {
-  if (e.target.closest('#admin-content')) scheduleDraftSave()
+  if (e.target.closest('#admin-content')) markDirty()
 }, true)
 document.addEventListener('change', (e) => {
-  if (e.target.closest('#admin-content')) scheduleDraftSave()
+  if (e.target.closest('#admin-content')) markDirty()
 }, true)
 document.addEventListener('visibilitychange', () => {
   if (document.hidden) flushDraft()
 })
 window.addEventListener('pagehide', flushDraft)
+window.addEventListener('beforeunload', (e) => {
+  if (!isDirty || $('admin-app')?.hidden) return
+  e.preventDefault()
+  e.returnValue = ''
+})
 document.addEventListener('pageshow', (e) => {
   if (e.persisted && getToken() && storeData) {
     restoreDraft()
@@ -680,11 +844,13 @@ async function initAdmin() {
       await loadData()
       const hadDraft = restoreDraft()
       showApp()
+      updateDirtyUI()
       if (hadDraft) status('Восстановлен несохранённый черновик', 'info')
       return
     } catch {
       clearToken()
       clearDraft()
+      markClean()
     }
   }
   showLoginScreen()
@@ -693,30 +859,54 @@ async function initAdmin() {
 initAdmin()
 
 $('btn-logout')?.addEventListener('click', () => {
+  if (!confirmDiscardIfDirty('Есть несохранённые изменения. Выйти без сохранения?')) return
   showLoginScreen(true)
+  markClean()
   $('login-password').value = ''
 })
 
 $('btn-save')?.addEventListener('click', async () => {
   try {
-    collectTab()
-    if (activeTab === 'products') await saveProducts()
-    else if (activeTab !== 'config') await saveStore()
-    else status('Используйте кнопки экспорта/импорта', 'info')
+    await runSave(async () => {
+      collectTab()
+      if (activeTab === 'products') await saveProducts()
+      else if (activeTab !== 'config') await saveStore()
+      else status('Используйте кнопки экспорта/импорта', 'info')
+    })
   } catch (err) { status(err.message, 'error') }
 })
 
 document.querySelectorAll('.admin-nav__btn').forEach((btn) => {
   btn.addEventListener('click', () => {
-    if (editingProductIdx !== null && activeTab === 'products') collectProduct()
-    else collectTab()
+    if (!confirmDiscardIfDirty()) return
+    if (editingProductIdx !== null && activeTab === 'products') {
+      if (isDirty || editingProductIsNew) {
+        if (editingProductIsNew) productsData.products.splice(editingProductIdx, 1)
+        else if (productEditBaseline) productsData.products[editingProductIdx] = cloneProduct(productEditBaseline)
+        productEditBaseline = null
+        editingProductIsNew = false
+        markClean()
+      } else {
+        collectProduct()
+      }
+    } else collectTab()
     activeTab = btn.dataset.tab
     editingProductIdx = null
+    productEditBaseline = null
+    editingProductIsNew = false
     document.querySelectorAll('.admin-nav__btn').forEach((b) => b.classList.toggle('admin-nav__btn--active', b === btn))
     $('tab-title').textContent = TITLES[activeTab]
     $('btn-save').style.display = (activeTab === 'config' || activeTab === 'orders') ? 'none' : ''
     renderTab()
   })
+})
+
+document.addEventListener('keydown', (e) => {
+  if ((e.metaKey || e.ctrlKey) && e.key.toLowerCase() === 's') {
+    if ($('admin-app')?.hidden) return
+    e.preventDefault()
+    $('btn-save')?.click()
+  }
 })
 
 function formatRelativeAgo(iso) {
@@ -1070,7 +1260,7 @@ function renderSortOrderList(categoryId) {
     items.map((p, i) => `
       <div class="admin-card admin-card--drag" draggable="true" data-order-idx="${i}">
         <span class="drag-handle">⠿</span>
-        <img src="${p.image || 'assets/logo.png'}" alt="" class="admin-sort-order-list__img" />
+        <img src="${assetUrl(p.image || 'assets/logo.png')}" alt="" class="admin-sort-order-list__img" />
         <span class="admin-sort-order-list__name">${escAttr(p.name)}${p.hidden ? ' <em>(скрыт)</em>' : ''}</span>
       </div>
     `).join('')
@@ -1085,7 +1275,7 @@ function renderSortOrderList(categoryId) {
       items.splice(drop, 0, item)
       items.forEach((p, idx) => { p.order = idx })
       renderSortOrderList(categoryId)
-      try { await saveProducts() } catch (err) { status(err.message, 'error') }
+      try { await runSave(async () => { await saveProducts() }) } catch (err) { status(err.message, 'error') }
     }
   })
 }
@@ -1136,13 +1326,13 @@ function renderProducts(c) {
       storeData.categorySortModes = storeData.categorySortModes || {}
       storeData.categorySortModes[sortCategoryId] = 'auto'
       renderProducts(c)
-      try { await saveStore() } catch (err) { status(err.message, 'error') }
+      try { await runSave(async () => { await saveStore() }) } catch (err) { status(err.message, 'error') }
     }
     $('sort-mode-manual').onclick = async () => {
       storeData.categorySortModes = storeData.categorySortModes || {}
       storeData.categorySortModes[sortCategoryId] = 'manual'
       renderProducts(c)
-      try { await saveStore() } catch (err) { status(err.message, 'error') }
+      try { await runSave(async () => { await saveStore() }) } catch (err) { status(err.message, 'error') }
     }
     if (sortMode === 'manual') renderSortOrderList(sortCategoryId)
   }
@@ -1157,15 +1347,39 @@ function renderProducts(c) {
       : (inLastImport ? '<span class="admin-badge admin-badge--import">В последнем импорте</span>' : '')
     return `
     <div class="admin-product-row${rowClass}">
-      <img src="${p.image || 'assets/logo.png'}" alt="" />
+      ${adminProductView === 'new' ? `<label class="admin-product-check"><input type="checkbox" data-bulk-id="${p.id}" /></label>` : ''}
+      <img src="${assetUrl(p.image || 'assets/logo.png')}" alt="" />
       <div><strong>${p.name}${p.isNew ? ' <span class="admin-badge admin-badge--new">Новое</span>' : ''}${importBadge ? ` ${importBadge}` : ''}</strong><span>${p.brand} · ${categoryLabel(p.category)} · наценка ${markup}${p.hidden ? ' · скрыт' : ''}</span></div>
       <button type="button" class="btn btn--secondary btn--sm" data-edit="${i}">Изменить</button>
       <button type="button" class="btn btn--ghost btn--sm" data-toggle-hidden="${i}">${p.hidden ? 'Вернуть' : 'Скрыть'}</button>
       <button type="button" class="btn btn--danger btn--sm" data-del="${i}">Удалить</button>
     </div>
   `}).join('') || `<p class="admin-hint">${adminProductView === 'hidden' ? 'Скрытых товаров нет' : adminProductView === 'new' ? 'Новых товаров нет' : 'Товаров нет'}</p>`
+  if (adminProductView === 'new' && products.length) {
+    $('product-list').insertAdjacentHTML('beforebegin', `
+      <div class="admin-bulk-bar">
+        <button type="button" class="btn btn--secondary btn--sm" id="bulk-select-all-new">Выбрать все</button>
+        <button type="button" class="btn btn--primary btn--sm" id="bulk-clear-new">Снять «Новое» с выбранных</button>
+      </div>
+    `)
+    $('bulk-select-all-new').onclick = () => {
+      $('product-list').querySelectorAll('[data-bulk-id]').forEach((cb) => { cb.checked = true })
+    }
+    $('bulk-clear-new').onclick = async () => {
+      const ids = [...$('product-list').querySelectorAll('[data-bulk-id]:checked')].map((cb) => Number(cb.dataset.bulkId))
+      if (!ids.length) { status('Выберите товары', 'error'); return }
+      for (const p of productsData.products) {
+        if (ids.includes(p.id)) p.isNew = false
+      }
+      try {
+        await runSave(async () => { await saveProducts() })
+        status(`Снято «Новое»: ${ids.length}`, 'success')
+        renderProducts(c)
+      } catch (err) { status(err.message, 'error') }
+    }
+  }
   $('product-list').querySelectorAll('[data-edit]').forEach((b) => {
-    b.onclick = () => { editingProductIdx = Number(b.dataset.edit); renderProducts(c) }
+    b.onclick = () => { beginProductEdit(Number(b.dataset.edit)); renderProducts(c) }
   })
   $('product-list').querySelectorAll('[data-toggle-hidden]').forEach((b) => {
     b.onclick = async () => {
@@ -1175,13 +1389,24 @@ function renderProducts(c) {
       if (!p.hidden) p.isNew = false
       renderProducts(c)
       try {
-        await saveProducts()
+        await runSave(async () => { await saveProducts() })
         status(p.hidden ? 'Товар скрыт с сайта' : 'Товар снова в каталоге', 'success')
       } catch (err) { status(err.message, 'error') }
     }
   })
   $('product-list').querySelectorAll('[data-del]').forEach((b) => {
-    b.onclick = () => { if (confirm('Удалить?')) { productsData.products.splice(Number(b.dataset.del), 1); renderProducts(c) } }
+    b.onclick = async () => {
+      if (!confirm('Удалить товар с сайта?')) return
+      productsData.products.splice(Number(b.dataset.del), 1)
+      try {
+        await runSave(async () => { await saveProducts() })
+        status('Товар удалён', 'success')
+        renderProducts(c)
+      } catch (err) {
+        status(err.message, 'error')
+        renderProducts(c)
+      }
+    }
   })
   $('add-product').onclick = () => {
     const id = Math.max(0, ...all.map((p) => p.id)) + 1
@@ -1197,7 +1422,7 @@ function renderProducts(c) {
       hidden: false,
       importNames: '',
     })
-    editingProductIdx = productsData.products.length - 1
+    beginProductEdit(productsData.products.length - 1, { isNew: true })
     adminProductView = 'active'
     renderProducts(c)
   }
@@ -1214,9 +1439,10 @@ function renderProductEditor(c) {
   c.innerHTML = `
     <div class="admin-editor-toolbar">
       <button type="button" class="btn btn--ghost" id="back-products">← К списку</button>
+      <button type="button" class="btn btn--ghost" id="discard-product" title="Вернуть товар как был и выйти">Выйти без сохранения</button>
       <button type="button" class="btn btn--primary" id="save-product">Сохранить товар</button>
     </div>
-    <h3 class="admin-editor-title">${p.name}</h3>
+    <h3 class="admin-editor-title">${escAttr(p.name)}</h3>
 
     ${section('Основное', `<div class="admin-grid">
       ${field('Название', 'p-name', p.name)}${field('Бренд', 'p-brand', p.brand)}
@@ -1242,7 +1468,7 @@ function renderProductEditor(c) {
     <p class="admin-hint">Перетащите цвет за ⠿, чтобы изменить порядок на сайте. В «Названиях в прайсе» — как у поставщика.</p>`)}
 
     ${showStorage ? section('Память', `<div id="storage-list"></div><button type="button" class="btn btn--secondary" id="add-storage">+ Объём</button>
-    <p class="admin-hint">256 ГБ, 512 ГБ, 1 ТБ. Цены — в блоке прайса ниже.</p>`) : ''}
+    <p class="admin-hint">Можно писать <code>128</code>, <code>1</code> или <code>12/512</code> — подпись ГБ/ТБ добавится сама (число &gt; 5 → ГБ, иначе ТБ; для Android единица по накопителю). Порядок всегда от меньшей памяти к большей.</p>`) : ''}
 
     ${showSim ? section('Версия SIM', `
       <label class="field field--check"><input type="checkbox" id="p-hasSim" ${p.simTypes?.length ? 'checked' : ''} /> Есть выбор SIM (eSIM / eSIM+SIM)</label>
@@ -1266,6 +1492,15 @@ function renderProductEditor(c) {
         <button type="button" class="btn btn--ghost" id="recalc-variants">Пересчитать розницу</button>
       </div>
       <p class="admin-hint" id="import-result"></p>
+      <div class="admin-variant-filters" id="variant-filters">
+        <label class="field"><span>Фильтр: цвет</span>
+          <select id="variant-filter-color"><option value="">Все цвета</option></select>
+        </label>
+        <label class="field"><span>Фильтр: память</span>
+          <select id="variant-filter-storage"><option value="">Вся память</option></select>
+        </label>
+        <span class="admin-hint" id="variant-filter-count"></span>
+      </div>
       <div id="variant-list"></div>
       <button type="button" class="btn btn--secondary" id="add-variant">+ Позиция вручную</button>
     `)}
@@ -1282,16 +1517,36 @@ function renderProductEditor(c) {
     const storageErr = validateProductStorage(productsData.products[editingProductIdx])
     if (storageErr) { status(storageErr, 'error'); return }
     try {
-      await saveProducts()
+      await runSave(async () => { await saveProducts() })
+      editingProductIsNew = false
+      productEditBaseline = cloneProduct(productsData.products[editingProductIdx])
       status('Товар сохранён', 'success')
     } catch (err) { status(err.message, 'error') }
   }
 
-  $('back-products').onclick = () => {
+  $('discard-product').onclick = () => {
+    if (isDirty || editingProductIsNew) {
+      if (!confirm(editingProductIsNew
+        ? 'Удалить новый товар без сохранения?'
+        : 'Отменить все правки этого товара и выйти?')) return
+    }
+    discardProductEditsAndExit(c)
+  }
+
+  $('back-products').onclick = async () => {
     collectProduct()
-    adminProductView = p.hidden ? 'hidden' : 'active'
-    editingProductIdx = null
-    renderProducts(c)
+    if (isDirty || editingProductIsNew) {
+      const save = confirm('Сохранить товар перед выходом?\n\nОК — сохранить и выйти\nОтмена — остаться в редакторе\n\nЧтобы выйти без сохранения, нажмите «Выйти без сохранения».')
+      if (!save) return
+      const storageErr = validateProductStorage(productsData.products[editingProductIdx])
+      if (storageErr) { status(storageErr, 'error'); return }
+      try {
+        await runSave(async () => { await saveProducts() })
+        editingProductIsNew = false
+        productEditBaseline = cloneProduct(productsData.products[editingProductIdx])
+      } catch (err) { status(err.message, 'error'); return }
+    }
+    exitProductEditor(c, productsData.products[editingProductIdx] || p)
   }
 
   const uploadImage = async (file) => {
@@ -1325,7 +1580,7 @@ function renderProductEditor(c) {
       const isCover = p.coverImage && src === p.coverImage
       return `
       <div class="admin-gallery-item${isCover ? ' admin-gallery-item--cover' : ''}">
-        <img src="${escAttr(src)}" alt="" class="admin-gallery-item__preview" />
+        <img src="${escAttr(assetUrl(src))}" alt="" class="admin-gallery-item__preview" />
         <input type="text" id="gal-url-${i}" value="${escAttr(src)}" placeholder="assets/products/..." />
         <div class="admin-gallery-item__actions">
           <button type="button" class="btn btn--ghost btn--sm${isCover ? ' admin-gallery-item__cover-btn--active' : ''}" data-gal-cover="${i}" title="Главное фото">★</button>
@@ -1410,7 +1665,7 @@ function renderProductEditor(c) {
         </div>
         <div class="admin-row admin-row--color-photo">
           ${col.image
-            ? `<img src="${escAttr(col.image)}" alt="" class="admin-color-preview" />`
+            ? `<img src="${escAttr(assetUrl(col.image))}" alt="" class="admin-color-preview" />`
             : '<span class="admin-hint" style="margin:0">Нет фото</span>'}
           <label class="btn btn--secondary admin-upload-btn btn--sm">Загрузить фото<input type="file" id="col-upload-${i}" accept="image/*" hidden /></label>
           ${col.image ? `<button type="button" class="btn btn--ghost btn--sm" data-clear-col-img="${i}">Убрать</button>` : ''}
@@ -1494,9 +1749,10 @@ function renderProductEditor(c) {
   const renderStorage = () => {
     if (!$('storage-list')) return
     if (!p.storage) p.storage = []
+    p.storage = sortStorageEntries(p.storage)
     $('storage-list').innerHTML = p.storage.map((s, i) => `
       <div class="admin-row">
-        <input type="text" id="stor-label-${i}" value="${escAttr(s.label)}" placeholder="256 ГБ или 128 ГБ Wi-Fi" />
+        <input type="text" id="stor-label-${i}" value="${escAttr(s.label)}" placeholder="128 или 12/512 или 1" />
         <button type="button" class="btn btn--danger btn--sm" data-del-stor="${i}">✕</button>
       </div>
     `).join('')
@@ -1510,6 +1766,12 @@ function renderProductEditor(c) {
     })
     $('storage-list').querySelectorAll('input').forEach((inp) => {
       inp.oninput = () => { syncStorageFromEditor(p); renderVariants() }
+      inp.addEventListener('blur', () => {
+        syncStorageFromEditor(p)
+        normalizeAndSortProductStorage(p)
+        renderStorage()
+        renderVariants({ skipCollect: true })
+      })
     })
   }
   if (showStorage) {
@@ -1523,6 +1785,8 @@ function renderProductEditor(c) {
   }
 
   if (!p.variants) p.variants = []
+  let variantFilterColor = ''
+  let variantFilterStorage = ''
   const getMarkup = () => ({
     percent: num('p-markup') || p.markupPercent || 0,
     fixed: num('p-markup-fixed') || p.markupFixed || 0,
@@ -1543,13 +1807,46 @@ function renderProductEditor(c) {
     })()
     const simList = p.simTypes?.length ? p.simTypes : ['']
 
-    const displayVariants = phoneStorage
+    let displayVariants = phoneStorage
       ? p.variants.filter((v) => isMeaningfulStorageLabel(v.storage))
-      : p.variants
+      : [...p.variants]
+    const totalCount = displayVariants.length
+    if (variantFilterColor) {
+      displayVariants = displayVariants.filter((v) => v.colorId === variantFilterColor)
+    }
+    if (variantFilterStorage) {
+      displayVariants = displayVariants.filter((v) => v.storage === variantFilterStorage)
+    }
 
     const showSimColumn = showSim
     const showStorageColumn = phoneStorage || !(storageLabels.length <= 1 && storageLabels[0] === 'Стандарт')
     const storageColumnLabel = isWatchCategory(p.category) ? 'Размер' : 'Память'
+
+    const colorFilter = $('variant-filter-color')
+    if (colorFilter) {
+      const prev = variantFilterColor
+      colorFilter.innerHTML = `<option value="">Все цвета</option>${p.colors.map((c) => `<option value="${c.id}"${prev === c.id ? ' selected' : ''}>${escAttr(c.name)}</option>`).join('')}`
+      colorFilter.onchange = () => {
+        variantFilterColor = colorFilter.value
+        renderVariants()
+      }
+    }
+    const storageFilter = $('variant-filter-storage')
+    if (storageFilter) {
+      const prev = variantFilterStorage
+      storageFilter.innerHTML = `<option value="">Вся память</option>${storageLabels.map((l) => `<option value="${escAttr(l)}"${prev === l ? ' selected' : ''}>${escAttr(l)}</option>`).join('')}`
+      storageFilter.onchange = () => {
+        variantFilterStorage = storageFilter.value
+        renderVariants()
+      }
+      storageFilter.closest('.field').style.display = showStorageColumn ? '' : 'none'
+    }
+    const countEl = $('variant-filter-count')
+    if (countEl) {
+      countEl.textContent = totalCount
+        ? `Показано ${displayVariants.length} из ${totalCount}`
+        : ''
+    }
 
     $('variant-list').innerHTML = displayVariants.map((v) => {
       const i = p.variants.indexOf(v)
@@ -1580,7 +1877,8 @@ function renderProductEditor(c) {
       }
     })
 
-    p.variants.forEach((_, i) => {
+    displayVariants.forEach((v) => {
+      const i = p.variants.indexOf(v)
       const updateRetail = () => {
         const purchase = num(`var-purchase-${i}`)
         const retail = purchase > 0 ? calcRetailFromPurchase(purchase, getMarkup()) : 0
@@ -1806,38 +2104,76 @@ async function renderOrders(c) {
     const orders = data.orders || []
 
     if (!orders.length) {
-      c.innerHTML = section('Заказы', '<p class="admin-hint">Заказов пока нет. Они появятся после оформления на сайте.</p>')
+      c.innerHTML = section('Заказы', `
+        <div class="admin-orders-toolbar">
+          <button type="button" class="btn btn--secondary btn--sm" id="orders-refresh">Обновить</button>
+        </div>
+        <p class="admin-hint">Заказов пока нет. Они появятся после оформления на сайте.</p>
+      `)
+      $('orders-refresh').onclick = () => renderOrders(c)
       return
     }
 
     c.innerHTML = section('Заказы', `
-      <p class="admin-hint">${orders.length} заказов · новые сверху. Уведомления в Telegram отправляются автоматически при оформлении на сайте.</p>
+      <div class="admin-orders-toolbar">
+        <p class="admin-hint">${orders.length} заказов · новые сверху. Уведомления в Telegram отправляются автоматически.</p>
+        <button type="button" class="btn btn--secondary btn--sm" id="orders-refresh">Обновить</button>
+      </div>
       <div id="orders-list"></div>
     `)
 
+    $('orders-refresh').onclick = () => renderOrders(c)
+
     $('orders-list').innerHTML = orders.map((o) => {
       const date = new Date(o.createdAt).toLocaleString('ru-RU')
-      const items = o.items.map((i) => `${i.name} × ${i.qty}`).join(', ')
+      const items = (o.items || []).map((i) => {
+        const variant = i.variantLabel ? ` · ${escAttr(i.variantLabel)}` : ''
+        const price = i.price != null ? ` — ${Number(i.price * (i.qty || 1)).toLocaleString('ru-RU')} ₽` : ''
+        return `<li>${escAttr(i.name)}${variant} × ${i.qty || 1}${price}</li>`
+      }).join('')
       const tgStatus = o.notified
         ? `✓ Telegram${o.notifiedChats?.length ? ` (${o.notifiedChats.length})` : ''}`
         : o.notifyError
-          ? `Telegram: ${o.notifyError}`
+          ? `Telegram: ${escAttr(o.notifyError)}`
           : 'Telegram: ожидание отправки…'
+      const phone = escAttr(o.phoneDisplay || o.phone || '')
       return `
         <div class="admin-order-row">
           <div class="admin-order-row__head">
-            <strong>${o.id}</strong>
+            <strong>${escAttr(o.id)}</strong>
             <span>${date}</span>
           </div>
-          <div>${o.name} · ${o.phoneDisplay}</div>
-          <div class="admin-hint">${items}</div>
+          <div class="admin-order-row__contact">
+            <span>${escAttr(o.name)} · ${phone}</span>
+            <button type="button" class="btn btn--ghost btn--sm" data-copy-phone="${phone}">Копировать телефон</button>
+          </div>
+          <ul class="admin-order-row__items">${items}</ul>
           <div class="admin-hint">${tgStatus}</div>
           <div class="admin-order-row__total">${Number(o.total).toLocaleString('ru-RU')} ₽</div>
         </div>
       `
     }).join('')
+
+    $('orders-list').querySelectorAll('[data-copy-phone]').forEach((btn) => {
+      btn.onclick = async () => {
+        const phone = btn.dataset.copyPhone || ''
+        if (!phone) return
+        try {
+          await navigator.clipboard.writeText(phone)
+          status('Телефон скопирован', 'success')
+        } catch {
+          status('Не удалось скопировать', 'error')
+        }
+      }
+    })
   } catch (err) {
-    c.innerHTML = section('Заказы', `<p class="admin-hint">${err.message}</p>`)
+    c.innerHTML = section('Заказы', `
+      <div class="admin-orders-toolbar">
+        <button type="button" class="btn btn--secondary btn--sm" id="orders-refresh">Обновить</button>
+      </div>
+      <p class="admin-hint">${escAttr(err.message)}</p>
+    `)
+    $('orders-refresh')?.addEventListener('click', () => renderOrders(c))
   }
 }
 

@@ -1,5 +1,7 @@
 import {
-  loadStore, getProductById, calcPrice, formatPrice, makeCartKey,
+  loadStore, getProductById, getProductBySlug, buildProductHref,
+  matchStorageLabel, matchSimType,
+  calcPrice, formatPrice, makeCartKey,
   getProductImages, getInitialSelection, getStockForVariant,
   usesSupplierPricing, isComboOrderable, isOptionUnavailable,
 } from './store.js'
@@ -22,24 +24,136 @@ let selectedSim = 0
 let selectedWarranty = 0
 let gallery
 let colorTipTimer = null
+let buyDock = null
+let syncBuyDock = () => {}
 
 const els = {}
 
-async function init() {
-  const hash = location.hash.replace('#', '')
-  const productId = Number(hash)
-  if (!productId) {
-    location.href = '/catalog'
-    return
+function applySelectionFromUrl() {
+  const params = new URLSearchParams(location.search)
+  const colorId = params.get('color')
+  if (colorId) {
+    const idx = product.colors.findIndex((c) => c.id === colorId || c.id.toLowerCase() === colorId.toLowerCase())
+    if (idx >= 0) selectedColor = idx
+  }
+  const storageParam = params.get('storage')
+  if (storageParam) {
+    const sizes = getSizeLabels()
+    if (sizes.length) {
+      const matched = matchStorageLabel(sizes, storageParam)
+      const idx = matched ? sizes.indexOf(matched) : -1
+      if (idx >= 0) selectedSize = idx
+    } else {
+      const visible = getDisplayStorage(product)
+      const labels = visible.map((s) => s.label)
+      const matched = matchStorageLabel(labels, storageParam)
+      const idx = matched ? labels.indexOf(matched) : -1
+      if (idx >= 0) selectedStorage = idx
+    }
+  }
+  const simParam = params.get('sim')
+  if (simParam && product.simTypes?.length) {
+    const matched = matchSimType(product.simTypes, simParam)
+    const idx = matched ? product.simTypes.indexOf(matched) : -1
+    if (idx >= 0) selectedSim = idx
+  }
+  const w = Number(params.get('w'))
+  if (w) {
+    const idx = WARRANTY_OPTIONS.findIndex((o) => o.months === w)
+    if (idx >= 0) selectedWarranty = idx
+  }
+}
+
+function syncSelectionToUrl() {
+  if (!product) return
+  const url = buildProductHref(product, {
+    color: product.colors[selectedColor]?.id,
+    storage: getCurrentStorageLabel(),
+    sim: getSelectedSimType(),
+    warranty: getWarrantyOption()?.months,
+  })
+  const current = `${location.pathname}${location.search}`
+  if (current !== url || location.hash) {
+    history.replaceState(null, '', url)
+  }
+}
+
+function initMobileBuyDock() {
+  if (!window.matchMedia('(max-width: 768px)').matches) return
+  const slot = document.getElementById('buy-bar-slot')
+  if (!slot || !els.addBtn || buyDock) return
+
+  buyDock = document.createElement('div')
+  buyDock.className = 'product-buy-dock'
+  buyDock.hidden = true
+  buyDock.innerHTML = `
+    <div class="product-buy-dock__price" id="buy-dock-price"></div>
+    <button type="button" class="product-detail__buy" id="buy-dock-btn">Купить</button>
+  `
+  document.body.appendChild(buyDock)
+
+  const dockPrice = buyDock.querySelector('#buy-dock-price')
+  const dockBtn = buyDock.querySelector('#buy-dock-btn')
+  dockBtn.addEventListener('click', (e) => {
+    e.preventDefault()
+    els.addBtn?.click()
+  })
+
+  syncBuyDock = () => {
+    if (!buyDock) return
+    if (dockPrice) dockPrice.textContent = els.price?.textContent || ''
+    if (dockBtn && els.addBtn) {
+      dockBtn.disabled = els.addBtn.disabled
+      dockBtn.textContent = els.addBtn.textContent
+      dockBtn.className = els.addBtn.className
+    }
   }
 
+  const refreshVisibility = (inView) => {
+    const cartOpen = document.getElementById('cart-panel')?.classList.contains('cart--open')
+    const checkout = document.getElementById('checkout-modal')
+    const checkoutOpen = checkout && !checkout.hasAttribute('hidden')
+    const lightbox = document.querySelector('.lightbox:not([hidden])')
+    const hide = inView || cartOpen || checkoutOpen || !!lightbox
+    buyDock.hidden = hide
+    document.body.classList.toggle('has-buy-dock', !hide)
+  }
+
+  let slotInView = true
+  const io = new IntersectionObserver(([entry]) => {
+    slotInView = entry.isIntersecting
+    refreshVisibility(slotInView)
+  }, { threshold: 0.2, rootMargin: '0px 0px -80px 0px' })
+  io.observe(slot)
+
+  // прячем dock, когда открыта корзина/лайтбокс
+  const mo = new MutationObserver(() => refreshVisibility(slotInView))
+  const cartPanel = document.getElementById('cart-panel')
+  if (cartPanel) mo.observe(cartPanel, { attributes: true, attributeFilter: ['class'] })
+  document.body.addEventListener('click', () => {
+    setTimeout(() => refreshVisibility(slotInView), 0)
+  }, true)
+
+  syncBuyDock()
+}
+
+async function init() {
   store = await loadStore()
-  product = getProductById(store, productId)
+
+  const pathMatch = location.pathname.match(/^\/product\/([^/]+)\/?$/)
+  const hashId = Number(location.hash.replace('#', ''))
+  if (pathMatch) {
+    product = getProductBySlug(store, pathMatch[1])
+  }
+  if (!product && hashId) {
+    product = getProductById(store, hashId)
+  }
   if (!product || product.hidden) {
     location.href = '/catalog'
     return
   }
 
+  document.title = `${product.name} — АирДроп`
   document.body.dataset.showCatalogToggle = 'true'
   document.body.dataset.cart = 'true'
   await renderHeader('catalog')
@@ -79,7 +193,11 @@ async function init() {
   })
 
   els.addBtn?.addEventListener('click', addToCart)
+  initMobileBuyDock()
   renderOptions()
+  document.getElementById('product-skeleton')?.setAttribute('hidden', '')
+  document.getElementById('product-breadcrumb')?.removeAttribute('hidden')
+  document.getElementById('product-detail')?.removeAttribute('hidden')
 }
 
 function getSelectedSimType() {
@@ -350,6 +468,8 @@ function updateUI(resetGallery = false) {
     els.addBtn.textContent = orderable && basePrice > 0 ? 'Купить' : 'Нет в наличии'
     els.addBtn.classList.toggle('product-detail__buy--unavailable', !orderable || basePrice <= 0)
   }
+  syncBuyDock()
+  syncSelectionToUrl()
   updateStockInfo()
   updateColorSelectionStatus()
   renderWarrantyOptions()
@@ -515,6 +635,7 @@ function renderOptions() {
   selectedStorage = initial.storageIdx
   selectedSize = initial.sizeIdx
   selectedSim = initial.simIdx
+  applySelectionFromUrl()
   ensureValidSelection()
   updateUI(true)
 }

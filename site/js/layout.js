@@ -1,4 +1,4 @@
-import { loadStore, getCatalogMode, setCatalogMode, isCatalogPage } from './store.js'
+import { loadStore, getCatalogMode, setCatalogMode, isCatalogPage, assetUrl } from './store.js'
 import { applyTheme } from './theme.js'
 import { initMotion, initHeaderScroll } from './motion.js'
 
@@ -51,8 +51,8 @@ export async function renderHeader(activeId = '') {
       <a href="/" class="logo">
         <span class="logo__badge">
           <span class="logo__faces">
-            <img src="${settings.logo}" alt="${settings.name}" class="logo__img-text" />
-            <img src="${settings.logoIcon || 'assets/logo.png'}" alt="" class="logo__img-icon" aria-hidden="true" />
+            <img src="${assetUrl(settings.logo)}" alt="${settings.name}" class="logo__img-text" />
+            <img src="${assetUrl(settings.logoIcon || 'assets/logo.png')}" alt="" class="logo__img-icon" aria-hidden="true" />
           </span>
         </span>
       </a>
@@ -139,7 +139,7 @@ export async function renderFooter() {
         <div class="footer__brand">
           <a href="/" class="logo">
             <span class="logo__badge">
-              <img src="${settings.logo}" alt="${settings.name}" class="logo__img-text" />
+              <img src="${assetUrl(settings.logo)}" alt="${settings.name}" class="logo__img-text" />
             </span>
           </a>
           <p>${settings.description}</p>

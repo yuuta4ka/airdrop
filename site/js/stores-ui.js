@@ -1,8 +1,10 @@
+import { assetUrl } from './store.js'
+
 export function renderStorePhotosHtml(photos, { variant = 'card' } = {}) {
   if (!photos?.length) return ''
 
   const slides = photos.map((src, i) => `
-    <img src="${src}" alt="" class="store-photos__img${i === 0 ? ' store-photos__img--active' : ''}" loading="lazy" />
+    <img src="${assetUrl(src)}" alt="" class="store-photos__img${i === 0 ? ' store-photos__img--active' : ''}" loading="lazy" />
   `).join('')
 
   if (variant === 'inline') {

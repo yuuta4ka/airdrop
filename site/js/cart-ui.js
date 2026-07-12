@@ -1,5 +1,5 @@
 import { loadCart, saveCart, getCartCount, getCartTotal } from './cart.js'
-import { formatPrice } from './store.js'
+import { formatPrice, assetUrl } from './store.js'
 import { bindRuPhoneInput, isValidRuPhone } from './phone.js'
 
 let cart = loadCart()
@@ -71,13 +71,38 @@ function ensureCheckoutModal() {
   })
 }
 
-function resetCheckoutView() {
+const CHECKOUT_CONTACT_KEY = 'airdrop_checkout_contact'
+
+function loadCheckoutContact() {
+  try {
+    const raw = localStorage.getItem(CHECKOUT_CONTACT_KEY)
+    if (!raw) return null
+    const data = JSON.parse(raw)
+    if (!data || typeof data !== 'object') return null
+    return {
+      name: String(data.name || '').trim(),
+      phone: String(data.phone || '').trim(),
+    }
+  } catch {
+    return null
+  }
+}
+
+function saveCheckoutContact(name, phone) {
+  try {
+    localStorage.setItem(CHECKOUT_CONTACT_KEY, JSON.stringify({ name, phone }))
+  } catch { /* ignore */ }
+}
+
+function resetCheckoutView({ keepContact = false } = {}) {
   const modal = $('checkout-modal')
   modal?.classList.remove('checkout-modal--success')
   $('checkout-form')?.removeAttribute('hidden')
   $('checkout-success')?.setAttribute('hidden', '')
-  $('checkout-name').value = ''
-  $('checkout-phone').value = ''
+  if (!keepContact) {
+    $('checkout-name').value = ''
+    $('checkout-phone').value = ''
+  }
   $('checkout-phone')?.setCustomValidity('')
   const btn = $('checkout-submit')
   if (btn) {
@@ -135,6 +160,7 @@ async function submitOrder() {
     const data = await res.json().catch(() => ({}))
     if (!res.ok) throw new Error(data.error || 'Не удалось отправить заказ')
 
+    saveCheckoutContact(name, phone)
     cart = []
     saveCart(cart)
     updateCartUI()
@@ -153,7 +179,10 @@ async function submitOrder() {
 export function openCheckout() {
   if (!cart.length) return
   ensureCheckoutModal()
-  resetCheckoutView()
+  resetCheckoutView({ keepContact: false })
+  const saved = loadCheckoutContact()
+  if (saved?.name) $('checkout-name').value = saved.name
+  if (saved?.phone) $('checkout-phone').value = saved.phone
   $('checkout-title').textContent = 'Оформление заказа'
   $('checkout-overlay')?.removeAttribute('hidden')
   $('checkout-modal')?.removeAttribute('hidden')
@@ -236,7 +265,7 @@ export function updateCartUI() {
   els.cartItems.innerHTML = cart.map((item) => `
     <div class="cart-item">
       <div class="cart-item__media">
-        <img src="${item.image || 'assets/logo.png'}" alt="" class="cart-item__photo" />
+        <img src="${assetUrl(item.image || 'assets/logo.png')}" alt="" class="cart-item__photo" />
       </div>
       <div class="cart-item__body">
         <div class="cart-item__name">${item.name}</div>

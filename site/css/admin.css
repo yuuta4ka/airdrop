@@ -1154,3 +1154,68 @@ body::before {
 .admin-hint--warn {
   color: #e8b86d;
 }
+
+.admin-save--dirty {
+  box-shadow: 0 0 0 2px rgba(232, 184, 109, 0.55);
+}
+
+.admin-bulk-bar {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  margin: 0 0 12px;
+  align-items: center;
+}
+
+.admin-product-check {
+  display: flex;
+  align-items: center;
+  margin-right: 4px;
+}
+
+.admin-orders-toolbar {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: space-between;
+  gap: 10px;
+  margin-bottom: 12px;
+}
+
+.admin-order-row__contact {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 8px;
+}
+
+.admin-order-row__items {
+  margin: 4px 0 0;
+  padding-left: 18px;
+  color: var(--admin-muted);
+  font-size: 0.86rem;
+  line-height: 1.45;
+}
+
+.admin-variant-filters {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 12px;
+  align-items: end;
+  margin: 12px 0;
+}
+
+.admin-variant-filters .field {
+  min-width: 160px;
+  margin: 0;
+}
+
+.admin-import-product-row {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+  padding: 4px 0;
+  border-bottom: 1px solid rgba(255, 255, 255, 0.06);
+}

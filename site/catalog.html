@@ -2,13 +2,13 @@
 <html lang="ru">
 <head>
   <meta charset="UTF-8" />
-  <script src="js/theme-init.js"></script>
+  <script src="/js/theme-init.js"></script>
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>Каталог — АирДроп</title>
   <link rel="preconnect" href="https://fonts.googleapis.com" />
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
   <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet" />
-  <link rel="stylesheet" href="css/style.css" />
+  <link rel="stylesheet" href="/css/style.css?v=20260713a" />
 </head>
 <body data-show-catalog-toggle="true" data-cart="true">
   <header class="header" id="site-header"></header>
@@ -46,8 +46,14 @@
       <section class="products" id="catalog">
         <div class="container">
           <div class="products__header">
-            <h2 class="products__title">Новые устройства</h2>
-            <span class="products__count" id="products-count">0 товаров</span>
+            <div class="products__header-main">
+              <h2 class="products__title">Новые устройства</h2>
+              <span class="products__count" id="products-count">…</span>
+            </div>
+            <label class="catalog-search">
+              <span class="visually-hidden">Поиск</span>
+              <input type="search" id="catalog-search" placeholder="Поиск: iPhone, Samsung…" autocomplete="off" enterkeyhint="search" />
+            </label>
           </div>
           <div class="products__grid" id="products-grid"></div>
         </div>
@@ -81,6 +87,6 @@
   </aside>
 
   <div class="toast" id="toast"></div>
-  <script type="module" src="js/catalog.js"></script>
+  <script type="module" src="/js/catalog.js?v=20260713f"></script>
 </body>
 </html>

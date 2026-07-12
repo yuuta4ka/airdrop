@@ -309,9 +309,36 @@ function checkAuth(req) {
   return auth === `Bearer ${readStore().adminPassword}`
 }
 
-function sendJson(res, status, data) {
-  res.writeHead(status, { 'Content-Type': 'application/json; charset=utf-8' })
+function sendJson(res, status, data, extraHeaders = {}) {
+  res.writeHead(status, {
+    'Content-Type': 'application/json; charset=utf-8',
+    ...extraHeaders,
+  })
   res.end(JSON.stringify(data))
+}
+
+function fileEtag(filePath) {
+  try {
+    const st = fs.statSync(filePath)
+    return `"${st.mtimeMs.toFixed(0)}-${st.size}"`
+  } catch {
+    return `"${Date.now()}"`
+  }
+}
+
+function sendJsonCached(req, res, filePath, data, { publicCache = false } = {}) {
+  const etag = fileEtag(filePath)
+  if (req.headers['if-none-match'] === etag) {
+    res.writeHead(304, {
+      ETag: etag,
+      'Cache-Control': publicCache ? 'public, max-age=30, must-revalidate' : 'private, max-age=15, must-revalidate',
+    })
+    return res.end()
+  }
+  return sendJson(res, 200, data, {
+    ETag: etag,
+    'Cache-Control': publicCache ? 'public, max-age=30, must-revalidate' : 'private, max-age=15, must-revalidate',
+  })
 }
 
 function readBody(req) {
@@ -323,9 +350,26 @@ function readBody(req) {
   })
 }
 
+function cacheControlFor(filePath) {
+  const ext = path.extname(filePath).toLowerCase()
+  const rel = path.relative(SITE_DIR, filePath).replace(/\\/g, '/')
+  if (ext === '.html' || rel === 'admin.html') return 'no-cache'
+  if (rel.startsWith('data/')) return 'no-store'
+  if (['.css', '.js', '.mjs', '.woff', '.woff2', '.ttf'].includes(ext)) {
+    return 'public, max-age=86400, stale-while-revalidate=604800'
+  }
+  if (['.png', '.jpg', '.jpeg', '.webp', '.gif', '.svg', '.ico', '.avif'].includes(ext)) {
+    return 'public, max-age=604800, stale-while-revalidate=2592000'
+  }
+  return 'public, max-age=300'
+}
+
 function serveFile(res, filePath) {
   const ext = path.extname(filePath).toLowerCase()
-  res.writeHead(200, { 'Content-Type': MIME[ext] || 'application/octet-stream' })
+  res.writeHead(200, {
+    'Content-Type': MIME[ext] || 'application/octet-stream',
+    'Cache-Control': cacheControlFor(filePath),
+  })
   fs.createReadStream(filePath).pipe(res)
 }
 
@@ -344,11 +388,19 @@ const server = http.createServer(async (req, res) => {
     return serveFile(res, path.join(SITE_DIR, 'admin.html'))
   }
 
+  // Красивые ссылки: /product или /product/iphone-17-pro-max (только один сегмент)
+  if (p === '/product' || /^\/product\/[^/]+\/?$/.test(p)) {
+    return serveFile(res, path.join(SITE_DIR, 'product.html'))
+  }
+
   if (p === '/api/store' && req.method === 'GET') {
     const store = readStore()
-    if (checkAuth(req)) return sendJson(res, 200, store)
+    if (checkAuth(req)) {
+      // Не кэшируем полный store с админ-сессией — тело отличается от публичного
+      return sendJson(res, 200, store, { 'Cache-Control': 'no-store' })
+    }
     const { adminPassword, ...publicStore } = store
-    return sendJson(res, 200, publicStore)
+    return sendJsonCached(req, res, STORE_FILE, publicStore, { publicCache: true })
   }
 
   if (p === '/api/admin/login' && req.method === 'POST') {
@@ -482,7 +534,7 @@ const server = http.createServer(async (req, res) => {
   }
 
   if (p === '/api/products' && req.method === 'GET') {
-    return sendJson(res, 200, readProducts())
+    return sendJsonCached(req, res, PRODUCTS_FILE, readProducts(), { publicCache: true })
   }
 
   if (p === '/api/store' && req.method === 'PUT') {

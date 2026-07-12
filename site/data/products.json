@@ -61,7 +61,7 @@
           "storage": "256 ГБ",
           "simType": "eSIM + SIM",
           "purchasePrice": 102000,
-          "price": 113900
+          "price": 114900
         },
         {
           "colorId": "orange",
@@ -82,14 +82,14 @@
           "storage": "1 ТБ",
           "simType": "eSIM + SIM",
           "purchasePrice": 137700,
-          "price": 153900
+          "price": 154900
         },
         {
           "colorId": "blue",
           "storage": "1 ТБ",
           "simType": "eSIM + SIM",
           "purchasePrice": 136000,
-          "price": 151900
+          "price": 152900
         },
         {
           "colorId": "blue",
@@ -103,14 +103,14 @@
           "storage": "512 ГБ",
           "simType": "eSIM + SIM",
           "purchasePrice": 118000,
-          "price": 131900
+          "price": 132900
         },
         {
           "colorId": "blue",
           "storage": "512 ГБ",
           "simType": "eSIM only",
           "purchasePrice": 107500,
-          "price": 119900
+          "price": 120900
         },
         {
           "colorId": "blue",
@@ -159,7 +159,7 @@
           "storage": "1 ТБ",
           "simType": "eSIM only",
           "purchasePrice": 123600,
-          "price": 137900
+          "price": 138900
         }
       ],
       "sizes": [],
@@ -1270,7 +1270,7 @@
       ],
       "storage": [
         {
-          "label": "64 GB"
+          "label": "64 ГБ"
         }
       ],
       "sizes": [
@@ -1285,21 +1285,21 @@
       "variants": [
         {
           "colorId": "white",
-          "storage": "64 GB",
+          "storage": "64 ГБ",
           "simType": "",
           "purchasePrice": 24800,
           "price": 27900
         },
         {
           "colorId": "gray",
-          "storage": "64 GB",
+          "storage": "64 ГБ",
           "simType": "",
           "purchasePrice": 25000,
           "price": 27900
         },
         {
           "colorId": "blue",
-          "storage": "64 GB",
+          "storage": "64 ГБ",
           "simType": "",
           "purchasePrice": 24200,
           "price": 27900
@@ -1567,10 +1567,10 @@
       ],
       "storage": [
         {
-          "label": "12/512 ГБ"
+          "label": "12/256 ГБ"
         },
         {
-          "label": "12/256 ГБ"
+          "label": "12/512 ГБ"
         }
       ],
       "variants": [
@@ -2648,10 +2648,10 @@
       ],
       "storage": [
         {
-          "label": "46 мм"
+          "label": "42 мм"
         },
         {
-          "label": "42 мм"
+          "label": "46 мм"
         }
       ],
       "sizes": [
@@ -2880,22 +2880,22 @@
       ],
       "storage": [
         {
-          "label": "128 ГБ Wi-Fi + Cellular"
-        },
-        {
-          "label": "256 ГБ Wi-Fi + Cellular"
-        },
-        {
-          "label": "512 ГБ Wi-Fi + Cellular"
-        },
-        {
           "label": "128 ГБ Wi-Fi"
+        },
+        {
+          "label": "128 ГБ Wi-Fi + Cellular"
         },
         {
           "label": "256 ГБ Wi-F"
         },
         {
+          "label": "256 ГБ Wi-Fi + Cellular"
+        },
+        {
           "label": "512 ГБ Wi-Fi"
+        },
+        {
+          "label": "512 ГБ Wi-Fi + Cellular"
         }
       ],
       "variants": [],
@@ -3364,10 +3364,10 @@
       ],
       "storage": [
         {
-          "label": "512 ГБ"
+          "label": "256 ГБ"
         },
         {
-          "label": "256 ГБ"
+          "label": "512 ГБ"
         }
       ],
       "variants": [
@@ -3475,10 +3475,10 @@
       ],
       "storage": [
         {
-          "label": "128 ГБ"
+          "label": "64 ГБ"
         },
         {
-          "label": "64 ГБ"
+          "label": "128 ГБ"
         }
       ],
       "variants": [
@@ -3776,10 +3776,10 @@
       ],
       "storage": [
         {
-          "label": "128 ГБ"
+          "label": "64 ГБ"
         },
         {
-          "label": "64 ГБ"
+          "label": "128 ГБ"
         }
       ],
       "variants": [
@@ -4180,10 +4180,10 @@
       ],
       "storage": [
         {
-          "label": "512 ГБ"
+          "label": "256 ГБ"
         },
         {
-          "label": "256 ГБ"
+          "label": "512 ГБ"
         }
       ],
       "variants": [
@@ -4669,10 +4669,10 @@
       ],
       "storage": [
         {
-          "label": "256 ГБ Wi-Fi"
+          "label": "256 ГБ"
         },
         {
-          "label": "256 ГБ"
+          "label": "256 ГБ Wi-Fi"
         }
       ],
       "variants": [
@@ -5093,10 +5093,10 @@
       ],
       "storage": [
         {
-          "label": "512 ГБ"
+          "label": "256 ГБ"
         },
         {
-          "label": "256 ГБ"
+          "label": "512 ГБ"
         }
       ],
       "variants": [
@@ -5614,10 +5614,10 @@
       ],
       "storage": [
         {
-          "label": "256 ГБ"
+          "label": "128 ГБ"
         },
         {
-          "label": "128 ГБ"
+          "label": "256 ГБ"
         }
       ],
       "variants": [
@@ -6269,7 +6269,7 @@
       "simModifiers": [],
       "colors": [
         {
-          "id": "станда��т",
+          "id": "ст��нда��т",
           "name": "Стандарт",
           "hex": "#888888",
           "image": "",

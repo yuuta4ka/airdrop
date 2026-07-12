@@ -29,6 +29,42 @@ function applyCategoryDefaults(store) {
 let storeCache = null
 let productsCache = null
 
+const SESSION_CACHE_KEY = 'airdrop:catalog-cache:v1'
+const SESSION_CACHE_TTL_MS = 90_000
+
+function readSessionCache() {
+  try {
+    const raw = sessionStorage.getItem(SESSION_CACHE_KEY)
+    if (!raw) return null
+    const parsed = JSON.parse(raw)
+    if (!parsed?.store || !parsed?.products || !parsed?.ts) return null
+    if (Date.now() - parsed.ts > SESSION_CACHE_TTL_MS) return null
+    return parsed
+  } catch {
+    return null
+  }
+}
+
+function writeSessionCache(store, products) {
+  try {
+    sessionStorage.setItem(SESSION_CACHE_KEY, JSON.stringify({
+      store,
+      products,
+      ts: Date.now(),
+    }))
+  } catch {
+    /* quota / private mode — ignore */
+  }
+}
+
+function clearSessionCache() {
+  try {
+    sessionStorage.removeItem(SESSION_CACHE_KEY)
+  } catch {
+    /* ignore */
+  }
+}
+
 function showOfflineBanner() {
   if (document.getElementById('site-offline-banner')) return
   const banner = document.createElement('div')
@@ -61,6 +97,14 @@ export async function loadStore() {
   if (storeCache && productsCache) {
     return mergeStoreData()
   }
+
+  const cached = readSessionCache()
+  if (cached) {
+    storeCache = cached.store
+    productsCache = cached.products
+    return mergeStoreData()
+  }
+
   let sRes, pRes
   try {
     ;[sRes, pRes] = await Promise.all([
@@ -77,24 +121,128 @@ export async function loadStore() {
   }
   storeCache = await sRes.json()
   productsCache = await pRes.json()
+  writeSessionCache(storeCache, productsCache)
   return mergeStoreData()
 }
 
 export async function loadProductsOnly() {
   if (productsCache) return productsCache
+  const cached = readSessionCache()
+  if (cached?.products) {
+    productsCache = cached.products
+    if (cached.store) storeCache = cached.store
+    return productsCache
+  }
   const res = await fetch('/api/products')
   if (!res.ok) throw new Error('Не удалось загрузить товары')
   productsCache = await res.json()
+  if (storeCache) writeSessionCache(storeCache, productsCache)
   return productsCache
 }
 
 export function invalidateStore() {
   storeCache = null
   productsCache = null
+  clearSessionCache()
 }
 
 export function getProductById(store, id) {
   return store.products.find((p) => p.id === Number(id))
+}
+
+export function getProductSlug(product) {
+  const slug = String(product?.slug || '').trim()
+  if (slug) return slug
+  return product?.id != null ? `product-${product.id}` : ''
+}
+
+export function getProductBySlug(store, slug) {
+  const key = decodeURIComponent(String(slug || '')).trim().toLowerCase()
+  if (!key) return null
+  return store.products.find((p) => getProductSlug(p).toLowerCase() === key) || null
+}
+
+/** Компактный параметр памяти для URL: 256gb, 1tb, 12-512gb */
+export function compactStorageParam(label) {
+  const s = String(label || '').trim()
+  if (!s || s === 'Стандарт') return ''
+
+  const combo = s.match(/^(\d+)\s*\/\s*(\d+)\s*(ГБ|ТБ|GB|TB)?(?:\s+(.+))?$/i)
+  if (combo) {
+    const unit = combo[3]
+      ? (/ТБ|TB/i.test(combo[3]) ? 'tb' : 'gb')
+      : (Number(combo[2]) > 5 ? 'gb' : 'tb')
+    const rest = (combo[4] || '').toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/^-|-$/g, '')
+    return `${combo[1]}-${combo[2]}${unit}${rest ? `-${rest}` : ''}`
+  }
+
+  const single = s.match(/^(\d+(?:[.,]\d+)?)\s*(ГБ|ТБ|GB|TB)?(?:\s+(.+))?$/i)
+  if (single) {
+    const num = String(single[1]).replace(',', '.')
+    const unit = single[2]
+      ? (/ТБ|TB/i.test(single[2]) ? 'tb' : 'gb')
+      : (Number(num) > 5 ? 'gb' : 'tb')
+    const rest = (single[3] || '').toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/^-|-$/g, '')
+    return `${num}${unit}${rest ? `-${rest}` : ''}`
+  }
+
+  const mm = s.match(/^(\d+)\s*мм$/i)
+  if (mm) return `${mm[1]}mm`
+
+  return s.toLowerCase().replace(/\s+/g, '-').replace(/[^a-z0-9а-яё\-]/gi, '')
+}
+
+export function compactSimParam(sim) {
+  const s = String(sim || '').toLowerCase().replace(/\s+/g, '')
+  if (!s) return ''
+  if (/esim\+sim|sim\+esim|simesim|dualsim/.test(s)) return 'esim-sim'
+  if (/esim/.test(s)) return 'esim'
+  return String(sim).toLowerCase().replace(/\s+/g, '-').replace(/[^a-z0-9\-]/g, '')
+}
+
+function normalizeForMatch(s) {
+  return String(s || '').toLowerCase().replace(/\s+/g, '').replace(/гб/g, 'gb').replace(/тб/g, 'tb').replace(/\//g, '-')
+}
+
+export function matchStorageLabel(labels, param) {
+  const list = (labels || []).filter(Boolean)
+  if (!param || !list.length) return null
+  const decoded = decodeURIComponent(String(param)).trim()
+  const exact = list.find((l) => l === decoded)
+  if (exact) return exact
+  const compact = normalizeForMatch(compactStorageParam(decoded) || decoded)
+  return list.find((l) => normalizeForMatch(compactStorageParam(l)) === compact)
+    || list.find((l) => normalizeForMatch(l).includes(compact) || compact.includes(normalizeForMatch(l)))
+    || null
+}
+
+export function matchSimType(simTypes, param) {
+  const list = simTypes || []
+  if (!param || !list.length) return null
+  const decoded = decodeURIComponent(String(param)).trim()
+  const exact = list.find((s) => s === decoded)
+  if (exact) return exact
+  const want = compactSimParam(decoded)
+  return list.find((s) => compactSimParam(s) === want) || null
+}
+
+/** Красивая ссылка: /product/iphone-17-pro-max?color=black&storage=256gb&w=12 */
+export function buildProductHref(product, selection = {}) {
+  const slug = getProductSlug(product)
+  if (!slug) return '/catalog'
+  const params = new URLSearchParams()
+  if (selection.color) params.set('color', selection.color)
+  if (selection.storage) {
+    const compact = compactStorageParam(selection.storage)
+    if (compact) params.set('storage', compact)
+  }
+  if (selection.sim) {
+    const compact = compactSimParam(selection.sim)
+    if (compact) params.set('sim', compact)
+  }
+  if (selection.warranty) params.set('w', String(selection.warranty))
+  const qs = params.toString()
+  return `/product/${encodeURIComponent(slug)}${qs ? `?${qs}` : ''}`
 }
 
 export function calcPrice(product, colorIdx = 0, storageIdx = 0, sizeIdx = 0, simType = null) {
@@ -178,10 +326,21 @@ export function makeCartKey(productId, colorId, storageLabel, sizeLabel, simType
   return `${productId}|${colorId}|${storageLabel}|${sizeLabel || ''}|${simType || ''}`
 }
 
+/** Корневой путь к ассету — чтобы работало с /product/slug */
+export function assetUrl(src) {
+  if (!src) return src
+  const s = String(src).trim()
+  if (!s) return s
+  if (/^(https?:|data:|blob:|\/\/)/i.test(s)) return s
+  if (s.startsWith('/')) return s
+  return `/${s.replace(/^\/+/, '')}`
+}
+
 export function getAllProductImages(product) {
   const merged = []
   const add = (img) => {
-    if (img && !merged.includes(img)) merged.push(img)
+    const url = assetUrl(img)
+    if (url && !merged.includes(url)) merged.push(url)
   }
 
   add(product.coverImage)
@@ -197,13 +356,14 @@ export function getAllProductImages(product) {
     color.images?.forEach(add)
   })
 
-  return merged.length ? merged : ['assets/logo.png']
+  return merged.length ? merged : [assetUrl('assets/logo.png')]
 }
 
 export function findColorIndexByImage(product, image) {
   if (!image || !product.colors?.length) return -1
+  const want = assetUrl(image)
   return product.colors.findIndex((c) =>
-    c.image === image || c.images?.includes(image),
+    assetUrl(c.image) === want || c.images?.some((img) => assetUrl(img) === want),
   )
 }
 
@@ -252,10 +412,12 @@ export function getProductImages(product, colorIdx = 0) {
   const color = product.colors?.[colorIdx]
   if (!color?.image) return all
 
-  const prioritized = [color.image]
+  const prioritized = []
   const add = (img) => {
-    if (img && !prioritized.includes(img)) prioritized.push(img)
+    const url = assetUrl(img)
+    if (url && !prioritized.includes(url)) prioritized.push(url)
   }
+  add(color.image)
   color.images?.forEach(add)
   all.forEach(add)
   return prioritized
@@ -263,10 +425,10 @@ export function getProductImages(product, colorIdx = 0) {
 
 /** Превью в каталоге — всегда главное фото */
 export function getProductImage(product, colorIdx = 0) {
-  if (product.coverImage) return product.coverImage
-  if (product.image) return product.image
+  if (product.coverImage) return assetUrl(product.coverImage)
+  if (product.image) return assetUrl(product.image)
   const color = product.colors?.[colorIdx]
-  if (color?.image) return color.image
+  if (color?.image) return assetUrl(color.image)
   return getAllProductImages(product)[0]
 }
 

@@ -241,8 +241,13 @@
     opacity: 0.55;
   }
 
+  /* Старый docked-бар больше не используем — новый .product-buy-dock */
   .product-buy-bar--docked {
     display: none !important;
+  }
+
+  body.has-mobile-nav.has-buy-dock .product-page {
+    padding-bottom: calc(148px + env(safe-area-inset-bottom, 0px));
   }
 
   /* ─── Опции ─── */

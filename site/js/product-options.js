@@ -30,16 +30,121 @@ export function isMeaningfulStorageLabel(label) {
   return label !== 'Стандарт'
 }
 
+const GB_PER_TB = 1024
+
+/** Число > 5 → ГБ, иначе → ТБ (для «голых» объёмов вроде 128 или 1). */
+export function storageUnitForNumber(n) {
+  const num = Number(n)
+  if (!Number.isFinite(num) || num <= 0) return 'ГБ'
+  return num > 5 ? 'ГБ' : 'ТБ'
+}
+
+function normalizeUnitToken(unit) {
+  const u = String(unit || '').trim().toUpperCase().replace('ГБ', 'GB').replace('ТБ', 'TB')
+  if (u === 'TB' || u === 'ТБ') return 'ТБ'
+  if (u === 'GB' || u === 'ГБ') return 'ГБ'
+  return ''
+}
+
+/**
+ * Объём для сортировки в «гигабайтах» (1 ТБ = 1024).
+ * Для Android «12/512 ГБ» берём второе число (накопитель), RAM — вторичный ключ.
+ */
+export function parseStorageSortKey(label) {
+  const s = String(label || '').trim()
+  if (!s || s === 'Стандарт') return { gb: Number.POSITIVE_INFINITY, ram: 0, raw: s }
+
+  const combo = s.match(/(\d+)\s*\/\s*(\d+)\s*(ГБ|ТБ|GB|TB)?/i)
+  if (combo) {
+    const ram = Number(combo[1])
+    const storageNum = Number(combo[2])
+    const unit = normalizeUnitToken(combo[3]) || storageUnitForNumber(storageNum)
+    const gb = unit === 'ТБ' ? storageNum * GB_PER_TB : storageNum
+    return { gb, ram, raw: s }
+  }
+
+  const single = s.match(/(\d+(?:[.,]\d+)?)\s*(ГБ|ТБ|GB|TB)/i)
+  if (single) {
+    const storageNum = Number(String(single[1]).replace(',', '.'))
+    const unit = normalizeUnitToken(single[2])
+    const gb = unit === 'ТБ' ? storageNum * GB_PER_TB : storageNum
+    return { gb, ram: 0, raw: s }
+  }
+
+  // Голое число без единицы — те же правила, что в админке
+  const bare = s.match(/^(\d+(?:[.,]\d+)?)$/)
+  if (bare) {
+    const storageNum = Number(String(bare[1]).replace(',', '.'))
+    const unit = storageUnitForNumber(storageNum)
+    const gb = unit === 'ТБ' ? storageNum * GB_PER_TB : storageNum
+    return { gb, ram: 0, raw: s }
+  }
+
+  const mm = s.match(/(\d+)\s*мм/i)
+  if (mm) return { gb: Number(mm[1]), ram: 0, raw: s }
+
+  return { gb: Number.POSITIVE_INFINITY, ram: 0, raw: s }
+}
+
+export function compareStorageLabels(a, b) {
+  const ka = parseStorageSortKey(a)
+  const kb = parseStorageSortKey(b)
+  if (ka.gb !== kb.gb) return ka.gb - kb.gb
+  if (ka.ram !== kb.ram) return ka.ram - kb.ram
+  return String(a || '').localeCompare(String(b || ''), 'ru', { numeric: true })
+}
+
+export function sortStorageEntries(list) {
+  return [...(list || [])].sort((a, b) => compareStorageLabels(a?.label ?? a, b?.label ?? b))
+}
+
+/**
+ * Автоподпись ГБ/ТБ:
+ * - «128» → «128 ГБ», «1» → «1 ТБ»
+ * - «12/512» → «12/512 ГБ» (единица по накопителю)
+ * Уже подписанные и не-объёмы (мм, Wi-Fi alone, Стандарт) не ломаем.
+ */
+export function normalizeStorageLabel(raw) {
+  const original = String(raw || '').trim().replace(/\s+/g, ' ')
+  if (!original) return ''
+  if (/^стандарт$/i.test(original)) return 'Стандарт'
+  if (/^\d+\s*мм$/i.test(original) || /^(wi-?fi|cellular|lte)$/i.test(original)) return original
+
+  const combo = original.match(/^(\d+)\s*\/\s*(\d+)\s*(ГБ|ТБ|GB|TB)?(?:\s+(.+))?$/i)
+  if (combo) {
+    const ram = combo[1]
+    const storageNum = Number(combo[2])
+    const unit = normalizeUnitToken(combo[3]) || storageUnitForNumber(storageNum)
+    const rest = (combo[4] || '').trim()
+    return rest ? `${ram}/${storageNum} ${unit} ${rest}` : `${ram}/${storageNum} ${unit}`
+  }
+
+  const single = original.match(/^(\d+(?:[.,]\d+)?)\s*(ГБ|ТБ|GB|TB)?(?:\s+(.+))?$/i)
+  if (single) {
+    const numStr = String(single[1]).replace(',', '.')
+    const storageNum = Number(numStr)
+    if (!Number.isFinite(storageNum)) return original
+    const unit = normalizeUnitToken(single[2]) || storageUnitForNumber(storageNum)
+    const rest = (single[3] || '').trim()
+    const pretty = Number.isInteger(storageNum) ? String(storageNum) : numStr
+    return rest ? `${pretty} ${unit} ${rest}` : `${pretty} ${unit}`
+  }
+
+  return original
+}
+
 /** Память для отображения на сайте и в админке (без «Стандарт» у телефонов) */
 export function getDisplayStorage(product) {
   const list = product.storage || []
+  let visible
   if (isPhoneCategory(product.category)) {
-    return list.filter((s) => isMeaningfulStorageLabel(s.label))
+    visible = list.filter((s) => isMeaningfulStorageLabel(s.label))
+  } else if (isAccessoryCategory(product.category) && list.every((s) => s.label === 'Стандарт')) {
+    visible = []
+  } else {
+    visible = list.filter((s) => s.label)
   }
-  if (isAccessoryCategory(product.category) && list.every((s) => s.label === 'Стандарт')) {
-    return []
-  }
-  return list.filter((s) => s.label)
+  return sortStorageEntries(visible)
 }
 
 /** Скрывать выбор цвета, если у товара только один безымянный «Стандарт»-цвет */

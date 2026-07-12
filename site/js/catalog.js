@@ -1,13 +1,32 @@
-import { loadStore, getMinPrice, formatPrice, badgeClass, getProductImage, hasAnyStock, isProductFullyUnavailable, getCatalogMode } from './store.js'
+import { loadStore, getMinPrice, formatPrice, badgeClass, getProductImage, hasAnyStock, isProductFullyUnavailable, getCatalogMode, buildProductHref } from './store.js'
 import { renderHeader, renderFooter } from './layout.js'
 import { initCartUI, resetCartOverlay, showToast } from './cart-ui.js'
 
 let store
 let activeCategory = 'all'
+let searchQuery = ''
+let searchTimer = null
+let restoreScrollPending = false
 
+const SCROLL_KEY = 'airdrop:catalog-scroll'
 const els = {}
 
 function $(id) { return document.getElementById(id) }
+
+function showCatalogSkeleton() {
+  const grid = $('products-grid')
+  if (!grid || grid.dataset.ready === '1') return
+  grid.innerHTML = Array.from({ length: 8 }, () => `
+    <div class="product-card product-card--skeleton" aria-hidden="true">
+      <div class="product-card__image skeleton-block"></div>
+      <div class="product-card__body">
+        <div class="skeleton-line skeleton-line--sm"></div>
+        <div class="skeleton-line"></div>
+        <div class="skeleton-line skeleton-line--price"></div>
+      </div>
+    </div>
+  `).join('')
+}
 
 function showCatalogError(msg) {
   const grid = $('products-grid')
@@ -20,9 +39,80 @@ function showCatalogError(msg) {
   `
 }
 
+function readUrlState() {
+  const params = new URLSearchParams(window.location.search)
+  const cat = params.get('cat')
+  if (cat) activeCategory = cat
+  const q = params.get('q')
+  if (q) searchQuery = q
+}
+
+function syncUrlState({ replace = true } = {}) {
+  const params = new URLSearchParams(window.location.search)
+  // preserve unrelated params briefly then rebuild
+  const next = new URLSearchParams()
+  if (activeCategory && activeCategory !== 'all') next.set('cat', activeCategory)
+  if (searchQuery.trim()) next.set('q', searchQuery.trim())
+  // keep toast/cart one-shots only if still present and no cat/q yet — drop them after init
+  const qs = next.toString()
+  const url = qs ? `/catalog?${qs}` : '/catalog'
+  if (replace) history.replaceState({ cat: activeCategory, q: searchQuery }, '', url)
+  else history.pushState({ cat: activeCategory, q: searchQuery }, '', url)
+}
+
+function saveScrollForReturn() {
+  try {
+    sessionStorage.setItem(SCROLL_KEY, JSON.stringify({
+      y: window.scrollY,
+      cat: activeCategory,
+      q: searchQuery,
+    }))
+  } catch { /* ignore */ }
+}
+
+function restoreScrollIfNeeded() {
+  if (!restoreScrollPending) return
+  restoreScrollPending = false
+  try {
+    const raw = sessionStorage.getItem(SCROLL_KEY)
+    if (!raw) return
+    const data = JSON.parse(raw)
+    sessionStorage.removeItem(SCROLL_KEY)
+    if (data.cat !== activeCategory || (data.q || '') !== (searchQuery || '')) return
+    requestAnimationFrame(() => {
+      window.scrollTo(0, Number(data.y) || 0)
+    })
+  } catch { /* ignore */ }
+}
+
+function setupSearch() {
+  const input = $('catalog-search')
+  if (!input) return
+  input.value = searchQuery
+  input.addEventListener('input', () => {
+    clearTimeout(searchTimer)
+    searchTimer = setTimeout(() => {
+      searchQuery = input.value.trim()
+      syncUrlState()
+      renderProducts()
+    }, 180)
+  })
+}
+
 async function init() {
+  showCatalogSkeleton()
+  readUrlState()
+  try {
+    const rawScroll = sessionStorage.getItem(SCROLL_KEY)
+    if (rawScroll) restoreScrollPending = true
+  } catch { /* ignore */ }
+
   try {
     store = await loadStore()
+    // validate category from URL
+    if (activeCategory !== 'all' && !(store.categories || []).some((c) => c.id === activeCategory)) {
+      activeCategory = 'all'
+    }
     await renderHeader('catalog')
     await renderFooter()
 
@@ -50,17 +140,30 @@ async function init() {
       console.error('Cart init failed:', err)
     }
 
+    setupSearch()
     window.addEventListener('catalog-mode-change', renderCatalogMode)
+    window.addEventListener('popstate', () => {
+      readUrlState()
+      if (activeCategory !== 'all' && !(store.categories || []).some((c) => c.id === activeCategory)) {
+        activeCategory = 'all'
+      }
+      const input = $('catalog-search')
+      if (input) input.value = searchQuery
+      renderCategories()
+      renderCatalogMode()
+    })
+
     renderCategories()
     renderCatalogMode()
+    syncUrlState()
 
     const params = new URLSearchParams(window.location.search)
     if (params.get('added')) {
       showToast('Товар добавлен в корзину')
-      history.replaceState({}, '', '/catalog')
+      syncUrlState()
     }
     if (params.get('openCart')) {
-      history.replaceState({}, '', '/catalog')
+      syncUrlState()
       setTimeout(() => document.getElementById('cart-btn')?.click(), 300)
     }
   } catch (err) {
@@ -94,6 +197,7 @@ function renderCategories() {
   els.categories.querySelectorAll('.category-btn').forEach((btn) => {
     btn.addEventListener('click', () => {
       activeCategory = btn.dataset.id
+      syncUrlState()
       renderCategories()
       renderProducts()
     })
@@ -145,18 +249,26 @@ function sortForAllCategories(products) {
   return result
 }
 
+function matchesSearch(p, q) {
+  if (!q) return true
+  const hay = `${p.name || ''} ${p.brand || ''} ${p.importNames || ''}`.toLowerCase()
+  return q.toLowerCase().split(/\s+/).filter(Boolean).every((part) => hay.includes(part))
+}
+
 function renderProducts() {
   if (!els.productsGrid || !els.productsCount) return
 
   const products = (Array.isArray(store?.products) ? store.products : []).filter((p) => !p.hidden)
-  const filtered = activeCategory === 'all'
+  let filtered = activeCategory === 'all'
     ? products
     : products.filter((p) => p.category === activeCategory)
+  filtered = filtered.filter((p) => matchesSearch(p, searchQuery))
 
   els.productsCount.textContent = `${filtered.length} товаров`
+  els.productsGrid.dataset.ready = '1'
 
   if (!filtered.length) {
-    els.productsGrid.innerHTML = `<div class="catalog-error"><p>Товары не найдены</p></div>`
+    els.productsGrid.innerHTML = `<div class="catalog-error"><p>${searchQuery ? 'Ничего не найдено по запросу' : 'Товары не найдены'}</p></div>`
     return
   }
 
@@ -178,7 +290,7 @@ function renderProducts() {
       : `<span class="product-card__price">от ${formatPrice(minPrice)}</span>`
 
     return `
-    <a href="/product#${p.id}" class="product-card product-card--link is-visible${fullyUnavailable ? ' product-card--unavailable' : ''}">
+    <a href="${buildProductHref(p)}" class="product-card product-card--link is-visible${fullyUnavailable ? ' product-card--unavailable' : ''}" data-product-id="${p.id}">
       <div class="product-card__image">
         ${badge}
         ${specOverlay}
@@ -197,7 +309,37 @@ function renderProducts() {
     </a>
   `}).join('')
 
+  els.productsGrid.querySelectorAll('a.product-card--link').forEach((a) => {
+    a.addEventListener('click', () => saveScrollForReturn())
+  })
+
   window.dispatchEvent(new CustomEvent('catalog-rendered'))
+  setupProductPrefetch()
+  restoreScrollIfNeeded()
 }
 
+let productPrefetchBound = false
+const prefetchedUrls = new Set()
+
+function prefetchUrl(url) {
+  if (prefetchedUrls.has(url)) return
+  prefetchedUrls.add(url)
+  const link = document.createElement('link')
+  link.rel = 'prefetch'
+  link.href = url
+  link.as = url.endsWith('.js') || url.includes('.js?') ? 'script' : 'document'
+  document.head.appendChild(link)
+}
+
+function setupProductPrefetch() {
+  if (!els.productsGrid || productPrefetchBound) return
+  productPrefetchBound = true
+  els.productsGrid.addEventListener('pointerenter', (e) => {
+    const card = e.target.closest?.('a.product-card--link')
+    if (!card) return
+    prefetchUrl('/js/product.js?v=20260713f')
+  }, true)
+}
+
+showCatalogSkeleton()
 init()
