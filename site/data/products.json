@@ -88,7 +88,7 @@
           "colorId": "blue",
           "storage": "1 ТБ",
           "simType": "eSIM + SIM",
-          "purchasePrice": 137500,
+          "purchasePrice": 137000,
           "price": 153900
         },
         {
@@ -100,17 +100,10 @@
         },
         {
           "colorId": "blue",
-          "storage": "1 ТБ",
-          "simType": "eSIM + SIM",
-          "purchasePrice": 137000,
-          "price": 153900
-        },
-        {
-          "colorId": "blue",
           "storage": "512 ГБ",
           "simType": "eSIM + SIM",
-          "purchasePrice": 118200,
-          "price": 132900
+          "purchasePrice": 120200,
+          "price": 134900
         },
         {
           "colorId": "blue",
@@ -121,27 +114,6 @@
         },
         {
           "colorId": "blue",
-          "storage": "512 ГБ",
-          "simType": "eSIM + SIM",
-          "purchasePrice": 120200,
-          "price": 134900
-        },
-        {
-          "colorId": "blue",
-          "storage": "256 ГБ",
-          "simType": "eSIM + SIM",
-          "purchasePrice": 102300,
-          "price": 114900
-        },
-        {
-          "colorId": "blue",
-          "storage": "256 ГБ",
-          "simType": "eSIM only",
-          "purchasePrice": 90000,
-          "price": 100900
-        },
-        {
-          "colorId": "blue",
           "storage": "256 ГБ",
           "simType": "eSIM + SIM",
           "purchasePrice": 103500,
@@ -149,6 +121,34 @@
         },
         {
           "colorId": "blue",
+          "storage": "256 ГБ",
+          "simType": "eSIM only",
+          "purchasePrice": 90700,
+          "price": 101900
+        },
+        {
+          "colorId": "white",
+          "storage": "1 ТБ",
+          "simType": "eSIM + SIM",
+          "purchasePrice": 137000,
+          "price": 153900
+        },
+        {
+          "colorId": "white",
+          "storage": "512 ГБ",
+          "simType": "eSIM + SIM",
+          "purchasePrice": 120200,
+          "price": 134900
+        },
+        {
+          "colorId": "white",
+          "storage": "256 ГБ",
+          "simType": "eSIM + SIM",
+          "purchasePrice": 103500,
+          "price": 115900
+        },
+        {
+          "colorId": "white",
           "storage": "256 ГБ",
           "simType": "eSIM only",
           "purchasePrice": 90700,
@@ -4544,8 +4544,7 @@
       "coverImage": "assets/products/7ebc8a079f4428da2932514282023afced2bbb21e0e8ea0c8c763351441e2880.jpg.webp",
       "description": "iPhone 17 Air — оригинальная техника, под заказ от 3–5 дней.",
       "simTypes": [
-        "eSIM only",
-        "eSIM + SIM"
+        "eSIM only"
       ],
       "simModifiers": [],
       "colors": [
