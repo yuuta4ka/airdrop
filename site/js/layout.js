@@ -20,7 +20,11 @@ export async function initSite() {
 function cartButtonHtml() {
   return `
     <button class="cart-btn" id="cart-btn" aria-label="Корзина">
-      <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M6 2L3 6v14a2 2 0 002 2h14a2 2 0 002-2V6l-3-4z"/><line x1="3" y1="6" x2="21" y2="6"/><path d="M16 10a4 4 0 01-8 0"/></svg>
+      <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.85" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+        <circle cx="9" cy="20" r="1.4"/>
+        <circle cx="18" cy="20" r="1.4"/>
+        <path d="M2.5 3.5h2.2l2.1 11.2a1.6 1.6 0 0 0 1.6 1.3h8.7a1.6 1.6 0 0 0 1.55-1.2L20.5 8H6.2"/>
+      </svg>
       <span class="cart-btn__badge" id="cart-badge" style="display:none">0</span>
     </button>
   `
@@ -35,6 +39,22 @@ function catalogToggleHtml(mode) {
   `
 }
 
+function catalogSearchHtml(query = '') {
+  const safe = String(query)
+    .replace(/&/g, '&amp;')
+    .replace(/"/g, '&quot;')
+    .replace(/</g, '&lt;')
+  return `
+    <label class="header-search liquid-glass">
+      <span class="visually-hidden">Поиск</span>
+      <input type="search" id="catalog-search" placeholder="Поиск по сайту" value="${safe}" autocomplete="off" enterkeyhint="search" />
+      <span class="header-search__icon" aria-hidden="true">
+        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><circle cx="11" cy="11" r="7"/><path d="m20 20-3.5-3.5"/></svg>
+      </span>
+    </label>
+  `
+}
+
 export async function renderHeader(activeId = '') {
   const store = await loadStore()
   applyTheme(store.theme)
@@ -42,35 +62,74 @@ export async function renderHeader(activeId = '') {
   const mode = getCatalogMode()
   const showToggle = document.body.dataset.showCatalogToggle === 'true'
   const showCart = document.body.dataset.cart === 'true'
+  const catalogBar = document.body.dataset.catalogBar === 'true'
 
   const header = document.getElementById('site-header')
   if (!header) return
 
-  header.innerHTML = `
-    <div class="container header__inner">
-      <a href="/" class="logo">
-        <span class="logo__badge">
-          <span class="logo__faces">
-            <img src="${assetUrl(settings.logo)}" alt="${settings.name}" class="logo__img-text" />
-            <img src="${assetUrl(settings.logoIcon || 'assets/logo.png')}" alt="" class="logo__img-icon" aria-hidden="true" />
-          </span>
-        </span>
-      </a>
-      <nav class="nav" id="main-nav">
-        ${navigation.map((item) => `
-          <a href="${item.href}" class="nav__link${activeId === item.id ? ' nav__link--active' : ''}">${item.label}</a>
-        `).join('')}
-      </nav>
-      <div class="header__actions">
-        <div class="header__actions-slot header__actions-slot--toggle">
-          ${showToggle ? catalogToggleHtml(mode) : ''}
+  header.classList.toggle('header--catalog', catalogBar)
+
+  if (catalogBar) {
+    const q = new URLSearchParams(location.search).get('q') || ''
+    header.innerHTML = `
+      <div class="header__stack">
+        <div class="header__nav-row">
+          <div class="container">
+            <nav class="nav" id="main-nav">
+              ${navigation.map((item) => `
+                <a href="${item.href}" class="nav__link${activeId === item.id ? ' nav__link--active' : ''}">${item.label}</a>
+              `).join('')}
+            </nav>
+          </div>
         </div>
-        <div class="header__actions-slot header__actions-slot--cart">
-          ${showCart ? cartButtonHtml() : ''}
+        <div class="container header__inner header__inner--catalog">
+          <a href="/" class="logo">
+            <span class="logo__badge">
+              <span class="logo__faces">
+                <img src="${assetUrl(settings.logo)}" alt="${settings.name}" class="logo__img-text" />
+                <img src="${assetUrl(settings.logoIcon || 'assets/logo.png')}" alt="" class="logo__img-icon" aria-hidden="true" />
+              </span>
+            </span>
+          </a>
+          ${catalogSearchHtml(q)}
+          <div class="header__actions">
+            <div class="header__actions-slot header__actions-slot--toggle">
+              ${showToggle ? catalogToggleHtml(mode) : ''}
+            </div>
+            <div class="header__actions-slot header__actions-slot--cart">
+              ${showCart ? cartButtonHtml() : ''}
+            </div>
+          </div>
         </div>
       </div>
-    </div>
-  `
+    `
+  } else {
+    header.innerHTML = `
+      <div class="container header__inner">
+        <a href="/" class="logo">
+          <span class="logo__badge">
+            <span class="logo__faces">
+              <img src="${assetUrl(settings.logo)}" alt="${settings.name}" class="logo__img-text" />
+              <img src="${assetUrl(settings.logoIcon || 'assets/logo.png')}" alt="" class="logo__img-icon" aria-hidden="true" />
+            </span>
+          </span>
+        </a>
+        <nav class="nav" id="main-nav">
+          ${navigation.map((item) => `
+            <a href="${item.href}" class="nav__link${activeId === item.id ? ' nav__link--active' : ''}">${item.label}</a>
+          `).join('')}
+        </nav>
+        <div class="header__actions">
+          <div class="header__actions-slot header__actions-slot--toggle">
+            ${showToggle ? catalogToggleHtml(mode) : ''}
+          </div>
+          <div class="header__actions-slot header__actions-slot--cart">
+            ${showCart ? cartButtonHtml() : ''}
+          </div>
+        </div>
+      </div>
+    `
+  }
 
   header.querySelectorAll('.catalog-toggle__btn').forEach((btn) => {
     btn.addEventListener('click', () => {

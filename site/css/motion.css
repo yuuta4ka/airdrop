@@ -305,11 +305,7 @@ body[data-theme="light-gray"] .ambient__grid {
 }
 
 .category-btn:active {
-  transform: scale(0.95);
-}
-
-.category-btn--active {
-  animation: scale-in 0.35s var(--spring) both;
+  transform: scale(0.96);
 }
 
 .cart-btn {

@@ -451,48 +451,89 @@ export function defaultPromptCategoryRows() {
 }
 
 /** Промпт для LLM: превратить PDF прайса в JSONL для импорта. */
-export function buildPriceJsonlPrompt(selectedCategories = []) {
-  const cats = (Array.isArray(selectedCategories) ? selectedCategories : [])
-    .map((c) => String(c || '').trim())
-    .filter(Boolean)
-  const categoriesBlock = cats.length
-    ? `Бери позиции ТОЛЬКО из этих секций/категорий прайса (остальные полностью игнорируй):\n${cats.map((c) => `- ${c}`).join('\n')}`
-    : 'Если категории не указаны — извлекай все товарные позиции из прайса.'
+export function buildPriceJsonlPrompt(selectedCategories = [], allKnownCategories = []) {
+  const cats = uniqueCategoryNames(selectedCategories)
+  const known = uniqueCategoryNames(allKnownCategories)
+  const excluded = known.filter((name) => !cats.some((c) => c.toLowerCase() === name.toLowerCase()))
 
-  return `Ты извлекаешь закупочные цены из PDF-прайса поставщика (файл price.pdf или приложенный PDF) и возвращаешь ТОЛЬКО валидный JSONL — по одному JSON-объекту на строку, без markdown, без пояснений, без нумерации.
+  const allowBlock = cats.length
+    ? `РАЗРЕШЁННЫЕ СЕКЦИИ (ALLOW LIST) — извлекай позиции ТОЛЬКО из них:
+${cats.map((c) => `- ${c}`).join('\n')}
 
-${categoriesBlock}
+Жёсткое правило: если строка прайса относится к любой другой секции/заголовку/бренду — ПРОПУСТИ её.`
+    : 'Если список разрешённых секций пуст — извлекай все товарные позиции из прайса.'
 
-Схема каждой строки:
+  const denyBlock = cats.length
+    ? `ЗАПРЕЩЁННЫЕ СЕКЦИИ (NEGATIVE / DENY LIST) — не извлекай ничего из них и не «догоняй» похожие модели:
+${(excluded.length
+  ? excluded
+  : [
+      'любые секции, которых нет в ALLOW LIST',
+      'смежные линейки (например, если разрешён iPhone 16 Pro — не бери iPhone 16 / 16 Plus / 16e без отдельного разрешения)',
+      'аксессуары, кабели, чехлы, зарядки, если они не в ALLOW LIST',
+      'б/у, витринные, demo, CPO — если не указаны явно в ALLOW LIST',
+    ]).map((c) => `- ${c}`).join('\n')}
+
+Негативные примеры поведения (так делать НЕЛЬЗЯ):
+- Добавлять товары «на всякий случай» из соседней категории
+- Дописывать модели, которых нет в выбранных секциях PDF
+- Переносить позиции из незапрошенной секции, даже если цена «рядом» на странице
+- Расширять ALLOW LIST своими синонимами секций`
+    : ''
+
+  return `Ты — детерминированный экстрактор закупочных цен из PDF-прайса поставщика (price.pdf или приложенный PDF).
+
+ЦЕЛЬ: вернуть ТОЛЬКО валидный JSONL — по одному JSON-объекту на строку.
+ЗАПРЕЩЕНО в ответе: markdown, \`\`\`, пояснения, нумерация, заголовки, пустые строки между объектами, комментарии.
+
+${allowBlock}
+
+${denyBlock}
+
+Схема каждой строки (поля в этом порядке, лишние поля не добавляй):
 {"product":"...","storage":"...","color":"...","sim":"...","size":"...","price":12345}
 
-Правила полей:
-1) product — только имя товара/карточки, БЕЗ памяти, цвета, SIM и размера.
-   Примеры правильно: "iPhone 16 Pro", "iPhone 17 Pro Max", "AirPods Pro 3", "Watch Series 11", "MacBook Neo 13\\" A18 Pro"
-   Примеры неправильно: "iPhone 16 Pro Desert", "iPhone 17 256Gb Black"
-2) storage — объём памяти, как в прайсе: "128Gb", "256Gb", "512Gb", "1Tb", "12/256Gb", "16/512Gb".
-   Если памяти нет (наушники и т.п.) — "".
-3) color — цвет/комплектация цвета. Если цвета нет — "".
-4) sim — только для iPhone: "Sim+eSim", "eSim+eSim", "Dual Sim". Для остальных товаров — "".
-   Если у iPhone в прайсе НЕ указана спецификация SIM/eSIM (типично для iPhone 15 и iPhone 16) — всегда пиши "Sim+eSim".
-   "eSim+eSim" / "Dual Sim" ставь только когда это явно написано в строке прайса.
-5) size — только для часов: "42mm", "46mm", "49mm", "40mm", "47mm". Для остальных поле можно опустить или "".
-6) price — целое число в рублях без пробелов и символа ₽.
+Правила полей (всегда одинаково, без вариативности):
+1) product — только имя карточки, БЕЗ памяти, цвета, SIM и размера.
+   Правильно: "iPhone 16 Pro", "iPhone 17 Pro Max", "AirPods Pro 3", "Watch Series 11", "MacBook Neo 13\\" A18 Pro"
+   Неправильно: "iPhone 16 Pro Desert", "iPhone 17 256Gb Black"
+   Нормализация: сохраняй каноническое написание модели как в прайсе; не сокращай и не разворачивай по-разному при повторном запуске.
+2) storage — как в прайсе: "128Gb", "256Gb", "512Gb", "1Tb", "12/256Gb", "16/512Gb". Если памяти нет — "".
+3) color — цвет/оттенок из прайса. Если нет — "".
+4) sim — только для iPhone: "Sim+eSim" | "eSim+eSim" | "Dual Sim". Иначе "".
+   Если у iPhone SIM/eSIM в строке НЕ указан (типично iPhone 15 / 16) — всегда "Sim+eSim".
+   "eSim+eSim" / "Dual Sim" — только при явном указании в строке.
+5) size — только часы: "42mm", "46mm", "49mm", "40mm", "47mm". Иначе "".
+6) price — целое число рублей без пробелов и без ₽. Строки без цены пропускай.
 
-Важно:
-- Дюйм в названии экрана экранируй: "MacBook Neo 13\\" A18 Pro"
-- Не смешивай модели: iPhone 16 ≠ iPhone 16 Pro ≠ iPhone 16 Pro Max
-- AirPods Max (2024) и AirPods Max (2026) — разные товары
-- Не добавляй позиции без цены
-- Не пиши ничего кроме JSONL-строк
+Стабильность и самопроверка:
+- Один и тот же PDF + тот же ALLOW LIST → один и тот же JSONL (одинаковые имена, поля, порядок по появлению в PDF).
+- Не выдумывай товары, цвета, объёмы и цены.
+- Не смешивай модели: iPhone 16 ≠ iPhone 16 Pro ≠ iPhone 16 Pro Max; AirPods Max (2024) ≠ AirPods Max (2026).
+- Дюйм экранируй: "MacBook Neo 13\\" A18 Pro".
+- Перед ответом мысленно отфильтруй каждую строку: если секция не из ALLOW LIST — удали.
+- В ответе не должно быть ни одной позиции из DENY LIST / вне ALLOW LIST.
 
-Пример:
-{"product":"iPhone 17 Pro Max","storage":"256Gb","color":"Orange","sim":"eSim+eSim","price":90000}
-{"product":"iPhone 16","storage":"128Gb","color":"Teal","sim":"Sim+eSim","price":52700}
-{"product":"iPhone 15","storage":"128Gb","color":"Black","sim":"Sim+eSim","price":47000}
-{"product":"AirPods Pro 3","color":"","price":15800}
-{"product":"Watch Series 11","size":"42mm","color":"Silver","price":26800}
+Пример формата:
+{"product":"iPhone 17 Pro Max","storage":"256Gb","color":"Orange","sim":"eSim+eSim","size":"","price":90000}
+{"product":"iPhone 16","storage":"128Gb","color":"Teal","sim":"Sim+eSim","size":"","price":52700}
+{"product":"AirPods Pro 3","storage":"","color":"","sim":"","size":"","price":15800}
+{"product":"Watch Series 11","storage":"","color":"Silver","sim":"","size":"42mm","price":26800}
 `
+}
+
+function uniqueCategoryNames(list) {
+  const out = []
+  const seen = new Set()
+  for (const raw of Array.isArray(list) ? list : []) {
+    const name = String(raw || '').trim()
+    if (!name) continue
+    const key = name.toLowerCase()
+    if (seen.has(key)) continue
+    seen.add(key)
+    out.push(name)
+  }
+  return out
 }
 
 /** @deprecated используйте buildPriceJsonlPrompt */

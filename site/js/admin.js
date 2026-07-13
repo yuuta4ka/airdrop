@@ -2463,7 +2463,7 @@ function renderPricePrompt(c) {
     : '<p class="admin-hint">Список пуст — добавьте категории ниже.</p>'
 
   c.innerHTML = section('Категории для промпта', `
-    <p class="admin-hint">Отметьте секции прайса, которые нейросеть должна извлечь. Неотмеченные в промпт не попадут.</p>
+    <p class="admin-hint">Отметьте секции прайса, которые нейросеть должна извлечь. Неотмеченные попадут в <strong>негативный список</strong> промпта и будут запрещены.</p>
     <p class="admin-hint admin-hint--muted">Выбрано: <strong id="prompt-selected-count">${selectedCount}</strong> из ${cats.length}. Справа — сколько карточек в каталоге уже связано с секцией.</p>
     <div class="admin-row admin-row--actions" style="margin-bottom:12px">
       <button type="button" class="btn btn--ghost btn--sm" id="prompt-select-all">Выбрать все</button>
@@ -2596,9 +2596,11 @@ function renderPricePrompt(c) {
     const btn = $('copy-price-jsonl-prompt')
     try {
       syncPromptCategoriesFromDom()
-      const categories = storeData.priceImport.promptCategories
+      const rows = storeData.priceImport.promptCategories || []
+      const categories = rows
         .filter((r) => r.selected && r.name)
         .map((r) => r.name)
+      const allCategories = rows.map((r) => r.name).filter(Boolean)
       if (!categories.length) {
         status('Выберите хотя бы одну категорию', 'error')
         return
@@ -2609,14 +2611,15 @@ function renderPricePrompt(c) {
           Authorization: `Bearer ${getToken()}`,
           'Content-Type': 'application/json',
         },
-        body: JSON.stringify({ categories }),
+        body: JSON.stringify({ categories, allCategories }),
       })
       const data = await parseApiJson(res)
       if (!res.ok) throw new Error(data?.error || 'Не удалось получить промпт')
       await navigator.clipboard.writeText(data.prompt)
       const prev = btn.textContent
       btn.textContent = 'Скопировано'
-      status(`Промпт скопирован (${categories.length} категорий)`, 'success')
+      const denied = Math.max(0, allCategories.length - categories.length)
+      status(`Промпт скопирован (${categories.length} разрешено, ${denied} в негативном списке)`, 'success')
       setTimeout(() => { btn.textContent = prev }, 2000)
     } catch (err) {
       status(err.message, 'error')

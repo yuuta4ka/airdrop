@@ -79,9 +79,14 @@ function restoreScrollIfNeeded() {
     const data = JSON.parse(raw)
     sessionStorage.removeItem(SCROLL_KEY)
     if (data.cat !== activeCategory || (data.q || '') !== (searchQuery || '')) return
-    requestAnimationFrame(() => {
-      window.scrollTo(0, Number(data.y) || 0)
-    })
+    const y = Number(data.y) || 0
+    // Instant jump — CSS scroll-behavior:smooth must not animate this
+    const html = document.documentElement
+    html.style.scrollBehavior = 'auto'
+    document.body.style.scrollBehavior = 'auto'
+    html.scrollTop = y
+    document.body.scrollTop = y
+    window.scrollTo(0, y)
   } catch { /* ignore */ }
 }
 
@@ -100,6 +105,7 @@ function setupSearch() {
 }
 
 async function init() {
+  if ('scrollRestoration' in history) history.scrollRestoration = 'manual'
   showCatalogSkeleton()
   readUrlState()
   try {
@@ -123,12 +129,8 @@ async function init() {
     els.newCatalog = $('new-catalog')
     els.catalogTop = $('catalog-top')
     els.whyUsList = $('why-us-list')
-    els.heroTitle = $('hero-title')
-    els.heroText = $('hero-text')
 
     const s = store.settings
-    if (els.heroTitle) els.heroTitle.innerHTML = `${s.heroTitle}<br /><span>${s.heroSubtitle}</span>`
-    if (els.heroText) els.heroText.textContent = s.heroText
     if (els.whyUsList) els.whyUsList.innerHTML = s.whyUs.map((item) => `<li>${item}</li>`).join('')
 
     $('used-vk-link')?.setAttribute('href', s.links.vkMarket)
@@ -322,24 +324,28 @@ let productPrefetchBound = false
 const prefetchedUrls = new Set()
 
 function prefetchUrl(url) {
-  if (prefetchedUrls.has(url)) return
+  if (!url || prefetchedUrls.has(url)) return
   prefetchedUrls.add(url)
   const link = document.createElement('link')
   link.rel = 'prefetch'
   link.href = url
-  link.as = url.endsWith('.js') || url.includes('.js?') ? 'script' : 'document'
+  if (url.includes('.js')) link.as = 'script'
   document.head.appendChild(link)
 }
 
 function setupProductPrefetch() {
   if (!els.productsGrid || productPrefetchBound) return
   productPrefetchBound = true
-  els.productsGrid.addEventListener('pointerenter', (e) => {
+  const prefetchFromEvent = (e) => {
     const card = e.target.closest?.('a.product-card--link')
-    if (!card) return
-    prefetchUrl('/js/product.js?v=20260713f')
-  }, true)
+    if (!card?.href) return
+    prefetchUrl(card.getAttribute('href') || card.href)
+    prefetchUrl('/js/product.js?v=20260713h')
+    prefetchUrl('/css/product-mobile.css?v=20260713h')
+  }
+  // Desktop hover + mobile touch start (до click)
+  els.productsGrid.addEventListener('pointerenter', prefetchFromEvent, true)
+  els.productsGrid.addEventListener('touchstart', prefetchFromEvent, { capture: true, passive: true })
 }
 
-showCatalogSkeleton()
 init()

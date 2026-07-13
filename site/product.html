@@ -8,8 +8,8 @@
   <link rel="preconnect" href="https://fonts.googleapis.com" />
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
   <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet" />
-  <link rel="stylesheet" href="/css/style.css?v=20260713d" />
-  <link rel="stylesheet" href="/css/product-mobile.css?v=20260713d" />
+  <link rel="stylesheet" href="/css/style.css?v=20260714l" />
+  <link rel="stylesheet" href="/css/product-mobile.css?v=20260714k" />
 </head>
 <body data-show-catalog-toggle="true" data-cart="true">
   <header class="header" id="site-header"></header>
@@ -37,7 +37,7 @@
             <div class="product-detail__image product-gallery__stage" id="product-gallery-stage">
               <span class="product-card__badge" id="product-badge" style="display:none"></span>
               <button type="button" class="product-gallery__nav product-gallery__nav--prev" id="gallery-prev" aria-label="Предыдущее фото" hidden>‹</button>
-              <img src="" alt="" class="product-detail__photo" id="product-photo" />
+              <img src="" alt="" class="product-detail__photo" id="product-photo" fetchpriority="high" decoding="async" />
               <button type="button" class="product-gallery__nav product-gallery__nav--next" id="gallery-next" aria-label="Следующее фото" hidden>›</button>
             </div>
           </div>
@@ -110,6 +110,6 @@
   <div class="color-cursor-tip" id="color-cursor-tip" hidden></div>
   <div class="toast" id="toast"></div>
 
-  <script type="module" src="/js/product.js?v=20260713f"></script>
+  <script type="module" src="/js/product.js?v=20260714i"></script>
 </body>
 </html>

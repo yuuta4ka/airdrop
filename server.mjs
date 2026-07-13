@@ -592,25 +592,35 @@ const server = http.createServer(async (req, res) => {
   if (p === '/api/price-jsonl-prompt' && (req.method === 'GET' || req.method === 'POST')) {
     if (!checkAuth(req)) return sendJson(res, 401, { error: 'Неверный пароль' })
     let categories = []
+    let allCategories = []
     if (req.method === 'POST') {
       try {
         const body = JSON.parse(await readBody(req))
         categories = Array.isArray(body.categories) ? body.categories : []
+        allCategories = Array.isArray(body.allCategories) ? body.allCategories : []
       } catch {
         return sendJson(res, 400, { error: 'Некорректный JSON' })
       }
     } else {
       const store = readStore()
-      categories = (store.priceImport?.promptCategories || [])
+      const rows = store.priceImport?.promptCategories?.length
+        ? store.priceImport.promptCategories
+        : defaultPromptCategoryRows()
+      allCategories = rows.map((row) => row?.name).filter(Boolean)
+      categories = rows
         .filter((row) => row?.selected && row?.name)
         .map((row) => row.name)
       if (!categories.length) {
         categories = defaultPromptCategoryRows().filter((r) => r.selected).map((r) => r.name)
       }
     }
+    if (!allCategories.length) {
+      allCategories = defaultPromptCategoryRows().map((r) => r.name)
+    }
     return sendJson(res, 200, {
-      prompt: buildPriceJsonlPrompt(categories),
+      prompt: buildPriceJsonlPrompt(categories, allCategories),
       categories,
+      allCategories,
     })
   }
 

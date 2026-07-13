@@ -128,17 +128,19 @@ export function initProductGallery({ stage, mainImg, prevBtn, nextBtn, getImages
     }
     const token = ++swapToken
 
-    // Сначала грузим кадр — анимация не опережает сеть
-    await loadImage(src)
-    if (token !== swapToken) return
-
+    // Первый кадр — сразу в DOM, без ожидания сети (быстрее открытие карточки)
     if (!animate || !hasRenderedOnce) {
       currentSrc = src
       mainImg.src = src
       mainImg.alt = alt || ''
       hasRenderedOnce = true
+      loadImage(src).catch(() => {})
       return
     }
+
+    // Смена кадра — ждём загрузку, чтобы анимация не опережала фото
+    await loadImage(src)
+    if (token !== swapToken) return
 
     const FADE_CLASS = 'product-detail__photo--fade'
     mainImg.classList.add(FADE_CLASS)

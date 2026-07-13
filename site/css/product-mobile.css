@@ -49,7 +49,7 @@
   .product-detail__gallery {
     border-radius: 0;
     box-shadow: none;
-    background: linear-gradient(180deg, var(--bg-elevated) 0%, var(--bg) 100%);
+    background: #fff !important;
     border: none;
     backdrop-filter: none !important;
     -webkit-backdrop-filter: none !important;
@@ -57,30 +57,43 @@
 
   .product-detail__gallery::before,
   .product-detail__gallery::after,
-  .product-detail__image::before {
-    display: none;
+  .product-detail__image::before,
+  .product-detail__image::after {
+    display: none !important;
   }
 
-  .product-detail__image {
+  .product-detail__image,
+  .product-gallery__stage {
     aspect-ratio: 1;
     max-height: min(88vw, 400px);
+    width: 100%;
     border: none;
     border-radius: 0;
-    padding: 16px 20px;
-    background: transparent;
+    padding: 16px 24px;
+    background: #fff !important;
     box-shadow: none;
     backdrop-filter: none !important;
     -webkit-backdrop-filter: none !important;
-    display: flex;
-    align-items: center;
-    justify-content: center;
+    display: grid;
+    place-items: center;
+    margin: 0;
+    box-sizing: border-box;
+    overflow: hidden;
   }
 
   .product-detail__photo {
     display: block;
-    max-height: min(72vw, 340px);
+    grid-area: 1 / 1;
+    width: 100%;
+    height: 100%;
     max-width: 100%;
-    margin: 0 auto;
+    max-height: 100%;
+    margin: 0;
+    padding: 0;
+    object-fit: contain;
+    object-position: center center;
+    justify-self: center;
+    align-self: center;
   }
 
   .product-gallery__nav {

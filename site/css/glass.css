@@ -26,6 +26,12 @@
   --glass-radius-sm: 16px;
   --glass-radius-pill: 100px;
   --logo-badge-bg: rgba(14, 22, 18, 0.72);
+  /* iOS-style fills (segmented controls, search, chips) */
+  --ios-fill: rgba(120, 120, 128, 0.16);
+  --ios-fill-strong: rgba(120, 120, 128, 0.22);
+  --ios-chip: rgba(255, 255, 255, 0.92);
+  --ios-chip-shadow: 0 1px 3px rgba(0, 0, 0, 0.12), 0 1px 1px rgba(0, 0, 0, 0.04);
+  --ios-blur: 24px;
 }
 
 body[data-theme="light-gray"] {
@@ -47,6 +53,17 @@ body[data-theme="light-gray"] {
     0 4px 20px rgba(0, 0, 0, 0.06),
     inset 0 1px 0 rgba(255, 255, 255, 0.95);
   --logo-badge-bg: rgba(74, 124, 89, 0.28);
+  --ios-fill: rgba(120, 120, 128, 0.12);
+  --ios-fill-strong: rgba(120, 120, 128, 0.18);
+  --ios-chip: #ffffff;
+  --ios-chip-shadow: 0 1px 4px rgba(0, 0, 0, 0.1), 0 0.5px 1px rgba(0, 0, 0, 0.06);
+}
+
+body[data-theme="dark-green"] {
+  --ios-fill: rgba(118, 118, 128, 0.28);
+  --ios-fill-strong: rgba(118, 118, 128, 0.36);
+  --ios-chip: rgba(99, 99, 102, 0.78);
+  --ios-chip-shadow: 0 1px 3px rgba(0, 0, 0, 0.35), inset 0 0.5px 0 rgba(255, 255, 255, 0.12);
 }
 
 /* ─── Liquid glass mixin (via shared pseudo pattern) ─── */
@@ -64,7 +81,8 @@ body[data-theme="light-gray"] {
 .why-us li,
 .cart-panel,
 .cart,
-.logo__badge {
+.logo__badge,
+.header-search {
   position: relative;
   isolation: isolate;
 }
@@ -83,7 +101,8 @@ body[data-theme="light-gray"] {
 .why-us li::before,
 .cart-panel::before,
 .cart::before,
-.logo__badge::before {
+.logo__badge::before,
+.header-search::before {
   content: '';
   position: absolute;
   inset: 0;
@@ -184,45 +203,59 @@ body[data-theme="light-gray"] {
   border: 1px solid rgba(255, 255, 255, 0.2);
 }
 
-/* ─── Logo ─── */
+/* ─── Logo — Liquid Glass accent (как в каталоге), весь сайт ─── */
 .logo__badge {
   display: inline-flex;
   align-items: center;
   justify-content: center;
-  padding: 6px 14px;
-  background: var(--logo-badge-bg);
-  backdrop-filter: blur(var(--glass-blur-sm)) saturate(var(--glass-saturate));
-  -webkit-backdrop-filter: blur(var(--glass-blur-sm)) saturate(var(--glass-saturate));
-  border-radius: 12px;
-  box-shadow: var(--glass-shadow-sm);
+  padding: 0 16px;
+  height: 44px;
+  box-sizing: border-box;
+  background: var(--accent);
+  backdrop-filter: blur(20px) saturate(180%);
+  -webkit-backdrop-filter: blur(20px) saturate(180%);
+  border-radius: 999px;
+  border: 1px solid color-mix(in srgb, var(--accent) 80%, white);
+  box-shadow:
+    0 2px 12px var(--accent-glow),
+    inset 0 1px 0 rgba(255, 255, 255, 0.28);
+  overflow: hidden;
 }
 
 body[data-theme="light-gray"] .logo__badge {
-  padding: 4px 10px;
-  background: linear-gradient(145deg, rgba(74, 124, 89, 0.55), rgba(61, 107, 79, 0.45));
-  border: 1px solid rgba(74, 124, 89, 0.35);
-  box-shadow: 0 2px 10px rgba(74, 124, 89, 0.15), inset 0 1px 0 rgba(255, 255, 255, 0.35);
+  padding: 0 16px;
+  background: var(--accent);
+  border: 1px solid color-mix(in srgb, var(--accent) 80%, white);
+  box-shadow:
+    0 2px 12px var(--accent-glow),
+    inset 0 1px 0 rgba(255, 255, 255, 0.28);
 }
 
 .footer__brand .logo__badge {
-  padding: 5px 12px;
+  padding: 0 14px;
+  height: 40px;
 }
 
 body[data-theme="light-gray"] .footer__brand .logo__badge {
-  padding: 4px 10px;
+  padding: 0 14px;
 }
 
 .logo__badge::before {
-  border-radius: inherit;
+  display: none;
 }
 
 .logo:hover .logo__badge {
-  transform: translateY(-2px) scale(1.02);
-  box-shadow: var(--glass-shadow);
+  transform: translateY(-1px) scale(1.02);
+  box-shadow:
+    0 4px 18px var(--accent-glow),
+    inset 0 1px 0 rgba(255, 255, 255, 0.35);
 }
 
 .logo__img-text {
   height: 30px;
+  width: auto;
+  max-width: 160px;
+  object-fit: contain;
   position: relative;
   z-index: 4;
 }
@@ -236,6 +269,129 @@ body[data-theme="light-gray"] .footer__brand .logo__badge {
   box-shadow:
     0 8px 32px rgba(0, 0, 0, 0.15),
     inset 0 1px 0 rgba(255, 255, 255, 0.12);
+}
+
+/* Каталог: нав сверху + строка поиска — sticky; фон только у навигации */
+.header--catalog {
+  background: transparent;
+  backdrop-filter: none;
+  -webkit-backdrop-filter: none;
+  border: none;
+  box-shadow: none;
+}
+
+.header--catalog .header__stack {
+  display: flex;
+  flex-direction: column;
+}
+
+/* Полупрозрачная шапка с «Главная / Каталог / …» */
+.header--catalog .header__nav-row {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  min-height: 48px;
+  padding-top: 4px;
+  padding-bottom: 4px;
+  width: 100%;
+  background: rgba(255, 255, 255, 0.42);
+  backdrop-filter: blur(20px) saturate(160%);
+  -webkit-backdrop-filter: blur(20px) saturate(160%);
+  border-bottom: 1px solid rgba(255, 255, 255, 0.35);
+  box-shadow: none;
+}
+
+body[data-theme="dark-green"] .header--catalog .header__nav-row {
+  background: rgba(14, 22, 18, 0.45);
+  border-bottom-color: rgba(255, 255, 255, 0.08);
+}
+
+.header--catalog .header__nav-row .nav {
+  justify-content: center;
+  gap: 8px;
+  width: 100%;
+}
+
+/* Строка лого · поиск · toggle · корзина — без фона полосы */
+.header--catalog .header__inner--catalog {
+  background: transparent !important;
+  backdrop-filter: none !important;
+  -webkit-backdrop-filter: none !important;
+  box-shadow: none !important;
+  border: none !important;
+}
+
+/* Контролы строки — как на скриншоте */
+.header--catalog .header-search {
+  background: rgba(120, 120, 128, 0.14);
+  backdrop-filter: blur(16px) saturate(160%);
+  -webkit-backdrop-filter: blur(16px) saturate(160%);
+  border: none;
+  border-radius: 999px;
+  box-shadow: inset 0 1px 2px rgba(0, 0, 0, 0.04);
+  overflow: hidden;
+}
+
+.header--catalog .header-search::before,
+.header--catalog .header-search::after {
+  display: none !important;
+}
+
+.header--catalog .header-search:focus-within {
+  background: rgba(120, 120, 128, 0.2);
+  border: none;
+  box-shadow: inset 0 1px 2px rgba(0, 0, 0, 0.05);
+}
+
+.header--catalog .catalog-toggle {
+  background: rgba(120, 120, 128, 0.14);
+  backdrop-filter: blur(16px) saturate(160%);
+  -webkit-backdrop-filter: blur(16px) saturate(160%);
+  border: none;
+  border-radius: 999px;
+  box-shadow: inset 0 1px 2px rgba(0, 0, 0, 0.04);
+  padding: 3px;
+  gap: 2px;
+}
+
+.header--catalog .catalog-toggle__btn {
+  border-radius: 999px;
+  color: var(--text-muted);
+  background: transparent;
+}
+
+.header--catalog .catalog-toggle__btn--active {
+  background: var(--accent);
+  color: #fff;
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.14);
+}
+
+.header--catalog .cart-btn {
+  background: rgba(120, 120, 128, 0.14);
+  backdrop-filter: blur(16px) saturate(160%);
+  -webkit-backdrop-filter: blur(16px) saturate(160%);
+  border: none;
+  border-radius: 12px;
+  box-shadow: inset 0 1px 2px rgba(0, 0, 0, 0.04);
+  color: var(--text);
+}
+
+.header--catalog .cart-btn:hover {
+  background: rgba(120, 120, 128, 0.22);
+  border: none;
+  box-shadow: inset 0 1px 2px rgba(0, 0, 0, 0.05);
+  transform: scale(1.03);
+}
+
+body[data-theme="dark-green"] .header--catalog .header-search,
+body[data-theme="dark-green"] .header--catalog .catalog-toggle,
+body[data-theme="dark-green"] .header--catalog .cart-btn {
+  background: rgba(118, 118, 128, 0.28);
+}
+
+body[data-theme="dark-green"] .header--catalog .header-search:focus-within,
+body[data-theme="dark-green"] .header--catalog .cart-btn:hover {
+  background: rgba(118, 118, 128, 0.38);
 }
 
 .header__inner {
@@ -256,24 +412,28 @@ body[data-theme="light-gray"] .footer__brand .logo__badge {
   color: var(--text);
 }
 
-/* ─── Cart ─── */
+/* ─── Cart — Liquid Glass circle ─── */
 .cart-btn {
   color: var(--text);
-  background: var(--glass-bg);
-  backdrop-filter: blur(var(--glass-blur-sm)) saturate(var(--glass-saturate));
-  -webkit-backdrop-filter: blur(var(--glass-blur-sm)) saturate(var(--glass-saturate));
-  border: 1px solid var(--glass-border);
-  border-radius: var(--glass-radius-sm);
-  box-shadow: var(--glass-shadow-sm);
+  background: rgba(255, 255, 255, 0.78);
+  backdrop-filter: blur(20px) saturate(180%);
+  -webkit-backdrop-filter: blur(20px) saturate(180%);
+  border: 1px solid rgba(255, 255, 255, 0.65);
+  border-radius: 50%;
+  box-shadow:
+    0 2px 12px rgba(0, 0, 0, 0.06),
+    inset 0 1px 0 rgba(255, 255, 255, 0.75);
 }
 
 .cart-btn svg { stroke: currentColor; }
 
 .cart-btn:hover {
-  background: var(--glass-bg-strong);
-  border-color: var(--glass-border-top);
-  box-shadow: var(--glass-shadow);
-  transform: translateY(-2px) scale(1.04);
+  background: rgba(255, 255, 255, 0.9);
+  border-color: rgba(255, 255, 255, 0.85);
+  box-shadow:
+    0 4px 16px rgba(0, 0, 0, 0.08),
+    inset 0 1px 0 rgba(255, 255, 255, 0.85);
+  transform: scale(1.03);
 }
 
 .cart-btn__badge {
@@ -282,25 +442,30 @@ body[data-theme="light-gray"] .footer__brand .logo__badge {
   box-shadow: 0 2px 8px var(--accent-glow);
 }
 
-/* ─── Catalog toggle ─── */
+/* ─── Catalog toggle (остальные страницы) ─── */
 .catalog-toggle {
-  background: var(--glass-bg-deep);
+  background: var(--glass-bg);
   backdrop-filter: blur(var(--glass-blur-sm)) saturate(var(--glass-saturate));
   -webkit-backdrop-filter: blur(var(--glass-blur-sm)) saturate(var(--glass-saturate));
   border: 1px solid var(--glass-border);
   border-radius: var(--glass-radius-pill);
   box-shadow: var(--glass-shadow-sm);
   padding: 3px;
+  gap: 2px;
 }
 
 .catalog-toggle__btn {
   border-radius: var(--glass-radius-pill);
   padding: 8px 16px;
+  background: transparent;
+  color: var(--text-muted);
+  font-weight: 600;
 }
 
 .catalog-toggle__btn--active {
   background: var(--accent);
-  box-shadow: 0 2px 12px var(--accent-glow), inset 0 1px 0 rgba(255, 255, 255, 0.25);
+  color: #fff;
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.14);
 }
 
 /* ─── Hero ─── */
@@ -385,27 +550,27 @@ body[data-theme="light-gray"] .footer__brand .logo__badge {
 /* Catalog top — unified gradient zone */
 .catalog-top {
   position: relative;
-  padding-top: 88px;
-  padding-bottom: 8px;
-  margin-bottom: 8px;
+  padding-top: 136px;
+  padding-bottom: 4px;
+  margin-bottom: 4px;
 }
 
 .catalog-top::before {
   content: '';
   position: absolute;
   inset: 0;
-  bottom: -40px;
+  bottom: -24px;
   background:
-    radial-gradient(ellipse 90% 70% at 50% 0%, rgba(74, 124, 89, 0.2) 0%, transparent 65%),
-    radial-gradient(ellipse 60% 50% at 80% 40%, rgba(107, 143, 114, 0.1) 0%, transparent 55%);
+    radial-gradient(ellipse 90% 70% at 50% 0%, rgba(74, 124, 89, 0.14) 0%, transparent 65%),
+    radial-gradient(ellipse 60% 50% at 80% 40%, rgba(107, 143, 114, 0.08) 0%, transparent 55%);
   pointer-events: none;
   z-index: 0;
 }
 
 body[data-theme="light-gray"] .catalog-top::before {
   background:
-    radial-gradient(ellipse 90% 70% at 50% 0%, rgba(74, 124, 89, 0.12) 0%, transparent 65%),
-    radial-gradient(ellipse 60% 50% at 20% 50%, rgba(125, 160, 130, 0.08) 0%, transparent 55%);
+    radial-gradient(ellipse 90% 70% at 50% 0%, rgba(74, 124, 89, 0.08) 0%, transparent 65%),
+    radial-gradient(ellipse 60% 50% at 20% 50%, rgba(125, 160, 130, 0.05) 0%, transparent 55%);
 }
 
 .catalog-top > * {
@@ -414,17 +579,41 @@ body[data-theme="light-gray"] .catalog-top::before {
 }
 
 .catalog-top .hero--compact {
-  padding-bottom: 16px;
+  display: none;
 }
 
 .categories--top {
-  padding: 0 0 28px;
+  padding: 0 0 20px;
   background: transparent;
 }
 
+.categories--top .container {
+  display: flex;
+  justify-content: center;
+}
+
 .categories--top .categories__list {
-  padding-top: 4px;
-  padding-bottom: 4px;
+  display: flex;
+  width: max-content;
+  max-width: 100%;
+  margin: 0 auto;
+  gap: 2px;
+  padding: 4px;
+  border-radius: 999px;
+  background: rgba(255, 255, 255, 0.72);
+  backdrop-filter: blur(var(--glass-blur)) saturate(var(--glass-saturate));
+  -webkit-backdrop-filter: blur(var(--glass-blur)) saturate(var(--glass-saturate));
+  border: 1px solid rgba(255, 255, 255, 0.65);
+  box-shadow: var(--glass-shadow-sm);
+  overflow-x: auto;
+  overscroll-behavior-x: contain;
+  -webkit-overflow-scrolling: touch;
+  scrollbar-width: none;
+  touch-action: pan-x;
+}
+
+.categories--top .categories__list::-webkit-scrollbar {
+  display: none;
 }
 
 .hero__title span {
@@ -436,27 +625,74 @@ body[data-theme="light-gray"] .catalog-top::before {
   filter: drop-shadow(0 2px 12px var(--accent-glow));
 }
 
-/* ─── Categories ─── */
+/* ─── Categories — Liquid Glass segmented chips ─── */
 .category-btn {
-  background: var(--glass-bg);
-  backdrop-filter: blur(24px) saturate(180%);
-  -webkit-backdrop-filter: blur(24px) saturate(180%);
-  border: 1px solid var(--glass-border);
+  background: transparent;
+  backdrop-filter: none;
+  -webkit-backdrop-filter: none;
+  border: none;
   border-radius: var(--glass-radius-pill);
-  box-shadow: var(--glass-shadow-sm);
+  box-shadow: none;
+  color: var(--text-muted);
 }
 
 .category-btn:hover {
-  background: var(--glass-bg-strong);
-  border-color: var(--glass-border-top);
-  transform: translateY(-2px);
+  background: transparent;
+  border-color: transparent;
+  color: var(--text);
+  transform: none;
 }
 
 .category-btn--active {
-  background: linear-gradient(135deg, var(--gradient-from), var(--gradient-mid));
-  border-color: rgba(255, 255, 255, 0.25);
-  color: #fff;
-  box-shadow: 0 4px 24px var(--accent-glow), inset 0 1px 0 rgba(255, 255, 255, 0.25);
+  background: var(--ios-chip);
+  border-color: transparent;
+  color: var(--text);
+  box-shadow: var(--ios-chip-shadow);
+}
+
+.categories--top .category-btn {
+  padding: 9px 16px;
+  font-size: 0.88rem;
+  font-weight: 600;
+}
+
+.categories--top .category-btn--active {
+  background: var(--ios-chip);
+  color: var(--text);
+  box-shadow: var(--ios-chip-shadow);
+}
+
+/* Поиск — Liquid Glass pill */
+.header-search {
+  background: var(--glass-bg);
+  backdrop-filter: blur(var(--glass-blur-sm)) saturate(var(--glass-saturate));
+  -webkit-backdrop-filter: blur(var(--glass-blur-sm)) saturate(var(--glass-saturate));
+  border: 1px solid var(--glass-border);
+  border-radius: 999px;
+  box-shadow: var(--glass-shadow-sm);
+  overflow: hidden;
+}
+
+.header-search::before {
+  border-radius: inherit;
+}
+
+.header-search input {
+  background: transparent !important;
+  border: none !important;
+  box-shadow: none !important;
+  backdrop-filter: none !important;
+  -webkit-backdrop-filter: none !important;
+}
+
+.header-search input:focus {
+  background: transparent !important;
+  box-shadow: none !important;
+}
+
+.header-search:focus-within {
+  border-color: var(--glass-border-top);
+  box-shadow: var(--glass-shadow);
 }
 
 /* ─── Product cards ─── */
@@ -521,15 +757,16 @@ body[data-theme="light-gray"] .catalog-top::before {
   z-index: 4;
 }
 
-/* Badges */
 .product-card__badge,
 #product-badge {
   color: #fff !important;
-  text-shadow: 0 1px 3px rgba(0, 0, 0, 0.3);
-  border: 1px solid rgba(255, 255, 255, 0.28);
+  text-shadow: 0 1px 2px rgba(0, 0, 0, 0.2);
+  border: 1px solid rgba(255, 255, 255, 0.4);
   backdrop-filter: blur(16px) saturate(180%);
   -webkit-backdrop-filter: blur(16px) saturate(180%);
-  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.25), inset 0 1px 0 rgba(255, 255, 255, 0.2);
+  box-shadow:
+    0 2px 12px rgba(0, 0, 0, 0.12),
+    inset 0 1px 0 rgba(255, 255, 255, 0.35);
   border-radius: var(--glass-radius-pill);
   padding: 5px 12px;
   z-index: 5;
@@ -541,8 +778,8 @@ body[data-theme="light-gray"] .catalog-top::before {
 }
 
 .product-card__spec {
-  background: var(--glass-bg-deep);
-  border: 1px solid var(--glass-border);
+  background: rgba(255, 255, 255, 0.55);
+  border: 1px solid rgba(255, 255, 255, 0.45);
   backdrop-filter: blur(12px);
   -webkit-backdrop-filter: blur(12px);
   border-radius: var(--glass-radius-pill);
@@ -578,14 +815,13 @@ body[data-theme="light-gray"] .catalog-top::before {
   box-shadow: var(--glass-shadow-sm);
 }
 
-/* ─── Buttons ─── */
+/* ─── Buttons — Liquid Glass pill ─── */
 .btn--primary {
-  background: linear-gradient(160deg, var(--gradient-from) 0%, var(--gradient-mid) 45%, var(--gradient-to) 100%);
-  border: 1px solid rgba(255, 255, 255, 0.28);
+  background: var(--accent);
+  border: 1px solid color-mix(in srgb, var(--accent) 80%, white);
   box-shadow:
-    0 4px 24px var(--accent-glow),
-    inset 0 1px 0 rgba(255, 255, 255, 0.3),
-    inset 0 -1px 0 rgba(0, 0, 0, 0.1);
+    0 2px 12px var(--accent-glow),
+    inset 0 1px 0 rgba(255, 255, 255, 0.28);
   border-radius: var(--glass-radius-pill);
   position: relative;
   overflow: hidden;
@@ -595,23 +831,24 @@ body[data-theme="light-gray"] .catalog-top::before {
   content: '';
   position: absolute;
   inset: 0;
-  background: linear-gradient(180deg, rgba(255,255,255,0.15) 0%, transparent 50%);
+  background: linear-gradient(180deg, rgba(255,255,255,0.18) 0%, transparent 55%);
   pointer-events: none;
 }
 
 .btn--secondary {
-  background: var(--glass-bg);
-  backdrop-filter: blur(24px) saturate(180%);
-  -webkit-backdrop-filter: blur(24px) saturate(180%);
-  border: 1px solid var(--glass-border);
+  background: rgba(255, 255, 255, 0.72);
+  backdrop-filter: blur(20px) saturate(180%);
+  -webkit-backdrop-filter: blur(20px) saturate(180%);
+  border: 1px solid rgba(255, 255, 255, 0.65);
   border-radius: var(--glass-radius-pill);
-  box-shadow: var(--glass-shadow-sm);
+  box-shadow:
+    0 2px 12px rgba(0, 0, 0, 0.06),
+    inset 0 1px 0 rgba(255, 255, 255, 0.75);
 }
 
 .btn--secondary:hover {
-  background: var(--glass-bg-strong);
-  border-color: var(--glass-border-top);
-  box-shadow: var(--glass-shadow);
+  background: rgba(255, 255, 255, 0.88);
+  border-color: rgba(255, 255, 255, 0.85);
 }
 
 /* ─── Footer ─── */

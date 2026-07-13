@@ -30,7 +30,7 @@ let storeCache = null
 let productsCache = null
 
 const SESSION_CACHE_KEY = 'airdrop:catalog-cache:v1'
-const SESSION_CACHE_TTL_MS = 90_000
+const SESSION_CACHE_TTL_MS = 300_000
 
 function readSessionCache() {
   try {

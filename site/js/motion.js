@@ -47,6 +47,10 @@ export function initHeaderScroll() {
       return
     }
     header.classList.toggle('header--compact', window.scrollY > HEADER_COMPACT_THRESHOLD)
+    // Каталог: шапка без фона — не включаем compact-тени
+    if (header.classList.contains('header--catalog')) {
+      header.classList.remove('header--compact')
+    }
   }
 
   if (!header.dataset.scrollBound) {
