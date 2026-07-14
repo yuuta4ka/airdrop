@@ -362,36 +362,6 @@ function isColorFullyUnavailable(colorId) {
   return true
 }
 
-function getSelectedColorAvailability() {
-  const color = product.colors[selectedColor]
-  if (!color) return { text: '', className: '' }
-
-  const orderable = isComboOrderable(
-    product,
-    color.id,
-    getCurrentStorageLabel(),
-    getSelectedSimType(),
-  )
-  const stock = getStockForVariant(
-    product,
-    color.id,
-    getSelectedSimType(),
-    getCurrentStorageLabel(),
-  )
-
-  if (!orderable) {
-    return { text: 'Нет в наличии', className: 'color-selection-status--unavailable' }
-  }
-  if (stock?.qty > 0) {
-    const qty = stock.qty > 1 ? ` · ${stock.qty} шт.` : ''
-    return { text: `В наличии${qty}`, className: 'color-selection-status--instock' }
-  }
-  return {
-    text: `Под заказ · ${store.settings.orderDays}`,
-    className: 'color-selection-status--order',
-  }
-}
-
 function updateColorSelectionStatus() {
   if (!els.colorSelectionStatus) return
   const color = product.colors[selectedColor]
@@ -400,35 +370,38 @@ function updateColorSelectionStatus() {
     return
   }
 
-  const { text, className } = getSelectedColorAvailability()
+  // Рядом с цветом — только название; статус «В наличии / Под заказ» только в плашке
   els.colorSelectionStatus.hidden = false
-  els.colorSelectionStatus.className = `color-selection-status ${className}`
+  els.colorSelectionStatus.className = 'color-selection-status'
   els.colorSelectionStatus.innerHTML = `
     <span class="color-selection-status__name">${color.name}</span>
-    <span class="color-selection-status__state">${text}</span>
   `
 }
 
 function updateStockInfo() {
+  if (!els.stockInfo) return
   const color = product.colors[selectedColor]
   if (!color) {
     els.stockInfo.innerHTML = ''
     return
   }
 
-  const stock = getStockForVariant(
-    product,
-    color.id,
-    getSelectedSimType(),
-    getCurrentStorageLabel(),
-  )
+  const simType = getSelectedSimType()
+  const storageLabel = getCurrentStorageLabel()
+  const orderable = isComboOrderable(product, color.id, storageLabel, simType)
+  const stock = getStockForVariant(product, color.id, simType, storageLabel)
 
+  if (!orderable) {
+    els.stockInfo.innerHTML = '<span class="stock-badge stock-badge--unavailable">Нет в наличии</span>'
+    return
+  }
   if (stock?.qty > 0) {
     const qty = stock.qty > 1 ? ` · ${stock.qty} шт.` : ''
     els.stockInfo.innerHTML = `<span class="stock-badge stock-badge--in">В наличии${qty}</span>`
-  } else {
-    els.stockInfo.innerHTML = ''
+    return
   }
+  const days = store.settings.orderDays || '3–5 дней'
+  els.stockInfo.innerHTML = `<span class="stock-badge stock-badge--order">Под заказ · ${days}</span>`
 }
 
 function renderWarrantyOptions() {
@@ -552,10 +525,10 @@ function renderOptions() {
   els.brand.textContent = product.brand
   els.description.textContent = product.description
 
-  if (product.badge) {
+  if (product.badge && product.badge !== 'В наличии') {
     els.badge.textContent = product.badge
     els.badge.style.display = 'inline-block'
-  } else {
+  } else if (els.badge) {
     els.badge.style.display = 'none'
   }
 

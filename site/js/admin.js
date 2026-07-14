@@ -1509,7 +1509,7 @@ function renderProductEditor(c) {
     <p class="admin-hint">Введите число (42, 46) — «мм» допишется автоматически. Цены задаются в прайсе ниже.</p>`) : ''}
 
     ${section('Наличие на складе', `<div id="stock-list"></div><button type="button" class="btn btn--secondary" id="add-stock">+ Позиция в наличии</button>
-    <p class="admin-hint">Только то, что реально есть у вас в магазине</p>`)}
+    <p class="admin-hint">Только то, что реально есть у вас в магазине. Если комбинации нет в прайсе — укажите розничную цену вручную; иначе подставится цена похожей версии из прайса.</p>`)}
   `
 
   $('save-product').onclick = async () => {
@@ -2042,11 +2042,12 @@ function renderProductEditor(c) {
   const renderStock = () => {
     $('stock-list').innerHTML = p.stock.map((s, i) => `
       <div class="admin-card admin-card--compact">
-        <div class="admin-grid admin-grid--5">
+        <div class="admin-grid admin-grid--stock">
           <label class="field"><span>Цвет</span><select id="stk-color-${i}">${colorOptions(s.colorId)}</select></label>
           <label class="field"><span>Версия SIM</span><select id="stk-sim-${i}">${simOptions(s.simType || '')}</select></label>
           <label class="field"><span>Память</span><select id="stk-storage-${i}">${storageOptions(s.storageLabel || '')}</select></label>
           <label class="field"><span>Кол-во</span><input type="number" id="stk-qty-${i}" value="${s.qty}" min="0" /></label>
+          <label class="field"><span>Розничная цена ₽</span><input type="number" id="stk-price-${i}" value="${s.price > 0 ? s.price : ''}" min="0" step="1" placeholder="из прайса" /></label>
           <button type="button" class="btn btn--danger btn--sm" data-del-stk="${i}">Удалить</button>
         </div>
       </div>
@@ -2063,6 +2064,7 @@ function renderProductEditor(c) {
       simType: p.simTypes?.[0] || '',
       storageLabel: storages[0]?.label || p.storage[0]?.label || '',
       qty: 1,
+      price: 0,
       note: 'В наличии',
     })
     renderStock()
@@ -3040,13 +3042,18 @@ function collectProduct() {
   }
 
   if (p.stock?.length) {
-    p.stock = p.stock.map((_, i) => ({
-      colorId: $(`stk-color-${i}`)?.value || '',
-      simType: $(`stk-sim-${i}`)?.value || '',
-      storageLabel: $(`stk-storage-${i}`)?.value || '',
-      qty: num(`stk-qty-${i}`),
-      note: 'В наличии',
-    }))
+    p.stock = p.stock.map((_, i) => {
+      const price = num(`stk-price-${i}`)
+      const row = {
+        colorId: $(`stk-color-${i}`)?.value || '',
+        simType: $(`stk-sim-${i}`)?.value || '',
+        storageLabel: $(`stk-storage-${i}`)?.value || '',
+        qty: num(`stk-qty-${i}`),
+        note: 'В наличии',
+      }
+      if (price > 0) row.price = price
+      return row
+    })
   }
 
   collectProductVariants(p)

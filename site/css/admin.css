@@ -972,6 +972,7 @@ body::before {
 
   .admin-grid--4 { grid-template-columns: 1fr; }
   .admin-grid--5 { grid-template-columns: 1fr; }
+  .admin-grid--stock { grid-template-columns: 1fr; }
   .admin-card--drag { grid-template-columns: 1fr; }
 }
 
@@ -1025,6 +1026,11 @@ body::before {
 
 .admin-grid--5 {
   grid-template-columns: repeat(5, minmax(0, 1fr));
+}
+
+.admin-grid--stock {
+  grid-template-columns: repeat(5, minmax(0, 1fr)) auto;
+  align-items: end;
 }
 
 .admin-gallery-list {

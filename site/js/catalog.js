@@ -340,7 +340,7 @@ function setupProductPrefetch() {
     const card = e.target.closest?.('a.product-card--link')
     if (!card?.href) return
     prefetchUrl(card.getAttribute('href') || card.href)
-    prefetchUrl('/js/product.js?v=20260714i')
+    prefetchUrl('/js/product.js?v=20260715b')
     prefetchUrl('/css/product-mobile.css?v=20260714r')
   }
   // Desktop hover + mobile touch start (до click)
