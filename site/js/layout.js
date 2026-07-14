@@ -83,10 +83,10 @@ export async function renderHeader(activeId = '') {
           </div>
         </div>
         <div class="container header__inner header__inner--catalog">
-          <a href="/" class="logo">
+          <a href="/" class="logo" aria-label="${settings.name}">
             <span class="logo__badge">
               <span class="logo__faces">
-                <img src="${assetUrl(settings.logo)}" alt="${settings.name}" class="logo__img-text" />
+                <img src="${assetUrl(settings.logo)}" alt="" class="logo__img-text" aria-hidden="true" />
                 <img src="${assetUrl(settings.logoIcon || 'assets/logo.png')}" alt="" class="logo__img-icon" aria-hidden="true" />
               </span>
             </span>
