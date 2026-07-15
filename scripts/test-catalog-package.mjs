@@ -48,4 +48,32 @@ const normalized = normalizeImportPayload({ products: [{ name: 'X', image: 'asse
 assert.equal(normalized.products[0].colors.length, 1)
 validateProductsData(normalized)
 
+const priced = {
+  products: [{
+    id: 10,
+    slug: 'priced',
+    name: 'Priced',
+    category: 'iphone',
+    colors: [{ id: 'b', name: 'Black' }],
+    variants: [{ colorId: 'b', storage: '128 ГБ', simType: '', purchasePrice: 1, price: 2 }],
+    stock: [{ colorId: 'b', qty: 2 }],
+    markupPercent: 12,
+  }],
+}
+const wiped = mergeProducts(priced, {
+  products: [{
+    id: 10,
+    slug: 'priced',
+    name: 'Priced Photo Only',
+    category: 'iphone',
+    colors: [{ id: 'b', name: 'Black' }],
+    variants: [],
+    stock: [],
+  }],
+}, 'merge')
+assert.equal(wiped.products[0].name, 'Priced Photo Only')
+assert.equal(wiped.products[0].variants.length, 1)
+assert.equal(wiped.products[0].stock.length, 1)
+assert.equal(wiped.products[0].markupPercent, 12)
+
 console.log('catalog-package tests OK')

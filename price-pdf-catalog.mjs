@@ -601,7 +601,7 @@ function productKeyFromEntry(entry, meta) {
   return name.split(/\d+\/\d+/)[0].trim() || name
 }
 
-function createEmptyProduct(name, meta, id) {
+export function createEmptyProduct(name, meta, id) {
   const isWatch = ['watch', 'watch-ultra', 'samsung-watch'].includes(meta.type)
   const isIpad = meta.type === 'ipad'
   return {
@@ -977,6 +977,12 @@ export function buildCatalogFromEntries(rawEntries, existingProducts, markup = {
     return copy
   })
 
+  const preserveVariantIds = new Set(
+    (options.preserveVariantProductIds || [])
+      .map((id) => Number(id))
+      .filter((id) => Number.isFinite(id)),
+  )
+
   const stats = {
     entries: entries.length,
     productsCreated: 0,
@@ -984,6 +990,7 @@ export function buildCatalogFromEntries(rawEntries, existingProducts, markup = {
     variantsAdded: 0,
     variantsUpdated: 0,
     variantsRemoved: 0,
+    variantsRemovalSkipped: 0,
     pricesUpdated: 0,
     skipped: 0,
     skippedVariants: 0,
@@ -992,6 +999,7 @@ export function buildCatalogFromEntries(rawEntries, existingProducts, markup = {
     skippedVariantSamples: [],
     errors: [],
     productSummaries: [],
+    variantRemovals: [],
   }
 
   const productMap = new Map()
@@ -1113,22 +1121,60 @@ export function buildCatalogFromEntries(rawEntries, existingProducts, markup = {
   for (const product of products) {
     const importedVariantKeys = importedVariantKeysByProduct.get(product.id)
     if (!importedVariantKeys) continue
+
+    const before = variantsBeforeByProduct.get(product.id) ?? product.variants.length
+    const preserve = preserveVariantIds.has(Number(product.id))
+
     if (replaceVariants && importedVariantKeys.size) {
-      const before = product.variants.length
-      product.variants = product.variants.filter((v) => importedVariantKeys.has(variantKey(v)))
+      const filtered = product.variants.filter((v) => importedVariantKeys.has(variantKey(v)))
       // Убираем дубликаты с одинаковым ключом (оставляем последний)
       const seen = new Map()
-      for (const v of product.variants) seen.set(variantKey(v), v)
-      product.variants = [...seen.values()]
-      stats.variantsRemoved += before - product.variants.length
+      for (const v of filtered) seen.set(variantKey(v), v)
+      const nextVariants = [...seen.values()]
+      const removed = Math.max(0, product.variants.length - nextVariants.length)
+
+      if (removed > 0 || nextVariants.length === 0) {
+        stats.variantRemovals.push({
+          id: product.id,
+          name: product.name,
+          before,
+          after: nextVariants.length,
+          removed,
+          importedCount: importedVariantKeys.size,
+          noPricesInImport: importedVariantKeys.size === 0,
+          preserved: preserve,
+        })
+      }
+
+      if (preserve) {
+        stats.variantsRemovalSkipped += removed
+        // Цены из текста уже обновлены выше; старые конфигурации не трогаем
+      } else {
+        product.variants = nextVariants
+        stats.variantsRemoved += removed
+      }
+    } else if (replaceVariants && importedVariantKeys.size === 0 && before > 0) {
+      // Имя товара встретилось, но ни одной цены из текста не сопоставилось —
+      // прайс не чистим, но показываем в UI на всякий случай (категория могла не попасть в промпт)
+      stats.variantRemovals.push({
+        id: product.id,
+        name: product.name,
+        before,
+        after: before,
+        removed: 0,
+        importedCount: 0,
+        noPricesInImport: true,
+        preserved: true,
+      })
     }
-    if (touchedProducts.has(product.id)) {
+
+    if (touchedProducts.has(product.id) || preserveVariantIds.has(Number(product.id))) {
       const prices = product.variants.map((v) => Number(v.price)).filter((n) => n > 0)
       stats.productSummaries.push({
         id: product.id,
         name: product.name,
         category: product.category,
-        variantsBefore: variantsBeforeByProduct.get(product.id) ?? 0,
+        variantsBefore: before,
         variantsAfter: product.variants.length,
         minPrice: prices.length ? Math.min(...prices) : null,
       })

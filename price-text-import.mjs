@@ -1,5 +1,10 @@
 import { CATALOG_SECTIONS } from './price-pdf-parser.mjs'
-import { buildCatalogFromEntries, extractAirpodsProductKey, resolveProductExact } from './price-pdf-catalog.mjs'
+import {
+  buildCatalogFromEntries,
+  createEmptyProduct,
+  extractAirpodsProductKey,
+  resolveProductExact,
+} from './price-pdf-catalog.mjs'
 
 function parsePriceCell(cell) {
   const digits = String(cell ?? '').replace(/\D/g, '')
@@ -301,7 +306,8 @@ export function buildCatalogFromPriceText(text, existingProducts, markup = { per
   const result = buildCatalogFromEntries(entries, existingProducts, markup, {
     pricesOnly: true,
     upsertVariants: true,
-    upsertProducts: true,
+    // Не создаём карточки сами — только обновляем найденные; остальное уходит в notFound для привязки вручную
+    upsertProducts: false,
     filterSections: false,
     getProductKey: (entry, meta) => {
       if (entry.fields?.product) return normalizeProductKey(entry.fields.product)
@@ -324,6 +330,52 @@ export function buildCatalogFromPriceText(text, existingProducts, markup = { per
     ].slice(0, 12)
   }
   return result
+}
+
+/**
+ * Черновик карточки по имени из прайса (для кнопки «Создать карточку» в привязке).
+ * Не пишет на диск — только собирает объект.
+ */
+export function buildProductStubFromPriceName(name, existingProducts = []) {
+  const raw = String(name || '').trim()
+  if (!raw) return { error: 'Пустое название' }
+
+  const productName = normalizeProductKey(raw)
+  const section = detectSection(productName) || detectSectionFromProducts(productName, existingProducts)
+    || detectSection(raw) || detectSectionFromProducts(raw, existingProducts)
+  if (!section) {
+    return { error: `Не удалось определить категорию для «${raw}»` }
+  }
+  const meta = CATALOG_SECTIONS.get(section)
+  if (!meta) {
+    return { error: `Неизвестная секция прайса: ${section}` }
+  }
+
+  const dup = (existingProducts || []).find((p) => {
+    const aliases = [p.name, ...(String(p.importNames || '').split(/[,;]+/))]
+      .map((s) => String(s || '').trim().toLowerCase())
+      .filter(Boolean)
+    const key = productName.toLowerCase()
+    return aliases.includes(key) || aliases.includes(raw.toLowerCase())
+  })
+  if (dup) {
+    return { error: `Уже есть карточка «${dup.name}» — лучше привязать имя к ней`, existingId: dup.id }
+  }
+
+  const nextId = Math.max(0, ...(existingProducts || []).map((p) => Number(p.id) || 0)) + 1
+  const product = createEmptyProduct(productName, meta, nextId)
+  // Имя из прайса как alias, если отличается от канонического
+  if (raw !== productName) {
+    const aliases = String(product.importNames || '')
+      .split(/[,;]+/)
+      .map((s) => s.trim())
+      .filter(Boolean)
+    if (!aliases.some((a) => a.toLowerCase() === raw.toLowerCase())) {
+      aliases.push(raw)
+      product.importNames = aliases.join(', ')
+    }
+  }
+  return { product, section }
 }
 
 /** Сколько карточек каталога попадает под каждую категорию промпта (по имени/importNames). */
@@ -478,7 +530,8 @@ ${(excluded.length
 - Добавлять товары «на всякий случай» из соседней категории
 - Дописывать модели, которых нет в выбранных секциях PDF
 - Переносить позиции из незапрошенной секции, даже если цена «рядом» на странице
-- Расширять ALLOW LIST своими синонимами секций`
+- Расширять ALLOW LIST своими синонимами секций
+- Извлекать оптовые строки с "от nшт" / "от 5шт" / "от 10 шт" и т.п.`
     : ''
 
   return `Ты — детерминированный экстрактор закупочных цен из PDF-прайса поставщика (price.pdf или приложенный PDF).
@@ -490,12 +543,20 @@ ${allowBlock}
 
 ${denyBlock}
 
+ОПТОВЫЕ ПОЗИЦИИ (от nшт) — СТРОГО НЕ ИЗВЛЕКАТЬ:
+- Если в строке прайса есть порог количества вроде "от 5шт", "от 5 шт", "от 10шт", "от 3 шт.", "от nшт", "от N шт", "от Nштук" (n/N — любое число) — ПРОПУСТИ всю строку.
+- То же для явного опта: "опт", "оптовая", "wholesale", "MOQ".
+- Розничную строку той же модели БЕЗ "от nшт" извлекай как обычно.
+- Не подставляй оптовую цену вместо розничной.
+- В ответе не должно быть ни одной оптовой позиции с "от nшт".
+
 Схема каждой строки (поля в этом порядке, лишние поля не добавляй):
 {"product":"...","storage":"...","color":"...","sim":"...","size":"...","price":12345}
 
 Правила полей (всегда одинаково, без вариативности):
 1) product — только имя карточки, БЕЗ памяти, цвета, SIM и размера.
    Правильно: "iPhone 16 Pro", "iPhone 17 Pro Max", "AirPods Pro 3", "Watch Series 11", "MacBook Neo 13\\" A18 Pro"
+   (для дюйма в JSON: после числа ставь обратный слеш \\ и сразу двойную кавычку ", пример в коде: \`MacBook Neo 13\\" A18 Pro\`)
    Неправильно: "iPhone 16 Pro Desert", "iPhone 17 256Gb Black"
    Нормализация: сохраняй каноническое написание модели как в прайсе; не сокращай и не разворачивай по-разному при повторном запуске.
 2) storage — как в прайсе: "128Gb", "256Gb", "512Gb", "1Tb", "12/256Gb", "16/512Gb". Если памяти нет — "".
@@ -510,9 +571,9 @@ ${denyBlock}
 - Один и тот же PDF + тот же ALLOW LIST → один и тот же JSONL (одинаковые имена, поля, порядок по появлению в PDF).
 - Не выдумывай товары, цвета, объёмы и цены.
 - Не смешивай модели: iPhone 16 ≠ iPhone 16 Pro ≠ iPhone 16 Pro Max; AirPods Max (2024) ≠ AirPods Max (2026).
-- Дюйм экранируй: "MacBook Neo 13\\" A18 Pro".
-- Перед ответом мысленно отфильтруй каждую строку: если секция не из ALLOW LIST — удали.
-- В ответе не должно быть ни одной позиции из DENY LIST / вне ALLOW LIST.
+- Дюйм в JSON экранируй: после числа — обратный слеш \\ и сразу двойная кавычка ". Пример: \`MacBook Neo 13\\" A18 Pro\`. Не пиши голый 13" без слеша внутри JSON-строки.
+- Перед ответом мысленно отфильтруй каждую строку: если секция не из ALLOW LIST — удали; если есть "от nшт" / опт — удали.
+- В ответе не должно быть ни одной позиции из DENY LIST / вне ALLOW LIST / с оптовым "от nшт".
 
 Пример формата:
 {"product":"iPhone 17 Pro Max","storage":"256Gb","color":"Orange","sim":"eSim+eSim","size":"","price":90000}

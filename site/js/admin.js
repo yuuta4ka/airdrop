@@ -114,6 +114,8 @@ let isDirty = false
 let savingInFlight = false
 let productEditBaseline = null
 let editingProductIsNew = false
+/** id товаров, у которых при «убрать лишние» не чистим старый прайс поставщика */
+let textImportPreserveVariantIds = new Set()
 const SAVE_BTN_LABEL = 'Сохранить изменения'
 const SAVE_PRODUCT_LABEL = 'Сохранить товар'
 
@@ -528,10 +530,12 @@ function formatPdfImportStats(s) {
   if (s.variantsAdded) lines.push(`Добавлено конфигураций: ${s.variantsAdded}`)
   else if (s.variantsUpdated) lines.push(`Обновлено конфигураций: ${s.variantsUpdated}`)
   if (s.variantsRemoved) lines.push(`Удалено устаревших конфигураций: ${s.variantsRemoved}`)
+  if (s.variantsRemovalSkipped) lines.push(`Сохранено прайсов без очистки: ${s.variantsRemovalSkipped}`)
   if (s.productsCreated) lines.push(`Создано карточек: ${s.productsCreated}`)
   if (s.productsUpdated) lines.push(`Товаров затронуто: ${s.productsUpdated}`)
   if (s.skippedVariants) lines.push(`Не сопоставлено конфигураций: ${s.skippedVariants}`)
-  if (s.skipped) lines.push(`Строк без товара в каталоге: ${s.skipped}`)
+  if (s.skipped) lines.push(`Позиций без карточки (нужна привязка/создание): ${s.skipped}`)
+  if (s.notFound?.length) lines.push(`Уникальных имён без карточки: ${s.notFound.length}`)
   if (s.unrecognized) lines.push(`Нераспознанных строк: ${s.unrecognized}`)
   if (!lines.length) lines.push(`Обработано строк: ${s.entries ?? 0}`)
   return lines
@@ -640,13 +644,14 @@ function formatImportResultHtml(s, opts = {}) {
 
   if (uniqueUnresolved.length) {
     html += `<details class="admin-import-report admin-import-report--warn" open>
-      <summary>Не распознано / нет в каталоге (${uniqueUnresolved.length})</summary>
-      <p class="admin-hint">Привяжите имя из прайса к карточке — оно добавится в «Названия в прайсе». После этого повторите импорт.</p>
+      <summary>Нужна привязка или новая карточка (${uniqueUnresolved.length})</summary>
+      <p class="admin-hint">Импорт сам карточки не создаёт. Привяжите имя к существующему товару или создайте новую карточку, затем повторите импорт.</p>
       ${uniqueUnresolved.map((name) => `
         <div class="admin-import-bind-row" data-bind-name="${escAttr(name)}">
           <code class="admin-import-bind-name">${escAttr(name)}</code>
           <select class="admin-import-bind-select">${productSelectOptions()}</select>
           <button type="button" class="btn btn--secondary btn--sm admin-import-bind-btn">Привязать</button>
+          <button type="button" class="btn btn--primary btn--sm admin-import-create-btn">Создать карточку</button>
         </div>
       `).join('')}
     </details>`
@@ -655,12 +660,81 @@ function formatImportResultHtml(s, opts = {}) {
   if (s.skippedVariantSamples?.length && !uniqueUnresolved.length) {
     html += `<details class="admin-import-report"><summary>Примеры несопоставленных конфигураций</summary>${s.skippedVariantSamples.slice(0, 8).map((n) => `<div>${escAttr(n)}</div>`).join('')}</details>`
   }
+
+  const removals = [...(s.variantRemovals || [])]
+    .filter((row) => row?.id != null)
+    .sort((a, b) => String(a.name).localeCompare(String(b.name), 'ru'))
+  if (removals.length) {
+    const willWipe = removals.filter((r) => !r.noPricesInImport && r.removed > 0)
+    const noPrices = removals.filter((r) => r.noPricesInImport)
+    html += `<details class="admin-import-report admin-import-report--warn" open>
+      <summary>Очистка прайса поставщика (${willWipe.length || removals.length})</summary>
+      <p class="admin-hint">В режиме «убрать лишние» с карточки снимаются конфигурации, которых нет в тексте. Если категория не попала в промпт или цен почти нет — нажмите «Не удалять прайс», затем повторите импорт. Без нажатия очистка идёт как раньше.</p>`
+    for (const row of willWipe) {
+      const id = Number(row.id)
+      const on = textImportPreserveVariantIds.has(id) || !!row.preserved
+      const detail = row.after === 0
+        ? `будет очищен весь прайс (${row.before} → 0)`
+        : `уйдёт конфигураций: ${row.removed} (${row.before} → ${row.after})`
+      html += `
+        <div class="admin-import-preserve-row${on ? ' admin-import-preserve-row--on' : ''}" data-preserve-id="${id}">
+          <div>
+            <strong>${escAttr(row.name)}</strong>
+            <span class="admin-hint">${escAttr(detail)}</span>
+          </div>
+          <button type="button" class="btn btn--sm ${on ? 'btn--primary' : 'btn--ghost'} admin-import-preserve-btn">
+            ${on ? 'Прайс сохранится' : 'Не удалять прайс'}
+          </button>
+        </div>`
+    }
+    if (noPrices.length) {
+      html += `<p class="admin-hint" style="margin-top:10px">В тексте нет ни одной цены по этим товарам — прайс не трогаем:</p>`
+      html += noPrices.map((row) => `
+        <div class="admin-import-preserve-row admin-import-preserve-row--info">
+          <div><strong>${escAttr(row.name)}</strong>
+          <span class="admin-hint">конфигураций сейчас: ${row.before}</span></div>
+        </div>`).join('')
+    }
+    html += `</details>`
+  }
+
   return html
+}
+
+function markImportBindRowDone(row, message) {
+  if (!row) return
+  row.classList.add('admin-import-bind-row--done')
+  row.querySelectorAll('button, select').forEach((el) => { el.disabled = true })
+  const bindBtn = row.querySelector('.admin-import-bind-btn')
+  if (bindBtn) bindBtn.textContent = 'Готово'
+  if (message) status(message, 'success')
 }
 
 function bindImportSkipHandlers(rootEl) {
   rootEl?.querySelectorAll('[data-open-product]').forEach((btn) => {
     btn.onclick = () => openProductEditorById(btn.dataset.openProduct)
+  })
+  rootEl?.querySelectorAll('.admin-import-preserve-btn').forEach((btn) => {
+    btn.onclick = () => {
+      const row = btn.closest('.admin-import-preserve-row')
+      const id = Number(row?.dataset.preserveId)
+      if (!Number.isFinite(id)) return
+      if (textImportPreserveVariantIds.has(id)) {
+        textImportPreserveVariantIds.delete(id)
+        row.classList.remove('admin-import-preserve-row--on')
+        btn.classList.remove('btn--primary')
+        btn.classList.add('btn--ghost')
+        btn.textContent = 'Не удалять прайс'
+        status(`«${row.querySelector('strong')?.textContent || id}» — при импорте прайс снова можно очистить`, 'info')
+      } else {
+        textImportPreserveVariantIds.add(id)
+        row.classList.add('admin-import-preserve-row--on')
+        btn.classList.add('btn--primary')
+        btn.classList.remove('btn--ghost')
+        btn.textContent = 'Прайс сохранится'
+        status(`Прайс «${row.querySelector('strong')?.textContent || id}» сохранится при следующем импорте «убрать лишние»`, 'success')
+      }
+    }
   })
   rootEl?.querySelectorAll('.admin-import-bind-btn').forEach((btn) => {
     btn.onclick = async () => {
@@ -686,12 +760,55 @@ function bindImportSkipHandlers(rootEl) {
       }
       try {
         await runSave(async () => { await saveProducts() })
-        row.classList.add('admin-import-bind-row--done')
-        btn.textContent = 'Готово'
-        btn.disabled = true
-        status(`Привязано к «${product.name}» — можно повторить импорт`, 'success')
+        markImportBindRowDone(row, `Привязано к «${product.name}» — можно повторить импорт`)
       } catch (err) {
         status(err.message, 'error')
+      }
+    }
+  })
+  rootEl?.querySelectorAll('.admin-import-create-btn').forEach((btn) => {
+    btn.onclick = async () => {
+      const row = btn.closest('.admin-import-bind-row')
+      const name = row?.dataset.bindName || ''
+      if (!name) {
+        status('Нет названия для создания', 'error')
+        return
+      }
+      if (!confirm(`Создать новую карточку «${name}»? Она появится в «Скрытые» / «Новые». Затем повторите импорт.`)) return
+      btn.disabled = true
+      const prev = btn.textContent
+      btn.textContent = 'Создание…'
+      try {
+        const res = await fetch('/api/admin/create-from-price-name', {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+            Authorization: `Bearer ${getToken()}`,
+          },
+          body: JSON.stringify({ name }),
+        })
+        const data = await parseApiJson(res)
+        if (!res.ok) throw new Error(data?.error || 'Не удалось создать карточку')
+        productsData = await (await fetch('/api/products')).json()
+        invalidateStore()
+        // Обновить селекты в других строках — появилась новая карточка
+        rootEl.querySelectorAll('.admin-import-bind-select').forEach((sel) => {
+          const cur = sel.value
+          sel.innerHTML = productSelectOptions(cur)
+        })
+        markImportBindRowDone(row, `Создана карточка «${data.product?.name || name}» — повторите импорт`)
+        if (data.product?.id != null) {
+          const open = document.createElement('button')
+          open.type = 'button'
+          open.className = 'btn btn--ghost btn--sm'
+          open.textContent = 'Открыть'
+          open.onclick = () => openProductEditorById(data.product.id)
+          row.appendChild(open)
+        }
+      } catch (err) {
+        status(err.message, 'error')
+        btn.disabled = false
+        btn.textContent = prev
       }
     }
   })
@@ -1347,7 +1464,7 @@ function renderProducts(c) {
       : (inLastImport ? '<span class="admin-badge admin-badge--import">В последнем импорте</span>' : '')
     return `
     <div class="admin-product-row${rowClass}">
-      ${adminProductView === 'new' ? `<label class="admin-product-check"><input type="checkbox" data-bulk-id="${p.id}" /></label>` : ''}
+      <label class="admin-product-check"><input type="checkbox" data-bulk-id="${p.id}" /></label>
       <img src="${assetUrl(p.image || 'assets/logo.png')}" alt="" />
       <div><strong>${p.name}${p.isNew ? ' <span class="admin-badge admin-badge--new">Новое</span>' : ''}${importBadge ? ` ${importBadge}` : ''}</strong><span>${p.brand} · ${categoryLabel(p.category)} · наценка ${markup}${p.hidden ? ' · скрыт' : ''}</span></div>
       <button type="button" class="btn btn--secondary btn--sm" data-edit="${i}">Изменить</button>
@@ -1355,27 +1472,91 @@ function renderProducts(c) {
       <button type="button" class="btn btn--danger btn--sm" data-del="${i}">Удалить</button>
     </div>
   `}).join('') || `<p class="admin-hint">${adminProductView === 'hidden' ? 'Скрытых товаров нет' : adminProductView === 'new' ? 'Новых товаров нет' : 'Товаров нет'}</p>`
-  if (adminProductView === 'new' && products.length) {
+
+  if (products.length) {
+    const hideOrShowLabel = adminProductView === 'hidden' ? 'Вернуть выбранные' : 'Скрыть выбранные'
+    const clearNewBtn = adminProductView === 'new'
+      ? '<button type="button" class="btn btn--primary btn--sm" id="bulk-clear-new">Снять «Новое»</button>'
+      : ''
     $('product-list').insertAdjacentHTML('beforebegin', `
       <div class="admin-bulk-bar">
-        <button type="button" class="btn btn--secondary btn--sm" id="bulk-select-all-new">Выбрать все</button>
-        <button type="button" class="btn btn--primary btn--sm" id="bulk-clear-new">Снять «Новое» с выбранных</button>
+        <button type="button" class="btn btn--secondary btn--sm" id="bulk-select-all">Выбрать все</button>
+        <button type="button" class="btn btn--ghost btn--sm" id="bulk-select-none">Снять выбор</button>
+        <span class="admin-bulk-bar__count" id="bulk-count">Выбрано: 0</span>
+        <button type="button" class="btn btn--ghost btn--sm" id="bulk-toggle-hidden">${hideOrShowLabel}</button>
+        ${clearNewBtn}
+        <button type="button" class="btn btn--danger btn--sm" id="bulk-delete">Удалить выбранные</button>
       </div>
     `)
-    $('bulk-select-all-new').onclick = () => {
-      $('product-list').querySelectorAll('[data-bulk-id]').forEach((cb) => { cb.checked = true })
+
+    const getSelectedIds = () => [...$('product-list').querySelectorAll('[data-bulk-id]:checked')]
+      .map((cb) => Number(cb.dataset.bulkId))
+
+    const refreshBulkCount = () => {
+      const n = getSelectedIds().length
+      const el = $('bulk-count')
+      if (el) el.textContent = `Выбрано: ${n}`
     }
-    $('bulk-clear-new').onclick = async () => {
-      const ids = [...$('product-list').querySelectorAll('[data-bulk-id]:checked')].map((cb) => Number(cb.dataset.bulkId))
+
+    $('product-list').querySelectorAll('[data-bulk-id]').forEach((cb) => {
+      cb.addEventListener('change', refreshBulkCount)
+    })
+
+    $('bulk-select-all').onclick = () => {
+      $('product-list').querySelectorAll('[data-bulk-id]').forEach((cb) => { cb.checked = true })
+      refreshBulkCount()
+    }
+    $('bulk-select-none').onclick = () => {
+      $('product-list').querySelectorAll('[data-bulk-id]').forEach((cb) => { cb.checked = false })
+      refreshBulkCount()
+    }
+
+    $('bulk-toggle-hidden').onclick = async () => {
+      const ids = getSelectedIds()
       if (!ids.length) { status('Выберите товары', 'error'); return }
+      const hide = adminProductView !== 'hidden'
+      let n = 0
       for (const p of productsData.products) {
-        if (ids.includes(p.id)) p.isNew = false
+        if (!ids.includes(p.id)) continue
+        p.hidden = hide
+        if (!p.hidden) p.isNew = false
+        n += 1
       }
       try {
         await runSave(async () => { await saveProducts() })
-        status(`Снято «Новое»: ${ids.length}`, 'success')
+        status(hide ? `Скрыто: ${n}` : `Возвращено в каталог: ${n}`, 'success')
         renderProducts(c)
       } catch (err) { status(err.message, 'error') }
+    }
+
+    if ($('bulk-clear-new')) {
+      $('bulk-clear-new').onclick = async () => {
+        const ids = getSelectedIds()
+        if (!ids.length) { status('Выберите товары', 'error'); return }
+        for (const p of productsData.products) {
+          if (ids.includes(p.id)) p.isNew = false
+        }
+        try {
+          await runSave(async () => { await saveProducts() })
+          status(`Снято «Новое»: ${ids.length}`, 'success')
+          renderProducts(c)
+        } catch (err) { status(err.message, 'error') }
+      }
+    }
+
+    $('bulk-delete').onclick = async () => {
+      const ids = getSelectedIds()
+      if (!ids.length) { status('Выберите товары', 'error'); return }
+      if (!confirm(`Удалить выбранные товары (${ids.length}) с сайта? Это нельзя отменить.`)) return
+      productsData.products = productsData.products.filter((p) => !ids.includes(p.id))
+      try {
+        await runSave(async () => { await saveProducts() })
+        status(`Удалено: ${ids.length}`, 'success')
+        renderProducts(c)
+      } catch (err) {
+        status(err.message, 'error')
+        renderProducts(c)
+      }
     }
   }
   $('product-list').querySelectorAll('[data-edit]').forEach((b) => {
@@ -2237,7 +2418,7 @@ function renderPriceImport(c) {
       <textarea id="price-text-import" class="admin-textarea" rows="14" placeholder='{"product":"iPhone 17 Pro Max","storage":"256Gb","color":"Orange","sim":"eSim+eSim","price":90000}'></textarea>
     </label>
     <div class="admin-import-modes">
-      <p class="admin-hint">Если комбинации (цвет/память/SIM) нет в новом прайсе — её нельзя заказать, значит старую цену нужно убрать.</p>
+      <p class="admin-hint">Если комбинации нет в тексте — в режиме «убрать лишние» она снимается с карточки. Сначала «Проверить»: можно привязать имена и нажать «Не удалять прайс» у товаров, чей прайс трогать не нужно (например, категория не была в промпте).</p>
     </div>
     <div class="admin-row admin-row--actions">
       <button type="button" class="btn btn--secondary" id="preview-price-text">Проверить без записи</button>
@@ -2258,6 +2439,8 @@ function renderPriceImport(c) {
       status('Вставьте прайс в текстовое поле', 'error')
       return
     }
+    // Новая проверка — сбрасываем выбор «не удалять», чтобы не тащить старый
+    if (dryRun) textImportPreserveVariantIds = new Set()
     resultEl.textContent = dryRun ? 'Проверка…' : 'Импорт…'
     try {
       const res = await fetch('/api/import-price-text', {
@@ -2267,6 +2450,7 @@ function renderPriceImport(c) {
           text,
           dryRun: !!dryRun,
           replaceVariants: !!replaceVariants,
+          preserveVariantProductIds: replaceVariants ? [...textImportPreserveVariantIds] : [],
           markupPercent: num('pi-markup'),
           markupFixed: num('pi-markup-fixed'),
         }),
@@ -2290,20 +2474,25 @@ function renderPriceImport(c) {
         invalidateStore()
         productsData = await (await fetch('/api/products')).json()
         const removed = s.variantsRemoved || 0
+        const kept = s.variantsRemovalSkipped || 0
         status(
-          removed
-            ? `Обновлено цен: ${s.pricesUpdated || 0}, удалено устаревших: ${removed}`
+          removed || kept
+            ? `Обновлено цен: ${s.pricesUpdated || 0}, удалено: ${removed}${kept ? `, сохранено без очистки: ${kept}` : ''}`
             : `Обновлено цен: ${s.pricesUpdated || 0}`,
           'success',
         )
+        textImportPreserveVariantIds = new Set()
       } else {
         const warns = (s.unrecognized || 0) + (s.notFound?.length || 0) + (s.skippedVariants || 0)
         const removed = s.variantsRemoved || 0
+        const wipeCount = (s.variantRemovals || []).filter((r) => !r.noPricesInImport && r.removed > 0).length
         status(
-          removed
-            ? `Проверка: будет удалено устаревших конфигураций: ${removed}`
-            : (warns ? `Проверка: есть замечания (${warns})` : 'Проверка: всё сопоставилось'),
-          removed || warns ? 'info' : 'success',
+          wipeCount
+            ? `Проверка: у ${wipeCount} товар(ов) очистится прайс — при необходимости нажмите «Не удалять прайс», затем импортируйте`
+            : (removed
+              ? `Проверка: будет удалено устаревших конфигураций: ${removed}`
+              : (warns ? `Проверка: есть замечания (${warns})` : 'Проверка: всё сопоставилось')),
+          wipeCount || removed || warns ? 'info' : 'success',
         )
       }
     } catch (err) {
@@ -2481,7 +2670,7 @@ function renderPricePrompt(c) {
       <button type="button" class="btn btn--secondary" id="prompt-cat-add-btn">Добавить</button>
     </div>
   `) + section('Скопировать промпт', `
-    <p class="admin-hint">Промпт учитывает только выбранные категории. Вставьте его в ChatGPT / Claude вместе с файлом <code>price.pdf</code>.</p>
+    <p class="admin-hint">Промпт учитывает только выбранные категории. Копируется уже в блоке кода (text), чтобы чат не съедал экранирование вроде дюймов 13&quot;. Вставьте вместе с файлом <code>price.pdf</code>.</p>
     <button type="button" class="btn btn--primary" id="copy-price-jsonl-prompt">Скопировать промпт</button>
   `)
 
@@ -2617,11 +2806,13 @@ function renderPricePrompt(c) {
       })
       const data = await parseApiJson(res)
       if (!res.ok) throw new Error(data?.error || 'Не удалось получить промпт')
-      await navigator.clipboard.writeText(data.prompt)
+      // Обёртка в code fence — чтобы чаты с Markdown не съедали \" в примерах (дюймы и т.п.)
+      const promptForChat = '```text\n' + String(data.prompt || '').replace(/\s+$/, '') + '\n```'
+      await navigator.clipboard.writeText(promptForChat)
       const prev = btn.textContent
       btn.textContent = 'Скопировано'
       const denied = Math.max(0, allCategories.length - categories.length)
-      status(`Промпт скопирован (${categories.length} разрешено, ${denied} в негативном списке)`, 'success')
+      status(`Промпт скопирован в блоке кода (${categories.length} разрешено, ${denied} в негативном списке)`, 'success')
       setTimeout(() => { btn.textContent = prev }, 2000)
     } catch (err) {
       status(err.message, 'error')
@@ -2633,8 +2824,9 @@ function renderConfig(c) {
   const stamp = new Date().toISOString().slice(0, 10)
   c.innerHTML = `
     ${section(`Каталог для коллеги (товары + фото) ${betaBadge()}`, `
-      <p class="admin-hint">Скачайте ZIP и передайте человеку, который наполняет карточки и загружает фото. Он работает в своей локальной админке, потом отдаёт ZIP обратно — вы импортируете сюда.</p>
-      <p class="admin-hint"><strong>Слияние</strong> — обновить существующие товары по id/slug и добавить новые. <strong>Заменить всё</strong> — полностью перезаписать каталог.</p>
+      <p class="admin-hint">Скачайте ZIP и передайте коллеге: он импортирует у себя (Слияние или Заменить на пустой базе), правит карточки/фото в админке, снова «Скачать каталог» и отдаёт ZIP вам.</p>
+      <p class="admin-hint"><strong>Слияние</strong> — обновить товары по id/slug и добавить новые (прайс поставщика не затирается, если в ZIP он пустой). <strong>Заменить всё</strong> — полностью перезаписать каталог.</p>
+      <p class="admin-hint">Архив может быть 50+ МБ из‑за фото — импорт идёт напрямую файлом, дождитесь окончания.</p>
       <div class="admin-row admin-row--actions">
         <button type="button" class="btn btn--primary" id="export-catalog-zip">Скачать каталог (.zip)</button>
         <label class="btn btn--secondary admin-upload-btn">Импорт каталога (.zip)
@@ -2734,18 +2926,31 @@ function renderConfig(c) {
     const file = e.target.files[0]
     const resultEl = $('import-catalog-result')
     if (!file) return
-    resultEl.textContent = 'Импорт…'
+    if (!/\.zip$/i.test(file.name) && file.type && !file.type.includes('zip')) {
+      status('Нужен файл .zip', 'error')
+      e.target.value = ''
+      return
+    }
+    const mode = $('import-catalog-mode').value
+    if (mode === 'replace' && !confirm('Заменить ВЕСЬ каталог данными из ZIP? Текущие товары, которых нет в архиве, будут удалены.')) {
+      e.target.value = ''
+      return
+    }
+    resultEl.textContent = `Импорт «${file.name}» (${(file.size / 1024 / 1024).toFixed(1)} МБ)…`
     try {
       const ping = await fetch('/api/ping').then((r) => parseApiJson(r)).catch(() => null)
       if (!ping?.importCatalogZip) {
         throw new Error('Сервер устарел. Перезапустите Start.bat / Start.command и обновите страницу (Ctrl+F5).')
       }
-      const data = await readFileAsBase64(file)
-      const mode = $('import-catalog-mode').value
+      // Сырой ZIP — без base64 (архив ~50+ МБ иначе раздувается и может падать)
       const res = await fetch('/api/admin/import-catalog', {
         method: 'POST',
-        headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${getToken()}` },
-        body: JSON.stringify({ data, mode }),
+        headers: {
+          Authorization: `Bearer ${getToken()}`,
+          'Content-Type': 'application/zip',
+          'X-Import-Mode': mode,
+        },
+        body: file,
       })
       const payload = await parseApiJson(res)
       if (!res.ok) throw new Error(payload?.error || `Ошибка импорта (${res.status})`)
@@ -2753,7 +2958,8 @@ function renderConfig(c) {
       invalidateStore()
       clearDraft()
       const s = payload.stats || {}
-      resultEl.textContent = `Готово: ${s.count} товаров, фото скопировано: ${s.assetsCopied ?? '—'}, режим: ${s.mode || mode}`
+      const skipped = s.assetsSkipped ? `, пропущено небезопасных путей: ${s.assetsSkipped}` : ''
+      resultEl.textContent = `Готово: ${s.count} товаров, фото скопировано: ${s.assetsCopied ?? '—'}${skipped}, режим: ${s.mode || mode}`
       status('Каталог импортирован', 'success')
       renderTab()
     } catch (err) {

@@ -125,10 +125,23 @@ export function mergeProducts(existing, incoming, mode = 'merge') {
     const slug = String(raw.slug || '').trim()
     const existingMatch = (raw.id && byId.get(raw.id)) || (slug && bySlug.get(slug))
     const id = existingMatch?.id ?? nextProductId(result)
-    const normalized = normalizeImportedProduct(
-      existingMatch ? { ...existingMatch, ...raw, id: existingMatch.id } : raw,
-      id,
-    )
+    let payload = existingMatch ? { ...existingMatch, ...raw, id: existingMatch.id } : raw
+    // Страховка для коллеги: если в ZIP внезапно пустой прайс/склад — не затираем рабочие данные
+    if (existingMatch) {
+      if ((!Array.isArray(raw.variants) || !raw.variants.length) && existingMatch.variants?.length) {
+        payload = { ...payload, variants: existingMatch.variants }
+      }
+      if ((!Array.isArray(raw.stock) || !raw.stock.length) && existingMatch.stock?.length) {
+        payload = { ...payload, stock: existingMatch.stock }
+      }
+      if (raw.markupPercent == null && existingMatch.markupPercent != null) {
+        payload = { ...payload, markupPercent: existingMatch.markupPercent }
+      }
+      if (raw.markupFixed == null && existingMatch.markupFixed != null) {
+        payload = { ...payload, markupFixed: existingMatch.markupFixed }
+      }
+    }
+    const normalized = normalizeImportedProduct(payload, id)
     if (existingMatch) {
       const idx = result.findIndex((p) => p.id === existingMatch.id)
       result[idx] = normalized

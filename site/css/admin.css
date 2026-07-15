@@ -509,7 +509,7 @@ body::before {
 
 .admin-import-bind-row {
   display: grid;
-  grid-template-columns: minmax(140px, 1.2fr) minmax(160px, 1fr) auto;
+  grid-template-columns: minmax(140px, 1.2fr) minmax(160px, 1fr) auto auto;
   gap: 8px;
   align-items: center;
   padding: 8px 0;
@@ -540,6 +540,34 @@ body::before {
   border-radius: 8px;
   color: var(--admin-text);
   font-family: inherit;
+}
+
+.admin-import-preserve-row {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+  padding: 8px 0;
+  border-bottom: 1px solid rgba(255, 255, 255, 0.05);
+}
+
+.admin-import-preserve-row > div {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  min-width: 0;
+}
+
+.admin-import-preserve-row--on {
+  background: rgba(92, 184, 122, 0.08);
+  border-radius: 8px;
+  padding: 8px 10px;
+  border-bottom-color: transparent;
+}
+
+.admin-import-preserve-row--info {
+  opacity: 0.85;
 }
 
 .prompt-cat-coverage {
@@ -1171,6 +1199,12 @@ body::before {
   gap: 8px;
   margin: 0 0 12px;
   align-items: center;
+}
+
+.admin-bulk-bar__count {
+  font-size: 0.82rem;
+  color: var(--admin-muted);
+  margin-right: 4px;
 }
 
 .admin-product-check {

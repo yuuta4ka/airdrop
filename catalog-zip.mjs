@@ -14,6 +14,17 @@ function normalizeZipPath(name) {
   return String(name || '').replace(/\\/g, '/').replace(/^\.\//, '').replace(/^\/+/, '')
 }
 
+/** Путь ассета внутри siteDir или null (защита от zip-slip: assets/../../etc/passwd). */
+export function resolveSafeAssetPath(siteDir, entryName) {
+  const norm = normalizeZipPath(entryName)
+  if (!norm.startsWith('assets/')) return null
+  if (norm.includes('\0') || norm.split('/').some((part) => part === '..')) return null
+  const assetsRoot = path.resolve(siteDir, 'assets')
+  const out = path.resolve(siteDir, ...norm.split('/'))
+  if (out !== assetsRoot && !out.startsWith(assetsRoot + path.sep)) return null
+  return out
+}
+
 function findZipEntry(zip, baseName) {
   const target = baseName.toLowerCase()
   return zip.getEntries().find((entry) => {
@@ -46,10 +57,13 @@ export function buildCatalogZip(siteDir, productsData) {
   for (const rel of assetPaths) {
     const abs = path.join(siteDir, rel)
     if (fs.existsSync(abs)) {
-      zip.addLocalFile(abs, path.dirname(rel))
-      manifest.assetFiles.push(rel)
+      // Всегда POSIX-пути в ZIP — иначе на Windows коллега получит кривую структуру
+      const zipDir = path.posix.dirname(rel.replace(/\\/g, '/'))
+      const zipName = path.posix.basename(rel.replace(/\\/g, '/'))
+      zip.addLocalFile(abs, zipDir === '.' ? '' : zipDir, zipName)
+      manifest.assetFiles.push(rel.replace(/\\/g, '/'))
     } else {
-      manifest.missingAssets.push(rel)
+      manifest.missingAssets.push(rel.replace(/\\/g, '/'))
     }
   }
 
@@ -67,10 +81,15 @@ export function applyCatalogZip(siteDir, zipBuffer, existingProducts, mode = 'me
   validateProductsData(incoming)
 
   let assetsCopied = 0
+  let assetsSkipped = 0
   for (const entry of zip.getEntries()) {
-    const name = normalizeZipPath(entry.entryName)
-    if (!name.startsWith('assets/') || entry.isDirectory) continue
-    const out = path.join(siteDir, name)
+    if (entry.isDirectory) continue
+    const out = resolveSafeAssetPath(siteDir, entry.entryName)
+    if (!out) {
+      const name = normalizeZipPath(entry.entryName)
+      if (name.startsWith('assets/')) assetsSkipped += 1
+      continue
+    }
     fs.mkdirSync(path.dirname(out), { recursive: true })
     fs.writeFileSync(out, entry.getData())
     assetsCopied += 1
@@ -82,6 +101,7 @@ export function applyCatalogZip(siteDir, zipBuffer, existingProducts, mode = 'me
     stats: {
       ...summarizeProducts(merged),
       assetsCopied,
+      assetsSkipped,
       mode,
     },
   }

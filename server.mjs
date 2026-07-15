@@ -3,7 +3,13 @@ import fs from 'node:fs'
 import path from 'node:path'
 import { fileURLToPath } from 'node:url'
 import { buildCatalogFromPdfText, extractTextFromPdfBuffer } from './price-pdf-catalog.mjs'
-import { buildCatalogFromPriceText, buildPriceJsonlPrompt, defaultPromptCategoryRows, promptCategoryProductCounts } from './price-text-import.mjs'
+import {
+  buildCatalogFromPriceText,
+  buildPriceJsonlPrompt,
+  buildProductStubFromPriceName,
+  defaultPromptCategoryRows,
+  promptCategoryProductCounts,
+} from './price-text-import.mjs'
 import {
   buildBackupPayload,
   mergeProducts,
@@ -350,6 +356,25 @@ function readBody(req) {
   })
 }
 
+/** Бинарное тело (ZIP каталога и т.п.) — без склейки в строку. */
+function readBodyBuffer(req, { maxBytes = 512 * 1024 * 1024 } = {}) {
+  return new Promise((resolve, reject) => {
+    const chunks = []
+    let total = 0
+    req.on('data', (c) => {
+      total += c.length
+      if (total > maxBytes) {
+        reject(new Error(`Файл слишком большой (лимит ${Math.round(maxBytes / 1024 / 1024)} МБ)`))
+        req.destroy()
+        return
+      }
+      chunks.push(c)
+    })
+    req.on('end', () => resolve(Buffer.concat(chunks)))
+    req.on('error', reject)
+  })
+}
+
 function cacheControlFor(filePath) {
   const ext = path.extname(filePath).toLowerCase()
   const rel = path.relative(SITE_DIR, filePath).replace(/\\/g, '/')
@@ -675,6 +700,30 @@ const server = http.createServer(async (req, res) => {
     }
   }
 
+  if (p === '/api/admin/create-from-price-name' && req.method === 'POST') {
+    if (!checkAuth(req)) return sendJson(res, 401, { error: 'Неверный пароль' })
+    try {
+      const body = JSON.parse(await readBody(req))
+      const name = String(body.name || '').trim()
+      if (!name) return sendJson(res, 400, { error: 'Не передано название' })
+      const existing = readProducts()
+      const result = buildProductStubFromPriceName(name, existing.products)
+      if (result.error) {
+        return sendJson(res, 400, { error: result.error, existingId: result.existingId })
+      }
+      existing.products.push(result.product)
+      writeProducts(existing)
+      return sendJson(res, 200, {
+        ok: true,
+        product: result.product,
+        section: result.section,
+      })
+    } catch (err) {
+      console.error('Create from price name error:', err)
+      return sendJson(res, 500, { error: err.message || 'Ошибка создания карточки' })
+    }
+  }
+
   if (p === '/api/import-price-text' && req.method === 'POST') {
     if (!checkAuth(req)) return sendJson(res, 401, { error: 'Неверный пароль' })
     try {
@@ -689,10 +738,14 @@ const server = http.createServer(async (req, res) => {
       }
       const dryRun = !!body.dryRun
       const replaceVariants = body.replaceVariants !== false
+      const preserveVariantProductIds = Array.isArray(body.preserveVariantProductIds)
+        ? body.preserveVariantProductIds
+        : []
 
       const existing = readProducts()
       const { products, stats } = buildCatalogFromPriceText(String(text), existing.products, markup, {
         replaceVariants,
+        preserveVariantProductIds,
       })
 
       if (!dryRun) {
@@ -796,16 +849,30 @@ const server = http.createServer(async (req, res) => {
   if (p === '/api/admin/import-catalog' && req.method === 'POST') {
     if (!checkAuth(req)) return sendJson(res, 401, { error: 'Неверный пароль' })
     try {
-      const body = JSON.parse(await readBody(req))
-      const raw = String(body.data ?? '')
-      const base64 = raw.replace(/^data:[^;]+;base64,/, '')
-      if (!base64) return sendJson(res, 400, { error: 'Файл не передан' })
-      const mode = body.mode === 'replace' ? 'replace' : 'merge'
+      const ct = String(req.headers['content-type'] || '')
+      let zipBuffer
+      let mode = 'merge'
+
+      // Предпочтительно: сырой ZIP (меньше памяти, без base64)
+      if (ct.includes('application/zip') || ct.includes('application/octet-stream') || ct.includes('application/x-zip')) {
+        mode = String(req.headers['x-import-mode'] || '').toLowerCase() === 'replace' ? 'replace' : 'merge'
+        zipBuffer = await readBodyBuffer(req)
+      } else {
+        const body = JSON.parse(await readBody(req))
+        const raw = String(body.data ?? '')
+        const base64 = raw.replace(/^data:[^;]+;base64,/, '')
+        if (!base64) return sendJson(res, 400, { error: 'Файл не передан' })
+        mode = body.mode === 'replace' ? 'replace' : 'merge'
+        zipBuffer = Buffer.from(base64, 'base64')
+      }
+
+      if (!zipBuffer?.length) return sendJson(res, 400, { error: 'Пустой файл каталога' })
+
       const existing = readProducts()
       if (!Array.isArray(existing?.products)) existing.products = []
       let result
       try {
-        result = applyCatalogZip(SITE_DIR, Buffer.from(base64, 'base64'), existing, mode)
+        result = applyCatalogZip(SITE_DIR, zipBuffer, existing, mode)
       } catch (err) {
         if (String(err?.message || '').includes('No END header')) {
           throw new Error('Файл не является корректным ZIP-архивом')
