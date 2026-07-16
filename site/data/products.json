@@ -1989,7 +1989,7 @@
       "brand": "Apple",
       "badge": null,
       "image": "assets/products/b876bde1a8354d3ee78b977a451cd6463aad4feec10c393ab5b4b3a2eff682a4.jpg.webp",
-      "description": "AirPods Max обеспечивают потрясающе детальный, высококачественный звук для непревзойденного прослушивания. Каждая часть специально разработанного драйвера работает над созданием звука с ультранизким искажением во всем слышимом диапазоне — так что вы услышите каждую ноту с чувством ясности.",
+      "description": "AirPods Max обеспечивают потрясающе детальный, высококачественный звук для непревзойденного прос������ушивания. Каждая часть специально разработанного драйвера работает над созданием звука с ультранизким искажением во всем слышимом диапазоне — так что вы услышите каждую ноту с чувством ясности.",
       "simTypes": null,
       "simModifiers": [],
       "colors": [
@@ -2455,7 +2455,7 @@
       "brand": "Apple",
       "badge": null,
       "image": "assets/products/93d7db5f16639554ac08b80932c14d39d7a54b580a49cd683b2426e92242abc9.jpg.webp",
-      "description": "Смарт-часы Apple Watch Series 11 42mm выполнены в серебристом алюминиевом корпусе. Водонепроницаемость 5 Бар гарантирует устойчивость к повышенной влажности, брызгам воды и атмосферным осадкам. В смарт-часах установлен квадратный сенсорный дисплей диагональю 1.77 дюйма. Панель OLED с яркостью до 2000 Кд/м² обеспечивает контрастное четкое изображение при разных условиях внешней освещенности.",
+      "description": "Смарт-часы Apple Watch Series 11 42mm выполнены в серебристом алюминиевом корпусе. Водонепроницаемость 5 Бар гарантирует устойчивость к повышенной влажнос��и, брызгам воды и атмосферным осадкам. В смарт-часах установлен квадратный сенсорный дисплей диагональю 1.77 дюйма. Панель OLED с яркостью до 2000 Кд/м² обеспечивает контрастное четкое изображение при разных условиях внешней освещенности.",
       "simTypes": null,
       "simModifiers": [],
       "colors": [
@@ -3478,27 +3478,20 @@
     {
       "id": 103,
       "slug": "xiaomi-17-ultra-leica",
-      "name": "Xiaomi 17 Ultra Leica",
+      "name": "Xiaomi 17 Ultra Leica Edition",
       "category": "xiaomi",
       "brand": "Xiaomi",
       "badge": null,
-      "image": "",
-      "coverImage": "",
+      "image": "assets/products/c4b942fb24a82e378bedf4112e11ae02fef93b576f252dbd3c911947ee4db3dd.png-mrniptvg-2xt6f3.webp",
+      "coverImage": "assets/products/c4b942fb24a82e378bedf4112e11ae02fef93b576f252dbd3c911947ee4db3dd.png-mrniptvg-2xt6f3.webp",
       "description": "Xiaomi 17 Ultra Leica — оригинальная техника, под заказ от 3–5 дней.",
       "simTypes": null,
       "simModifiers": [],
       "colors": [
         {
-          "id": "default",
-          "name": "Стандарт",
-          "hex": "#888888",
-          "image": "",
-          "importNames": ""
-        },
-        {
           "id": "black-leica",
           "name": "Black Leica",
-          "hex": "#888888",
+          "hex": "#2e2e2e",
           "image": "",
           "importNames": "Black Leica"
         }
@@ -3514,18 +3507,21 @@
           "storage": "512 ГБ",
           "simType": "",
           "purchasePrice": 88500,
-          "price": 98900
+          "price": 101900
         }
       ],
       "sizes": [],
       "stock": [],
-      "images": [],
+      "images": [
+        "assets/products/c4b942fb24a82e378bedf4112e11ae02fef93b576f252dbd3c911947ee4db3dd.png-mrniptvg-2xt6f3.webp",
+        "assets/products/ofwq2zba1e4h3xqkct7w00jzlcsaeypu-mrnjbd21-lzujwb.webp"
+      ],
       "markupPercent": 15,
       "markupFixed": 0,
       "showCatalogSpec": false,
       "importNames": "Xiaomi 17 Ultra Leica, Xiaomi 17 Ultra",
-      "hidden": true,
-      "isNew": true,
+      "hidden": false,
+      "isNew": false,
       "lastPriceImportAt": "2026-07-16T11:14:40.962Z"
     },
     {
@@ -3535,25 +3531,32 @@
       "category": "huawei",
       "brand": "Huawei",
       "badge": null,
-      "image": "",
-      "coverImage": "",
+      "image": "assets/products/ba9277bf5dbada0b5a255372f8f5251d8b7f8d253ae0f5f6a64eb5396881fbe2.jpg-mrnitevi-rdvrbl.webp",
+      "coverImage": "assets/products/ba9277bf5dbada0b5a255372f8f5251d8b7f8d253ae0f5f6a64eb5396881fbe2.jpg-mrnitevi-rdvrbl.webp",
       "description": "HUAWEI Pura 80 — оригинальная техника, под заказ от 3–5 дней.",
       "simTypes": null,
       "simModifiers": [],
       "colors": [
         {
           "id": "default",
-          "name": "Стандарт",
-          "hex": "#888888",
-          "image": "",
-          "importNames": ""
+          "name": "Чёрный",
+          "hex": "#4c504f",
+          "image": "assets/products/ba9277bf5dbada0b5a255372f8f5251d8b7f8d253ae0f5f6a64eb5396881fbe2.jpg-mrniwanp-ntcqqb.webp",
+          "importNames": "Black"
         },
         {
           "id": "black",
-          "name": "Black",
-          "hex": "#888888",
-          "image": "",
-          "importNames": "Black"
+          "name": "Золотистый",
+          "hex": "#e9bb9f",
+          "image": "assets/products/a9a10d07a3e09d06aee53b5f8f01bc73ef746d97a1e1568a8e45ec46876a1b26.jpg-mrniwedb-3antt6.webp",
+          "importNames": "Gold"
+        },
+        {
+          "id": "c1784207172293",
+          "name": "Белый",
+          "hex": "#dbdbdb",
+          "image": "assets/products/e339df31a4a462b1bb0740cebe8362352663d0c6114db06e41cc0f58cf87bebb.jpg-mrniwh4t-k1xahu.webp",
+          "importNames": "White"
         }
       ],
       "storage": [
@@ -3567,18 +3570,26 @@
           "storage": "256 ГБ",
           "simType": "",
           "purchasePrice": 31500,
-          "price": 35900
+          "price": 36900
         }
       ],
-      "sizes": null,
+      "sizes": [],
       "stock": [],
-      "images": [],
+      "images": [
+        "assets/products/ba9277bf5dbada0b5a255372f8f5251d8b7f8d253ae0f5f6a64eb5396881fbe2.jpg-mrnitevi-rdvrbl.webp",
+        "assets/products/b7e5d5e192db29ebdc336776a2dd2979bef47759aae952a22674545f71fa0ada.jpg-mrnitk83-kbhw3r.webp",
+        "assets/products/82b715696aba66852a0b66b0fdb4ed8c3184e18686d0a7a1faea6a167b3151a2.jpg-mrnitoi5-xsqiv5.webp",
+        "assets/products/7705495e16f27ac6e224143478e498d54a2980488cd0c6528716086c3a9315e3.jpg-mrnitt0e-v4gzkn.webp",
+        "assets/products/1a658a8c102b21c8e86ca10022f9299f167fd40413f48bea54dd6d2174115449.jpg-mrnity78-i6yril.webp",
+        "assets/products/889cf9a4581c765a71ffb9bd41246bb82cab0e3d174a4b97cf279bf9bb41fabf.jpg-mrniu22c-bs4iro.webp",
+        "assets/products/b7201e8977dd2d59305b3ac62e72cfc553280027cda91c8853287fb9350aeed1.jpg-mrniu5nb-gim33e.webp"
+      ],
       "markupPercent": 15,
       "markupFixed": 0,
       "showCatalogSpec": false,
       "importNames": "HUAWEI Pura 80",
-      "hidden": true,
-      "isNew": true,
+      "hidden": false,
+      "isNew": false,
       "lastPriceImportAt": "2026-07-16T11:14:40.962Z"
     },
     {
@@ -3588,7 +3599,7 @@
       "category": "iphone",
       "brand": "Apple",
       "badge": null,
-      "image": "",
+      "image": "assets/products/79529c9eaf7a7399e5082912b5d03dd67e2043c98ac49e575ea6530176a324a6.jpg-mrniy03j-mos8k7.webp",
       "description": "",
       "simTypes": null,
       "simModifiers": [],
@@ -3597,8 +3608,15 @@
           "id": "black",
           "name": "Чёрный",
           "hex": "#1a1a1a",
-          "image": "",
+          "image": "assets/products/79529c9eaf7a7399e5082912b5d03dd67e2043c98ac49e575ea6530176a324a6.jpg-mrniz4ru-9sbtal.webp",
           "importNames": ""
+        },
+        {
+          "id": "c1784207306280",
+          "name": "Белый",
+          "hex": "#ffffff",
+          "image": "assets/products/27d291388476c2d4bc9f21e303637a9f1d7392da1732551753316951321fa416.jpg-mrniz7zk-vd5hqj.webp",
+          "importNames": "White"
         }
       ],
       "storage": [
@@ -3608,14 +3626,20 @@
       ],
       "sizes": [],
       "stock": [],
-      "images": [],
+      "images": [
+        "assets/products/79529c9eaf7a7399e5082912b5d03dd67e2043c98ac49e575ea6530176a324a6.jpg-mrniy03j-mos8k7.webp",
+        "assets/products/4488fb211fc173d397b514708a6c2c9b306a0545b89ae2be4ef14be69c8cf75d.jpg-mrniy3uz-ewenxq.webp",
+        "assets/products/6784e386d789247ab013ecba190c17d5a628b23b1887916c8e914de1a2c5d352.jpg-mrniy6v7-o92xhi.webp",
+        "assets/products/562975686fac76b3e71e2fbc662d9a062501e071c28bcd1ca9a2e8dcf4596e58.jpg-mrniya31-j0hnsh.webp"
+      ],
       "variants": [],
       "markupPercent": 15,
       "markupFixed": 0,
       "showCatalogSpec": false,
-      "hidden": true,
+      "hidden": false,
       "importNames": "iPhone 16E",
-      "coverImage": ""
+      "coverImage": "assets/products/79529c9eaf7a7399e5082912b5d03dd67e2043c98ac49e575ea6530176a324a6.jpg-mrniy03j-mos8k7.webp",
+      "isNew": false
     },
     {
       "id": 107,
@@ -3624,35 +3648,37 @@
       "category": "xiaomi",
       "brand": "Xiaomi",
       "badge": null,
-      "image": "",
-      "coverImage": "",
+      "image": "assets/products/3dec7e737516b2c4923c41bbd77d982777a4bdaf76ac87a69a9a4ada346570a0.jpg-mrnj3rd2-svwpxe.webp",
+      "coverImage": "assets/products/3dec7e737516b2c4923c41bbd77d982777a4bdaf76ac87a69a9a4ada346570a0.jpg-mrnj3rd2-svwpxe.webp",
       "description": "OnePlus Nord CE6 — оригинальная техника, под заказ от 3–5 дней.",
       "simTypes": null,
       "simModifiers": [],
       "colors": [
         {
           "id": "default",
-          "name": "Стандарт",
-          "hex": "#888888",
-          "image": "",
-          "importNames": ""
+          "name": "Чёрный",
+          "hex": "#000000",
+          "image": "assets/products/3dec7e737516b2c4923c41bbd77d982777a4bdaf76ac87a69a9a4ada346570a0.jpg-mrnj4cxg-6xpouc.webp",
+          "importNames": "Black"
         }
       ],
       "storage": [
         {
-          "label": "Стандарт"
+          "label": "8/256 ГБ"
         }
       ],
       "variants": [],
-      "sizes": null,
+      "sizes": [],
       "stock": [],
-      "images": [],
+      "images": [
+        "assets/products/3dec7e737516b2c4923c41bbd77d982777a4bdaf76ac87a69a9a4ada346570a0.jpg-mrnj3rd2-svwpxe.webp"
+      ],
       "markupPercent": 15,
       "markupFixed": 0,
       "showCatalogSpec": false,
       "importNames": "OnePlus Nord CE6",
-      "hidden": true,
-      "isNew": true
+      "hidden": false,
+      "isNew": false
     },
     {
       "id": 108,
@@ -3661,35 +3687,47 @@
       "category": "xiaomi",
       "brand": "Xiaomi",
       "badge": null,
-      "image": "",
-      "coverImage": "",
+      "image": "assets/products/62b622c736747a2af2c7024a4c4da075b0820beacd714535f6491a68d4282118.jpg-mrnj1v3o-ulwlc7.webp",
+      "coverImage": "assets/products/62b622c736747a2af2c7024a4c4da075b0820beacd714535f6491a68d4282118.jpg-mrnj1v3o-ulwlc7.webp",
       "description": "OnePlus Nord 6 — оригинальная техника, под заказ от 3–5 дней.",
       "simTypes": null,
       "simModifiers": [],
       "colors": [
         {
           "id": "default",
-          "name": "Стандарт",
-          "hex": "#888888",
-          "image": "",
-          "importNames": ""
+          "name": "Чёрный",
+          "hex": "#000000",
+          "image": "assets/products/62b622c736747a2af2c7024a4c4da075b0820beacd714535f6491a68d4282118.jpg-mrnj19lu-9truw9.webp",
+          "importNames": "Black"
+        },
+        {
+          "id": "c1784207771906",
+          "name": "Зелёный",
+          "hex": "#49c79b",
+          "image": "assets/products/782e03d32c47b4b0f5832a3b68ef719d911caffd3cbda666da8ca9931af3f052.jpg-mrnj8zol-j8d4xv.webp",
+          "importNames": "Green"
         }
       ],
       "storage": [
         {
-          "label": "Стандарт"
+          "label": "8/256 ГБ"
+        },
+        {
+          "label": "12/512 ГБ"
         }
       ],
       "variants": [],
-      "sizes": null,
+      "sizes": [],
       "stock": [],
-      "images": [],
+      "images": [
+        "assets/products/62b622c736747a2af2c7024a4c4da075b0820beacd714535f6491a68d4282118.jpg-mrnj1v3o-ulwlc7.webp"
+      ],
       "markupPercent": 15,
       "markupFixed": 0,
       "showCatalogSpec": false,
       "importNames": "OnePlus Nord 6",
-      "hidden": true,
-      "isNew": true
+      "hidden": false,
+      "isNew": false
     },
     {
       "id": 109,
@@ -3698,31 +3736,43 @@
       "category": "ipad",
       "brand": "Apple",
       "badge": null,
-      "image": "",
-      "coverImage": "",
+      "image": "assets/products/fea2ff1a3a34bb949d11c6a5be8ba9c4d7afc212ef2cfe0a5171f3513690c099.jpg-mrnjces9-a29ulz.webp",
+      "coverImage": "assets/products/fea2ff1a3a34bb949d11c6a5be8ba9c4d7afc212ef2cfe0a5171f3513690c099.jpg-mrnjces9-a29ulz.webp",
       "description": "iPad Pro 11 M5 (2025) Wi-Fi — оригинальная техника, под заказ от 3–5 дней.",
       "simTypes": null,
       "simModifiers": [],
       "colors": [
         {
           "id": "default",
-          "name": "Стандарт",
-          "hex": "#888888",
-          "image": "",
-          "importNames": ""
+          "name": "Чёрный",
+          "hex": "#252525",
+          "image": "assets/products/fea2ff1a3a34bb949d11c6a5be8ba9c4d7afc212ef2cfe0a5171f3513690c099.jpg-mrnjdqq8-dp2oo4.webp",
+          "importNames": "Black"
+        },
+        {
+          "id": "c1784207985402",
+          "name": "Серебристый",
+          "hex": "#b6b6b6",
+          "image": "assets/products/e395faff0e50f4271f5e840d78809d2c230aeaca002af03cbf8ebe150d5ad2a0.jpg-mrnjdngj-iju2ja.webp",
+          "importNames": "Silver"
         }
       ],
       "storage": [],
       "variants": [],
-      "sizes": null,
+      "sizes": [],
       "stock": [],
-      "images": [],
+      "images": [
+        "assets/products/fea2ff1a3a34bb949d11c6a5be8ba9c4d7afc212ef2cfe0a5171f3513690c099.jpg-mrnjces9-a29ulz.webp",
+        "assets/products/2702f268364739ddb9d62e13a0356612a668c5c4995e3f4370ed60baf344a355.jpg-mrnjci2a-31h0do.webp",
+        "assets/products/56e392d51384b5f697d8f3690b721ac0346b42ed2d6cf93c6a158e503e77a191.jpg-mrnjcl51-fzrtng.webp",
+        "assets/products/3217d13981c99e4d8875a34bdee5c899a67fe7ea37b2bb83b72b4b933a704dc5.jpg-mrnjcnrv-a40zqj.webp"
+      ],
       "markupPercent": 15,
       "markupFixed": 0,
       "showCatalogSpec": false,
       "importNames": "iPad Pro 11 M5 (2025) Wi-Fi",
-      "hidden": true,
-      "isNew": true
+      "hidden": false,
+      "isNew": false
     }
   ]
 }

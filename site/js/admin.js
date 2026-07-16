@@ -174,6 +174,21 @@ function markClean() {
   updateDirtyUI()
 }
 
+/** Товары с сервера без кэша браузера (после импорта каталога/прайса). */
+async function fetchProductsFresh() {
+  const res = await fetch(`/api/products?_=${Date.now()}`, { cache: 'no-store' })
+  if (!res.ok) throw new Error('Не удалось загрузить товары')
+  return res.json()
+}
+
+function isNoDirtyControl(target) {
+  if (!target || !target.closest) return true
+  if (target.closest('[data-no-dirty]')) return true
+  if (target.matches?.('input[type="file"]')) return true
+  const id = target.id || ''
+  return id === 'import-catalog-mode' || id === 'import-products-mode'
+}
+
 function confirmDiscardIfDirty(message) {
   if (!isDirty) return true
   return confirm(message || 'Есть несохранённые изменения. Уйти без сохранения на сервер?')
@@ -933,10 +948,12 @@ $('login-form').addEventListener('submit', async (e) => {
 bindPasswordToggles()
 
 document.addEventListener('input', (e) => {
-  if (e.target.closest('#admin-content')) markDirty()
+  if (!e.target.closest('#admin-content') || isNoDirtyControl(e.target)) return
+  markDirty()
 }, true)
 document.addEventListener('change', (e) => {
-  if (e.target.closest('#admin-content')) markDirty()
+  if (!e.target.closest('#admin-content') || isNoDirtyControl(e.target)) return
+  markDirty()
 }, true)
 document.addEventListener('visibilitychange', () => {
   if (document.hidden) flushDraft()
@@ -2826,11 +2843,11 @@ function renderConfig(c) {
     ${section(`Каталог для коллеги (товары + фото) ${betaBadge()}`, `
       <p class="admin-hint">Скачайте ZIP и передайте коллеге: он импортирует у себя (Слияние или Заменить на пустой базе), правит карточки/фото в админке, снова «Скачать каталог» и отдаёт ZIP вам.</p>
       <p class="admin-hint"><strong>Слияние</strong> — обновить товары по id/slug и добавить новые (прайс поставщика не затирается, если в ZIP он пустой). <strong>Заменить всё</strong> — полностью перезаписать каталог.</p>
-      <p class="admin-hint">Архив может быть 50+ МБ из‑за фото — импорт идёт напрямую файлом, дождитесь окончания.</p>
+      <p class="admin-hint">Архив может быть 50+ МБ из‑за фото — импорт сразу сохраняется на сервер, дождитесь окончания.</p>
       <div class="admin-row admin-row--actions">
-        <button type="button" class="btn btn--primary" id="export-catalog-zip">Скачать каталог (.zip)</button>
-        <label class="btn btn--secondary admin-upload-btn">Импорт каталога (.zip)
-          <input type="file" id="import-catalog-zip" accept=".zip,application/zip" hidden />
+        <button type="button" class="btn btn--primary" id="export-catalog-zip" data-no-dirty>Скачать каталог (.zip)</button>
+        <label class="btn btn--secondary admin-upload-btn" data-no-dirty>Импорт каталога (.zip)
+          <input type="file" id="import-catalog-zip" accept=".zip,application/zip" hidden data-no-dirty />
         </label>
       </div>
       <div class="admin-progress" id="export-catalog-progress" hidden>
@@ -2838,8 +2855,8 @@ function renderConfig(c) {
       </div>
       <p class="admin-hint" id="export-catalog-status"></p>
       <div class="admin-row">
-        <label class="field"><span>Режим импорта каталога</span>
-          <select id="import-catalog-mode">
+        <label class="field" data-no-dirty><span>Режим импорта каталога</span>
+          <select id="import-catalog-mode" data-no-dirty>
             <option value="merge" selected>Слияние (рекомендуется)</option>
             <option value="replace">Заменить весь каталог</option>
           </select>
@@ -2954,13 +2971,15 @@ function renderConfig(c) {
       })
       const payload = await parseApiJson(res)
       if (!res.ok) throw new Error(payload?.error || `Ошибка импорта (${res.status})`)
-      productsData = await (await fetch('/api/products')).json()
+      // ZIP уже записан на диск сервером — подтягиваем товары и снимаем «несохранённо»
+      productsData = await fetchProductsFresh()
       invalidateStore()
       clearDraft()
+      markClean()
       const s = payload.stats || {}
       const skipped = s.assetsSkipped ? `, пропущено небезопасных путей: ${s.assetsSkipped}` : ''
-      resultEl.textContent = `Готово: ${s.count} товаров, фото скопировано: ${s.assetsCopied ?? '—'}${skipped}, режим: ${s.mode || mode}`
-      status('Каталог импортирован', 'success')
+      resultEl.textContent = `Сохранено: ${s.count} товаров, фото: ${s.assetsCopied ?? '—'}${skipped}, режим: ${s.mode || mode}`
+      status('Каталог импортирован и сохранён', 'success')
       renderTab()
     } catch (err) {
       resultEl.textContent = err.message
@@ -2987,7 +3006,8 @@ function renderConfig(c) {
       if (!res.ok) throw new Error(payload.error || 'Ошибка импорта')
       await loadData()
       clearDraft()
-      status(`Backup импортирован (${payload.stats?.products ?? '—'} товаров)`, 'success')
+      markClean()
+      status(`Backup импортирован и сохранён (${payload.stats?.products ?? '—'} товаров)`, 'success')
       renderTab()
     } catch (err) { status(err.message || 'Некорректный backup', 'error') }
     e.target.value = ''
@@ -3033,10 +3053,11 @@ function renderConfig(c) {
       })
       const payload = await res.json().catch(() => ({}))
       if (!res.ok) throw new Error(payload.error || 'Ошибка импорта')
-      productsData = await (await fetch('/api/products')).json()
+      productsData = await fetchProductsFresh()
       invalidateStore()
       clearDraft()
-      status(`Товары импортированы (${payload.stats?.count ?? '—'})`, 'success')
+      markClean()
+      status(`Товары импортированы и сохранены (${payload.stats?.count ?? '—'})`, 'success')
       renderTab()
     } catch (err) { status(err.message || 'Некорректный JSON', 'error') }
     e.target.value = ''
