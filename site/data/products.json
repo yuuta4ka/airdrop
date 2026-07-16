@@ -130,8 +130,8 @@
           "colorId": "white",
           "storage": "256 ГБ",
           "simType": "eSIM only",
-          "purchasePrice": 94800,
-          "price": 105900
+          "purchasePrice": 94000,
+          "price": 104900
         },
         {
           "colorId": "orange",
@@ -187,7 +187,7 @@
       "coverImage": "assets/products/bde6fa42703171e6bb6c2c1bd235fec457b6c328ee00729c65b4b2ca9d10fd5a.jpg.webp",
       "hidden": false,
       "importNames": "iPhone 17 Pro Max",
-      "lastPriceImportAt": "2026-07-15T21:19:58.181Z"
+      "lastPriceImportAt": "2026-07-16T11:14:40.962Z"
     },
     {
       "id": 2,
@@ -335,13 +335,6 @@
           "simType": "eSIM + SIM",
           "purchasePrice": 112500,
           "price": 125900
-        },
-        {
-          "colorId": "white",
-          "storage": "512 ГБ",
-          "simType": "eSIM + SIM",
-          "purchasePrice": 114000,
-          "price": 127900
         }
       ],
       "sizes": [],
@@ -366,7 +359,7 @@
       "coverImage": "assets/products/3f07b1ffa9193a775d83d5a74fa818307037b9e0cf34e51a18ac31304fceefb9.jpg.webp",
       "hidden": false,
       "importNames": "iPhone 17 Pro",
-      "lastPriceImportAt": "2026-07-15T21:19:58.181Z"
+      "lastPriceImportAt": "2026-07-16T11:14:40.962Z"
     },
     {
       "id": 3,
@@ -457,13 +450,6 @@
           "price": 73900
         },
         {
-          "colorId": "green",
-          "storage": "256 ГБ",
-          "simType": "eSIM only",
-          "purchasePrice": 63600,
-          "price": 70900
-        },
-        {
           "colorId": "lavender",
           "storage": "256 ГБ",
           "simType": "eSIM + SIM",
@@ -507,7 +493,7 @@
       "markupFixed": 0,
       "hidden": false,
       "importNames": "Phone 17",
-      "lastPriceImportAt": "2026-07-15T21:19:58.181Z"
+      "lastPriceImportAt": "2026-07-16T11:14:40.962Z"
     },
     {
       "id": 5,
@@ -592,25 +578,11 @@
       ],
       "variants": [
         {
-          "colorId": "teal",
-          "storage": "128 ГБ",
-          "simType": "eSIM + SIM",
-          "purchasePrice": 54000,
-          "price": 60900
-        },
-        {
           "colorId": "pink",
           "storage": "256 ГБ",
           "simType": "eSIM + SIM",
           "purchasePrice": 62700,
           "price": 69900
-        },
-        {
-          "colorId": "black",
-          "storage": "128 ГБ",
-          "simType": "eSIM + SIM",
-          "purchasePrice": 55000,
-          "price": 61900
         },
         {
           "colorId": "ultramarine",
@@ -634,7 +606,7 @@
       "markupFixed": 0,
       "hidden": false,
       "importNames": "iPhone 16",
-      "lastPriceImportAt": "2026-07-15T21:19:58.181Z"
+      "lastPriceImportAt": "2026-07-16T11:14:40.962Z"
     },
     {
       "id": 6,
@@ -846,7 +818,7 @@
       "importNames": "Macbook Air 13 M5",
       "markupPercent": 11.8,
       "markupFixed": 0,
-      "lastPriceImportAt": "2026-07-15T21:19:58.181Z"
+      "lastPriceImportAt": "2026-07-16T11:14:40.962Z"
     },
     {
       "id": 9,
@@ -959,7 +931,7 @@
       "importNames": "AirPods Pro 2 Type-C",
       "markupPercent": 20,
       "markupFixed": 0,
-      "lastPriceImportAt": "2026-07-15T21:19:58.181Z"
+      "lastPriceImportAt": "2026-07-16T11:14:40.962Z"
     },
     {
       "id": 12,
@@ -1052,7 +1024,7 @@
       "markupFixed": 0,
       "hidden": false,
       "importNames": "Samsung Galaxy S25 Ultra, S25 Ultra, Samsung S25 Ultra",
-      "lastPriceImportAt": "2026-07-15T21:19:58.181Z"
+      "lastPriceImportAt": "2026-07-16T11:14:40.962Z"
     },
     {
       "id": 13,
@@ -1148,7 +1120,7 @@
       "markupFixed": 0,
       "importNames": "Samsung Galaxy S26 Plus, Galaxy S26+, Samsung Galaxy S26+",
       "hidden": false,
-      "lastPriceImportAt": "2026-07-15T21:19:58.181Z"
+      "lastPriceImportAt": "2026-07-16T11:14:40.962Z"
     },
     {
       "id": 14,
@@ -1233,7 +1205,7 @@
       "markupFixed": 0,
       "importNames": "Samsung Galaxy S26, Galaxy S26",
       "hidden": false,
-      "lastPriceImportAt": "2026-07-15T21:19:58.181Z"
+      "lastPriceImportAt": "2026-07-16T11:14:40.962Z"
     },
     {
       "id": 15,
@@ -1270,32 +1242,29 @@
       ],
       "storage": [
         {
-          "label": "64 ГБ"
+          "label": "Стандарт"
         }
       ],
       "sizes": [
         {
           "label": "47 мм"
-        },
-        {
-          "label": "64 GB"
         }
       ],
       "stock": [],
       "variants": [
         {
           "colorId": "white",
-          "storage": "64 ГБ",
+          "storage": "Стандарт",
           "simType": "",
           "purchasePrice": 24800,
-          "price": 27900
+          "price": 32900
         },
         {
           "colorId": "blue",
-          "storage": "64 ГБ",
+          "storage": "Стандарт",
           "simType": "",
           "purchasePrice": 24200,
-          "price": 27900
+          "price": 31900
         }
       ],
       "images": [
@@ -1309,8 +1278,8 @@
       "markupPercent": 30,
       "markupFixed": 0,
       "hidden": false,
-      "importNames": "Galaxy Watch 8 Ultra, Samsung Watch 8 Ultra 2025 LTE",
-      "lastPriceImportAt": "2026-07-15T21:19:58.181Z"
+      "importNames": "Galaxy Watch 8 Ultra, Samsung Watch 8 Ultra 2025 LTE, Watch 8 Ultra 2025 LTE",
+      "lastPriceImportAt": "2026-07-16T11:14:40.962Z"
     },
     {
       "id": 16,
@@ -1434,7 +1403,7 @@
       "importNames": "Galaxy Watch 8 Classic",
       "markupPercent": 30,
       "markupFixed": 0,
-      "lastPriceImportAt": "2026-07-15T21:19:58.181Z"
+      "lastPriceImportAt": "2026-07-16T11:14:40.962Z"
     },
     {
       "id": 18,
@@ -1514,7 +1483,7 @@
       "importNames": "Xiaomi 15",
       "markupPercent": 30,
       "markupFixed": 0,
-      "lastPriceImportAt": "2026-07-15T21:19:58.181Z"
+      "lastPriceImportAt": "2026-07-16T11:14:40.962Z"
     },
     {
       "id": 45,
@@ -1585,15 +1554,8 @@
           "colorId": "sky-blue",
           "storage": "12/256 ГБ",
           "simType": "",
-          "purchasePrice": 70500,
-          "price": 78900
-        },
-        {
-          "colorId": "default",
-          "storage": "12/256 ГБ",
-          "simType": "",
-          "purchasePrice": 70500,
-          "price": 78900
+          "purchasePrice": 69100,
+          "price": 77900
         },
         {
           "colorId": "default",
@@ -1626,7 +1588,7 @@
       "showCatalogSpec": false,
       "hidden": false,
       "importNames": "Samsung Galaxy S26 Ultra",
-      "lastPriceImportAt": "2026-07-15T21:19:58.181Z"
+      "lastPriceImportAt": "2026-07-16T11:14:40.962Z"
     },
     {
       "id": 46,
@@ -1720,7 +1682,7 @@
       "hidden": false,
       "importNames": "iPad Air 11 M4 (2026)",
       "coverImage": "assets/products/f7b433ecf3686d7c895b860459b17cdc9a51097de53dc48806b8bd717b474149.png.webp",
-      "lastPriceImportAt": "2026-07-15T21:19:58.181Z"
+      "lastPriceImportAt": "2026-07-16T11:14:40.962Z"
     },
     {
       "id": 47,
@@ -1832,7 +1794,7 @@
       "hidden": false,
       "importNames": "iPad 11 (2025), iPad 11 (2025) Wifi",
       "coverImage": "assets/products/7d0b6c1deca9cfd4d43fd5055d0a05e2496a5fa91e9e9de90d05aa9bcd506176.jpg.webp",
-      "lastPriceImportAt": "2026-07-15T21:19:58.181Z"
+      "lastPriceImportAt": "2026-07-16T11:14:40.962Z"
     },
     {
       "id": 48,
@@ -1941,7 +1903,7 @@
       "hidden": false,
       "importNames": "MacBook Neo 13\" A18 Pro",
       "coverImage": "assets/products/af8d42f73eb70f5dac8c932709cb09fa8b2445e17eeabb4e8d63834c7391376b.png.webp",
-      "lastPriceImportAt": "2026-07-15T21:19:58.181Z"
+      "lastPriceImportAt": "2026-07-16T11:14:40.962Z"
     },
     {
       "id": 49,
@@ -2009,13 +1971,6 @@
           "simType": "",
           "purchasePrice": 39000,
           "price": 43900
-        },
-        {
-          "colorId": "c1783088962652",
-          "storage": "Стандарт",
-          "simType": "",
-          "purchasePrice": 40100,
-          "price": 44900
         }
       ],
       "markupPercent": 15,
@@ -2024,7 +1979,7 @@
       "hidden": false,
       "importNames": "AirPods Max (2026)",
       "coverImage": "assets/products/1ef34c825b701b5079d49c1c98a4593f726abae33045a32dda7a4e62750f4566.jpg.webp",
-      "lastPriceImportAt": "2026-07-15T21:19:58.181Z"
+      "lastPriceImportAt": "2026-07-16T11:14:40.962Z"
     },
     {
       "id": 50,
@@ -2111,7 +2066,7 @@
       "hidden": false,
       "importNames": "Airpods Max (2024)",
       "coverImage": "assets/products/b876bde1a8354d3ee78b977a451cd6463aad4feec10c393ab5b4b3a2eff682a4.jpg.webp",
-      "lastPriceImportAt": "2026-07-15T21:19:58.181Z"
+      "lastPriceImportAt": "2026-07-16T11:14:40.962Z"
     },
     {
       "id": 51,
@@ -2270,7 +2225,7 @@
       "hidden": false,
       "importNames": "AirPods Pro 3, Цветные Apple AirPods Pro 3",
       "coverImage": "assets/products/optimize.webp",
-      "lastPriceImportAt": "2026-07-15T21:19:58.181Z"
+      "lastPriceImportAt": "2026-07-16T11:14:40.962Z"
     },
     {
       "id": 53,
@@ -2443,7 +2398,7 @@
       "hidden": false,
       "importNames": "Apple AirPods 4 ANC, Цветные Apple AirPods 4 ANC",
       "coverImage": "assets/products/7fa1971c830c849593dfd2293d7d3479944f5a827c477ad9292ede4a2f0b7663.jpg.webp",
-      "lastPriceImportAt": "2026-07-15T21:19:58.181Z"
+      "lastPriceImportAt": "2026-07-16T11:14:40.962Z"
     },
     {
       "id": 54,
@@ -2490,7 +2445,7 @@
       "hidden": false,
       "importNames": "Apple AirPods 4",
       "coverImage": "assets/products/7fa1971c830c849593dfd2293d7d3479944f5a827c477ad9292ede4a2f0b7663.jpg.webp",
-      "lastPriceImportAt": "2026-07-15T21:19:58.181Z"
+      "lastPriceImportAt": "2026-07-16T11:14:40.962Z"
     },
     {
       "id": 55,
@@ -2618,7 +2573,7 @@
       "hidden": false,
       "importNames": "Watch Series 11, S11",
       "coverImage": "assets/products/93d7db5f16639554ac08b80932c14d39d7a54b580a49cd683b2426e92242abc9.jpg.webp",
-      "lastPriceImportAt": "2026-07-15T21:19:58.181Z"
+      "lastPriceImportAt": "2026-07-16T11:14:40.962Z"
     },
     {
       "id": 56,
@@ -2714,7 +2669,7 @@
       "importNames": "iPhone 15",
       "hidden": false,
       "isNew": false,
-      "lastPriceImportAt": "2026-07-15T21:19:58.181Z"
+      "lastPriceImportAt": "2026-07-16T11:14:40.962Z"
     },
     {
       "id": 57,
@@ -2877,7 +2832,7 @@
       "showCatalogSpec": false,
       "importNames": "Watch SE (2025), SE (2025)",
       "hidden": false,
-      "lastPriceImportAt": "2026-07-15T21:19:58.181Z"
+      "lastPriceImportAt": "2026-07-16T11:14:40.962Z"
     },
     {
       "id": 59,
@@ -2949,21 +2904,21 @@
           "storage": "Стандарт",
           "simType": "",
           "purchasePrice": 56500,
-          "price": 63900
+          "price": 65900
         },
         {
           "colorId": "natural-anchor-blue-ocea",
           "storage": "Стандарт",
           "simType": "",
           "purchasePrice": 57500,
-          "price": 64900
+          "price": 66900
         },
         {
           "colorId": "black-ti-black-charcoal-",
           "storage": "Стандарт",
           "simType": "",
           "purchasePrice": 56700,
-          "price": 63900
+          "price": 65900
         }
       ],
       "sizes": [],
@@ -2988,7 +2943,7 @@
       "showCatalogSpec": false,
       "importNames": "Apple Watch Ultra 3, Ultra 3",
       "hidden": false,
-      "lastPriceImportAt": "2026-07-15T21:19:58.181Z"
+      "lastPriceImportAt": "2026-07-16T11:14:40.962Z"
     },
     {
       "id": 61,
@@ -3078,7 +3033,7 @@
       "importNames": "Samsung Galaxy Z Fold 7\", Z Fold 7, Samsung Z Fold 7",
       "hidden": false,
       "isNew": false,
-      "lastPriceImportAt": "2026-07-15T21:19:58.181Z"
+      "lastPriceImportAt": "2026-07-16T11:14:40.962Z"
     },
     {
       "id": 82,
@@ -3144,7 +3099,7 @@
       "showCatalogSpec": false,
       "importNames": "Samsung Galaxy Buds 4 Pro, Buds 4 Pro РСТ",
       "hidden": false,
-      "lastPriceImportAt": "2026-07-15T21:19:58.181Z"
+      "lastPriceImportAt": "2026-07-16T11:14:40.962Z"
     },
     {
       "id": 87,
@@ -3306,7 +3261,7 @@
       "importNames": "iPhone 17 Air",
       "hidden": false,
       "isNew": false,
-      "lastPriceImportAt": "2026-07-15T21:19:58.181Z"
+      "lastPriceImportAt": "2026-07-16T11:14:40.962Z"
     },
     {
       "id": 93,
@@ -3384,13 +3339,6 @@
           "price": 66900
         },
         {
-          "colorId": "black",
-          "storage": "512 ГБ",
-          "simType": "",
-          "purchasePrice": 51300,
-          "price": 57900
-        },
-        {
           "colorId": "deep-violet",
           "storage": "256 ГБ",
           "simType": "",
@@ -3419,8 +3367,8 @@
       "showCatalogSpec": false,
       "importNames": "Xiaomi 17T Pro",
       "hidden": false,
-      "isNew": true,
-      "lastPriceImportAt": "2026-07-15T21:19:58.181Z"
+      "isNew": false,
+      "lastPriceImportAt": "2026-07-16T11:14:40.962Z"
     },
     {
       "id": 102,
@@ -3524,8 +3472,8 @@
       "showCatalogSpec": false,
       "importNames": "Samsung Galaxy S25, S25, Samsung S25",
       "hidden": false,
-      "isNew": true,
-      "lastPriceImportAt": "2026-07-15T21:19:58.181Z"
+      "isNew": false,
+      "lastPriceImportAt": "2026-07-16T11:14:40.962Z"
     },
     {
       "id": 103,
@@ -3557,9 +3505,6 @@
       ],
       "storage": [
         {
-          "label": "Стандарт"
-        },
-        {
           "label": "512 ГБ"
         }
       ],
@@ -3581,7 +3526,203 @@
       "importNames": "Xiaomi 17 Ultra Leica, Xiaomi 17 Ultra",
       "hidden": true,
       "isNew": true,
-      "lastPriceImportAt": "2026-07-15T21:19:58.181Z"
+      "lastPriceImportAt": "2026-07-16T11:14:40.962Z"
+    },
+    {
+      "id": 105,
+      "slug": "huawei-pura-80",
+      "name": "HUAWEI Pura 80",
+      "category": "huawei",
+      "brand": "Huawei",
+      "badge": null,
+      "image": "",
+      "coverImage": "",
+      "description": "HUAWEI Pura 80 — оригинальная техника, под заказ от 3–5 дней.",
+      "simTypes": null,
+      "simModifiers": [],
+      "colors": [
+        {
+          "id": "default",
+          "name": "Стандарт",
+          "hex": "#888888",
+          "image": "",
+          "importNames": ""
+        },
+        {
+          "id": "black",
+          "name": "Black",
+          "hex": "#888888",
+          "image": "",
+          "importNames": "Black"
+        }
+      ],
+      "storage": [
+        {
+          "label": "256 ГБ"
+        }
+      ],
+      "variants": [
+        {
+          "colorId": "black",
+          "storage": "256 ГБ",
+          "simType": "",
+          "purchasePrice": 31500,
+          "price": 35900
+        }
+      ],
+      "sizes": null,
+      "stock": [],
+      "images": [],
+      "markupPercent": 15,
+      "markupFixed": 0,
+      "showCatalogSpec": false,
+      "importNames": "HUAWEI Pura 80",
+      "hidden": true,
+      "isNew": true,
+      "lastPriceImportAt": "2026-07-16T11:14:40.962Z"
+    },
+    {
+      "id": 106,
+      "slug": "product-106",
+      "name": "iPhone 16E",
+      "category": "iphone",
+      "brand": "Apple",
+      "badge": null,
+      "image": "",
+      "description": "",
+      "simTypes": null,
+      "simModifiers": [],
+      "colors": [
+        {
+          "id": "black",
+          "name": "Чёрный",
+          "hex": "#1a1a1a",
+          "image": "",
+          "importNames": ""
+        }
+      ],
+      "storage": [
+        {
+          "label": "128 ГБ"
+        }
+      ],
+      "sizes": [],
+      "stock": [],
+      "images": [],
+      "variants": [],
+      "markupPercent": 15,
+      "markupFixed": 0,
+      "showCatalogSpec": false,
+      "hidden": true,
+      "importNames": "iPhone 16E",
+      "coverImage": ""
+    },
+    {
+      "id": 107,
+      "slug": "oneplus-nord-ce6",
+      "name": "OnePlus Nord CE6",
+      "category": "xiaomi",
+      "brand": "Xiaomi",
+      "badge": null,
+      "image": "",
+      "coverImage": "",
+      "description": "OnePlus Nord CE6 — оригинальная техника, под заказ от 3–5 дней.",
+      "simTypes": null,
+      "simModifiers": [],
+      "colors": [
+        {
+          "id": "default",
+          "name": "Стандарт",
+          "hex": "#888888",
+          "image": "",
+          "importNames": ""
+        }
+      ],
+      "storage": [
+        {
+          "label": "Стандарт"
+        }
+      ],
+      "variants": [],
+      "sizes": null,
+      "stock": [],
+      "images": [],
+      "markupPercent": 15,
+      "markupFixed": 0,
+      "showCatalogSpec": false,
+      "importNames": "OnePlus Nord CE6",
+      "hidden": true,
+      "isNew": true
+    },
+    {
+      "id": 108,
+      "slug": "oneplus-nord-6",
+      "name": "OnePlus Nord 6",
+      "category": "xiaomi",
+      "brand": "Xiaomi",
+      "badge": null,
+      "image": "",
+      "coverImage": "",
+      "description": "OnePlus Nord 6 — оригинальная техника, под заказ от 3–5 дней.",
+      "simTypes": null,
+      "simModifiers": [],
+      "colors": [
+        {
+          "id": "default",
+          "name": "Стандарт",
+          "hex": "#888888",
+          "image": "",
+          "importNames": ""
+        }
+      ],
+      "storage": [
+        {
+          "label": "Стандарт"
+        }
+      ],
+      "variants": [],
+      "sizes": null,
+      "stock": [],
+      "images": [],
+      "markupPercent": 15,
+      "markupFixed": 0,
+      "showCatalogSpec": false,
+      "importNames": "OnePlus Nord 6",
+      "hidden": true,
+      "isNew": true
+    },
+    {
+      "id": 109,
+      "slug": "ipad-pro-11-m5-2025-wi-fi",
+      "name": "iPad Pro 11 M5 (2025) Wi-Fi",
+      "category": "ipad",
+      "brand": "Apple",
+      "badge": null,
+      "image": "",
+      "coverImage": "",
+      "description": "iPad Pro 11 M5 (2025) Wi-Fi — оригинальная техника, под заказ от 3–5 дней.",
+      "simTypes": null,
+      "simModifiers": [],
+      "colors": [
+        {
+          "id": "default",
+          "name": "Стандарт",
+          "hex": "#888888",
+          "image": "",
+          "importNames": ""
+        }
+      ],
+      "storage": [],
+      "variants": [],
+      "sizes": null,
+      "stock": [],
+      "images": [],
+      "markupPercent": 15,
+      "markupFixed": 0,
+      "showCatalogSpec": false,
+      "importNames": "iPad Pro 11 M5 (2025) Wi-Fi",
+      "hidden": true,
+      "isNew": true
     }
   ]
 }

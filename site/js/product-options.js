@@ -161,11 +161,34 @@ export function shouldShowStorageOptions(product) {
   return visible.length > 1 || (visible.length === 1 && isMeaningfulStorageLabel(visible[0].label))
 }
 
+function variantStorageKeys(product) {
+  return [...new Set(
+    (product?.variants || [])
+      .filter((v) => Number(v?.purchasePrice) > 0)
+      .map((v) => v.storage)
+      .filter(Boolean),
+  )]
+}
+
 export function resolveVariantStorageLabel(product, storageIdx = 0, sizeIdx = 0) {
   const sizeLabels = getProductSizeLabels(product)
+  const variantKeys = variantStorageKeys(product)
+
   if (sizeLabels.length) {
     const idx = Math.min(Math.max(sizeIdx ?? 0, 0), sizeLabels.length - 1)
-    return sizeLabels[idx] || sizeLabels[0] || ''
+    const sizeLabel = sizeLabels[idx] || sizeLabels[0] || ''
+    const matched = variantKeys.find((s) => normalizeOptionLabel(s) === normalizeOptionLabel(sizeLabel))
+    if (matched) return matched
+
+    // В карточке есть мм, а прайс завязан на «64 ГБ» / «Стандарт» — не ломаем наличие
+    if (isWatchCategory(product.category)) {
+      const nonStandard = variantKeys.filter((s) => s !== 'Стандарт')
+      if (nonStandard.length === 1) return nonStandard[0]
+      if (variantKeys.length === 1) return variantKeys[0]
+      if (variantKeys.length && variantKeys.every((s) => s === 'Стандарт')) return 'Стандарт'
+    }
+
+    return sizeLabel
   }
   if (product.sizes?.length > 1) {
     return product.sizes[sizeIdx ?? 0]?.label || ''
@@ -189,20 +212,28 @@ export function normalizeOptionLabel(label) {
   return String(label || '').replace(/\s/g, '').toLowerCase().replace(/mm/g, 'мм')
 }
 
-/** Размеры часов: из блока «Размеры» + из прайса (variants.storage) */
+function isWatchSizeLabel(label) {
+  const s = String(label || '').trim()
+  if (!s || /^стандарт$/i.test(s)) return false
+  if (/\d+\s*(гб|тб|gb|tb)\b/i.test(s)) return false
+  if (/^\d{2}\s*(мм|mm)$/i.test(s) || /^\d{2}$/.test(s)) return true
+  return /мм|mm/i.test(s)
+}
+
+/** Размеры часов: из блока «Размеры» + мм из прайса; без ГБ/ТБ и «Стандарт» */
 export function getProductSizeLabels(product) {
   const fromSizes = (product.sizes || [])
     .map((s) => normalizeWatchSizeLabel(s.label))
-    .filter(Boolean)
+    .filter((l) => isWatchSizeLabel(l))
 
-  if (!isWatchCategory(product.category) && product.category !== 'galaxy-watch') {
+  if (!isWatchCategory(product.category)) {
     return fromSizes.length > 1 ? fromSizes : []
   }
 
   const fromVariants = [...new Set(
     (product.variants || [])
       .map((v) => v.storage)
-      .filter((l) => l && (l === 'Стандарт' || /мм|mm/i.test(l)))
+      .filter((l) => isWatchSizeLabel(l))
       .map((l) => normalizeWatchSizeLabel(l)),
   )]
 
@@ -211,8 +242,6 @@ export function getProductSizeLabels(product) {
     const na = Number(String(a).match(/(\d+)/)?.[1] || 0)
     const nb = Number(String(b).match(/(\d+)/)?.[1] || 0)
     if (na && nb && na !== nb) return na - nb
-    if (a === 'Стандарт') return 1
-    if (b === 'Стандарт') return -1
     return a.localeCompare(b, 'ru')
   }
   return merged.sort(order)

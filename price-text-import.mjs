@@ -207,6 +207,113 @@ function repairJsonLine(line) {
   return line.replace(/(\d)"(?=[^,:}\]])/g, '$1\\"')
 }
 
+/** Категории, где хвост после имени модели = вариант (ремешок/цвет), а не часть SKU. */
+const CATALOG_PEEL_CATEGORIES = new Set(['apple-watch', 'galaxy-watch'])
+
+/** Хвост похож на вариант отделки, а не на продолжение названия модели. */
+const VARIANT_LEFTOVER_RE = /\b(band|loop|milanese|titanium|ocean|alpine|trail|sport|braided|nike|hermes|charcoal|slate|starlight|midnight|ti)\b/i
+
+function escapeRegExp(s) {
+  return String(s).replace(/[.*+?^${}()|[\]\\]/g, '\\$&')
+}
+
+function catalogAliases(product) {
+  return [product?.name, ...(String(product?.importNames || '').split(/[,;]+/))]
+    .map((s) => String(s || '').trim())
+    .filter(Boolean)
+}
+
+function normalizeAliasKey(s) {
+  return String(s || '').toLowerCase().replace(/\s+/g, ' ').trim()
+}
+
+/** Варианты написания одного alias (с/без Apple, Galaxy…). */
+function aliasMatchForms(alias) {
+  const a = String(alias || '').replace(/\s+/g, ' ').trim()
+  if (!a) return []
+  const forms = new Set([a])
+  if (/^Apple\s+/i.test(a)) forms.add(a.replace(/^Apple\s+/i, ''))
+  else forms.add(`Apple ${a}`)
+  if (/^Samsung\s+Galaxy\s+/i.test(a)) {
+    forms.add(a.replace(/^Samsung\s+Galaxy\s+/i, 'Galaxy '))
+    forms.add(a.replace(/^Samsung\s+Galaxy\s+/i, ''))
+  } else if (/^Galaxy\s+/i.test(a)) {
+    forms.add(`Samsung ${a}`)
+    forms.add(a.replace(/^Galaxy\s+/i, ''))
+  }
+  if (/^Watch\s+/i.test(a)) forms.add(`Apple ${a}`)
+  if (/^Apple\s+Watch\s+/i.test(a)) forms.add(a.replace(/^Apple\s+/i, ''))
+  return [...forms]
+}
+
+/**
+ * Самый длинный alias карточки, которым начинается строка LLM.
+ * Только apple-watch / galaxy-watch — чтобы не отрезать «Pro Max» у iPhone.
+ */
+export function findCatalogPrefixMatch(rawProduct, products) {
+  const raw = String(rawProduct || '').replace(/\s+/g, ' ').trim()
+  if (!raw || !products?.length) return null
+
+  let best = null
+  let bestLen = 0
+
+  for (const product of products) {
+    if (!CATALOG_PEEL_CATEGORIES.has(product.category)) continue
+    for (const alias of catalogAliases(product)) {
+      for (const form of aliasMatchForms(alias)) {
+        const formKey = normalizeAliasKey(form)
+        if (formKey.length < 8 || formKey.length < bestLen) continue
+        const re = new RegExp(`^${escapeRegExp(form)}(?=$|\\s)`, 'i')
+        const m = raw.match(re)
+        if (!m) continue
+        const leftover = raw.slice(m[0].length).trim()
+        // Неполный матч модели: «Watch Ultra» + хвост «3 Black…»
+        if (/^\d+\b/.test(leftover)) continue
+        if (formKey.length === bestLen && best && !leftover) continue
+        best = { product, alias: form, leftover }
+        bestLen = formKey.length
+      }
+    }
+  }
+  return best
+}
+
+/**
+ * Если LLM вшил ремешок в product — привязываем к карточке каталога и
+ * переносим хвост в color только когда это безопасно.
+ * Без карточки в каталоге ничего не меняем (никаких regex «наугад»).
+ */
+export function alignJsonFieldsToCatalog(row, products) {
+  if (!row?.product || !products?.length) return row
+  const raw = String(row.product).replace(/\s+/g, ' ').trim()
+
+  const hit = findCatalogPrefixMatch(raw, products)
+  if (!hit) return row
+
+  // Точное имя/alias → только каноническое имя карточки, color не трогаем
+  if (!hit.leftover) {
+    if (hit.product.name === raw) return row
+    return { ...row, product: hit.product.name }
+  }
+
+  return {
+    ...row,
+    product: hit.product.name,
+    color: mergePeeledColor(row.color, hit.leftover),
+  }
+}
+
+function mergePeeledColor(existing, leftover) {
+  const color = String(existing || '').trim()
+  const next = String(leftover || '').replace(/\s+/g, ' ').trim()
+  if (!next) return color
+  if (!color) return next
+  if (next.toLowerCase().includes(color.toLowerCase())) return next
+  // Не склеиваем наугад: подменяем color хвостом только если он явно про ремешок/отделку
+  if (VARIANT_LEFTOVER_RE.test(next)) return next
+  return color
+}
+
 function parseJsonPriceLine(line) {
   let data
   try {
@@ -249,11 +356,12 @@ export function parseTextPriceLines(text, options = {}) {
     if (jsonMode === null) jsonMode = looksLikeJsonLine(line)
 
     if (jsonMode || looksLikeJsonLine(line)) {
-      const row = parseJsonPriceLine(line)
+      let row = parseJsonPriceLine(line)
       if (!row) {
         skipped.push(line.slice(0, 120))
         continue
       }
+      row = alignJsonFieldsToCatalog(row, products)
       const section = detectSection(row.product) || detectSectionFromProducts(row.product, products)
       if (!section) {
         skipped.push(row.product)
@@ -554,18 +662,38 @@ ${denyBlock}
 {"product":"...","storage":"...","color":"...","sim":"...","size":"...","price":12345}
 
 Правила полей (всегда одинаково, без вариативности):
-1) product — только имя карточки, БЕЗ памяти, цвета, SIM и размера.
-   Правильно: "iPhone 16 Pro", "iPhone 17 Pro Max", "AirPods Pro 3", "Watch Series 11", "MacBook Neo 13\\" A18 Pro"
+1) product — только имя карточки, БЕЗ памяти, цвета, SIM, размера и ремешка.
+   Правильно: "iPhone 16 Pro", "iPhone 17 Pro Max", "AirPods Pro 3", "Apple Watch Ultra 3", "Apple Watch Series 11", "MacBook Neo 13\\" A18 Pro"
    (для дюйма в JSON: после числа ставь обратный слеш \\ и сразу двойную кавычку ", пример в коде: \`MacBook Neo 13\\" A18 Pro\`)
-   Неправильно: "iPhone 16 Pro Desert", "iPhone 17 256Gb Black"
+   Неправильно: "iPhone 16 Pro Desert", "iPhone 17 256Gb Black", "Watch Ultra 3 Black Ocean Band"
    Нормализация: сохраняй каноническое написание модели как в прайсе; не сокращай и не разворачивай по-разному при повторном запуске.
-2) storage — как в прайсе: "128Gb", "256Gb", "512Gb", "1Tb", "12/256Gb", "16/512Gb". Если памяти нет — "".
+2) storage — память телефона/планшета/ноутбука: "128Gb", "256Gb", "512Gb", "1Tb", "12/256Gb", "16/512Gb".
+   Для часов (Apple Watch / Galaxy Watch / Huawei Watch) storage ВСЕГДА "" — даже если в прайсе написано 32Gb / 64Gb.
 3) color — цвет/оттенок из прайса. Если нет — "".
 4) sim — только для iPhone: "Sim+eSim" | "eSim+eSim" | "Dual Sim". Иначе "".
    Если у iPhone SIM/eSIM в строке НЕ указан (типично iPhone 15 / 16) — всегда "Sim+eSim".
    "eSim+eSim" / "Dual Sim" — только при явном указании в строке.
-5) size — только часы: "42mm", "46mm", "49mm", "40mm", "47mm". Иначе "".
+5) size — ТОЛЬКО для часов и ТОЛЬКО диаметр корпуса: "40mm", "42mm", "44mm", "46mm", "47mm", "49mm".
+   Нельзя писать в size гигабайты, ремешок или цвет. Если мм в строке нет — "".
 6) price — целое число рублей без пробелов и без ₽. Строки без цены пропускай.
+
+APPLE WATCH / GALAXY WATCH — жёсткие правила:
+- product = только модель: "Apple Watch Ultra 3", "Apple Watch Series 11", "Apple Watch SE", "Galaxy Watch 8 Ultra".
+- storage = "" всегда (Gb/ГБ у часов игнорировать).
+- size = только мм корпуса, если указан; иначе "".
+- color = всё про внешний вид: корпус (Black, Natural), материал (Titanium / Ti), ремешок (Ocean Band, Alpine Loop, Trail Loop, Milanese) и его цвет.
+- Нельзя писать ремешок, цвет или Gb в product. Одна модель Ultra 3 = один product на все ремешки.
+
+Неправильно (так делать НЕЛЬЗЯ):
+{"product":"Watch Ultra 3 Black Ocean Band","storage":"","color":"Black","sim":"","size":"","price":56500}
+{"product":"Galaxy Watch 8 Ultra","storage":"64Gb","color":"Blue","sim":"","size":"47mm","price":24200}
+{"product":"Watch Series 11","storage":"","color":"Silver","sim":"","size":"64Gb","price":26800}
+
+Правильно:
+{"product":"Apple Watch Ultra 3","storage":"","color":"Black Ocean Band","sim":"","size":"","price":56500}
+{"product":"Apple Watch Ultra 3","storage":"","color":"Natural Anchor Blue Ocean Band","sim":"","size":"","price":57500}
+{"product":"Galaxy Watch 8 Ultra","storage":"","color":"Blue","sim":"","size":"47mm","price":24200}
+{"product":"Apple Watch Series 11","storage":"","color":"Silver","sim":"","size":"42mm","price":26800}
 
 Стабильность и самопроверка:
 - Один и тот же PDF + тот же ALLOW LIST → один и тот же JSONL (одинаковые имена, поля, порядок по появлению в PDF).
@@ -579,7 +707,9 @@ ${denyBlock}
 {"product":"iPhone 17 Pro Max","storage":"256Gb","color":"Orange","sim":"eSim+eSim","size":"","price":90000}
 {"product":"iPhone 16","storage":"128Gb","color":"Teal","sim":"Sim+eSim","size":"","price":52700}
 {"product":"AirPods Pro 3","storage":"","color":"","sim":"","size":"","price":15800}
-{"product":"Watch Series 11","storage":"","color":"Silver","sim":"","size":"42mm","price":26800}
+{"product":"Apple Watch Ultra 3","storage":"","color":"Black Ocean Band","sim":"","size":"","price":56500}
+{"product":"Galaxy Watch 8 Ultra","storage":"","color":"Blue","sim":"","size":"47mm","price":24200}
+{"product":"Apple Watch Series 11","storage":"","color":"Silver","sim":"","size":"42mm","price":26800}
 `
 }
 

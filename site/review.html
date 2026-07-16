@@ -5,51 +5,41 @@
   <script src="/js/theme-init.js"></script>
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>Оценить магазин — АирДроп</title>
-  <link rel="stylesheet" href="/css/style.css?v=20260714r" />
+  <link rel="stylesheet" href="/css/style.css?v=20260716j" />
   <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet" />
 </head>
 <body class="review-page">
   <header class="header" id="site-header"></header>
   <main class="review-main">
-    <div class="review-card">
-      <div class="review-card__icon">⭐</div>
-      <h1 class="review-card__title" id="review-title">Оцените работу магазина iStorik от 1 до 5</h1>
-      <p class="review-card__text">Нажмите на звезду — это займёт пару секунд</p>
-      <div class="stars" id="stars" role="group" aria-label="Оценка от 1 до 5">
-        <button class="star-btn" data-rating="1" aria-label="1 звезда">★</button>
-        <button class="star-btn" data-rating="2" aria-label="2 звезды">★</button>
-        <button class="star-btn" data-rating="3" aria-label="3 звезды">★</button>
-        <button class="star-btn" data-rating="4" aria-label="4 звезды">★</button>
-        <button class="star-btn" data-rating="5" aria-label="5 звёзд">★</button>
+    <div class="review-glow" aria-hidden="true"></div>
+    <section class="review-panel liquid-glass">
+      <div class="review-panel__mark" aria-hidden="true">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round">
+          <path d="m12 3.2 2.35 4.76 5.25.76-3.8 3.7.9 5.24L12 15.9l-4.7 2.46.9-5.24-3.8-3.7 5.25-.76L12 3.2Z"/>
+        </svg>
       </div>
-      <p class="stars__hint">1 — плохо · 5 — отлично</p>
-      <a href="/catalog" class="review-back">← Вернуться в магазин</a>
-    </div>
+      <p class="review-panel__eyebrow">Обратная связь</p>
+      <h1 class="review-panel__title" id="review-title">Оцените работу магазина</h1>
+      <p class="review-panel__lead">Выберите оценку — это займёт пару секунд</p>
+      <div class="stars-block">
+        <div class="stars" id="stars" role="group" aria-label="Оценка от 1 до 5">
+          <button type="button" class="star-btn" data-rating="1" aria-label="1 звезда"></button>
+          <button type="button" class="star-btn" data-rating="2" aria-label="2 звезды"></button>
+          <button type="button" class="star-btn" data-rating="3" aria-label="3 звезды"></button>
+          <button type="button" class="star-btn" data-rating="4" aria-label="4 звезды"></button>
+          <button type="button" class="star-btn" data-rating="5" aria-label="5 звёзд"></button>
+        </div>
+        <div class="stars__scale" aria-hidden="true">
+          <span>Плохо</span>
+          <span>Отлично</span>
+        </div>
+      </div>
+      <a href="/catalog" class="review-back">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M19 12H5"/><path d="m11 6-6 6 6 6"/></svg>
+        Вернуться в магазин
+      </a>
+    </section>
   </main>
-  <script type="module">
-    import { loadStore } from './js/store.js'
-    import { renderHeader } from './js/layout.js'
-
-    const store = await loadStore()
-    document.getElementById('review-title').textContent =
-      `Оцените работу магазина ${store.settings.reviewBrand} от 1 до 5`
-    await renderHeader('reviews')
-
-    document.querySelectorAll('.star-btn').forEach((btn) => {
-      btn.addEventListener('mouseenter', () => highlight(Number(btn.dataset.rating)))
-      btn.addEventListener('click', () => {
-        const r = Number(btn.dataset.rating)
-        location.href = r <= 3 ? `/review-negative?stars=${r}` : `/review-positive?stars=${r}`
-      })
-    })
-    document.getElementById('stars').addEventListener('mouseleave', () => {
-      document.querySelectorAll('.star-btn').forEach((b) => b.classList.remove('star-btn--active'))
-    })
-    function highlight(upTo) {
-      document.querySelectorAll('.star-btn').forEach((b) => {
-        b.classList.toggle('star-btn--active', Number(b.dataset.rating) <= upTo)
-      })
-    }
-  </script>
+  <script type="module" src="/js/review.js?v=20260716j"></script>
 </body>
 </html>

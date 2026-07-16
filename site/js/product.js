@@ -214,6 +214,14 @@ function getSelectionContext() {
 }
 
 function getAvailabilityStorageLabels() {
+  // Ключи из прайса важнее UI-размеров (у часов мм в карточке, а variant.storage может быть «64 ГБ»)
+  const fromVariants = [...new Set(
+    (product.variants || [])
+      .filter((v) => Number(v.purchasePrice) > 0)
+      .map((v) => v.storage)
+      .filter(Boolean),
+  )]
+  if (fromVariants.length) return fromVariants
   const sizes = getSizeLabels()
   if (sizes.length) return sizes
   const visible = getDisplayStorage(product).map((s) => s.label).filter(Boolean)

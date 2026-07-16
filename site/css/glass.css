@@ -73,7 +73,7 @@ body[data-theme="dark-green"] {
 .product-card,
 .info-card,
 .used-card,
-.review-card,
+.review-panel,
 .page-main .page-content,
 .product-detail__gallery,
 .product-detail__image,
@@ -93,7 +93,7 @@ body[data-theme="dark-green"] {
 .product-card::before,
 .info-card::before,
 .used-card::before,
-.review-card::before,
+.review-panel::before,
 .page-main .page-content::before,
 .product-detail__gallery::before,
 .product-detail__image::before,
@@ -127,7 +127,7 @@ body[data-theme="dark-green"] {
 .hero__content::after,
 .product-card::after,
 .info-card::after,
-.review-card::after,
+.review-panel::after,
 .product-detail__info::after {
   content: '';
   position: absolute;
@@ -943,37 +943,27 @@ body[data-theme="light-gray"] .catalog-top::before {
 }
 
 /* ─── Review ─── */
-.review-card {
+.review-panel {
   background: var(--glass-bg);
   backdrop-filter: blur(var(--glass-blur)) saturate(var(--glass-saturate));
   -webkit-backdrop-filter: blur(var(--glass-blur)) saturate(var(--glass-saturate));
-  border-radius: calc(var(--glass-radius) + 8px);
+  border: 1px solid var(--glass-border);
   box-shadow: var(--glass-shadow);
 }
 
-.review-card__icon {
-  background: var(--glass-bg-strong);
-  backdrop-filter: blur(20px);
-  border: 1px solid var(--glass-border);
-  box-shadow: var(--glass-shadow-sm);
-}
-
-.review-action-btn {
+.review-action {
   background: var(--glass-bg);
   backdrop-filter: blur(24px) saturate(180%);
   -webkit-backdrop-filter: blur(24px) saturate(180%);
   border: 1px solid var(--glass-border);
-  border-radius: var(--glass-radius);
   box-shadow: var(--glass-shadow-sm);
 }
 
-.review-action-btn:hover {
-  transform: translateY(-3px) scale(1.02);
+.review-action:hover {
   box-shadow: var(--glass-shadow);
 }
 
-.review-action-btn--primary {
-  color: #fff;
+.review-action--primary {
   border-color: rgba(255, 255, 255, 0.25);
 }
 
@@ -1026,7 +1016,7 @@ body[data-theme="light-gray"] .catalog-top::before {
   .product-card::after,
   .product-detail__info::after,
   .info-card::after,
-  .review-card::after {
+  .review-panel::after {
     animation: none !important;
   }
 

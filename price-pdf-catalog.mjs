@@ -893,16 +893,18 @@ export function variantFromStructuredFields(fields, product, meta) {
   if (!product.storage) product.storage = []
 
   let colorName = String(fields.color || '').trim()
-  let storageRaw = String(fields.storage || fields.size || '').trim()
-  if (storageRaw === '—' || storageRaw === '-') storageRaw = ''
+  let storageField = String(fields.storage || '').trim()
+  let sizeField = String(fields.size || '').trim()
+  if (storageField === '—' || storageField === '-') storageField = ''
+  if (sizeField === '—' || sizeField === '-') sizeField = ''
   // Для iPhone без указанной SIM (15/16 и т.п.) по умолчанию Sim+eSim
   const simRaw = String(fields.sim || '').trim() || (meta.type === 'iphone' ? 'Sim+eSim' : '')
 
   // Ray-Ban и похожие: размер S50/S53 часто приходит в конце цвета
-  if (!storageRaw && colorName) {
+  if (!storageField && !sizeField && colorName) {
     const sizeM = colorName.match(/\s+(S\d{2})$/i)
     if (sizeM) {
-      storageRaw = sizeM[1].toUpperCase()
+      sizeField = sizeM[1].toUpperCase()
       colorName = colorName.slice(0, sizeM.index).trim()
     }
   }
@@ -914,23 +916,39 @@ export function variantFromStructuredFields(fields, product, meta) {
   const isWatchLike = ['watch', 'watch-ultra', 'samsung-watch'].includes(meta.type)
     || (meta.type === 'huawei' && (fields.size !== undefined && fields.size !== null) && !fields.storage)
 
+  const looksLikeCapacity = (s) => /\d+\s*(gb|гб|tb|тб)\b/i.test(String(s || ''))
+  const looksLikeWatchSize = (s) => {
+    const t = String(s || '').trim()
+    if (!t || looksLikeCapacity(t)) return false
+    return /^\d{2}\s*(mm|мм)?$/i.test(t) || /\d{2}\s*(mm|мм)/i.test(t)
+  }
+
   let storageLabel = 'Стандарт'
   if (isWatchLike) {
-    const sizeLabel = storageRaw ? normalizeWatchSizeLabel(storageRaw) || storageRaw : 'Стандарт'
-    storageLabel = resolveWatchStorageLabel(sizeLabel, product, meta) || sizeLabel
-    if (storageLabel && storageLabel !== 'Стандарт') {
-      ensureStorage(product, storageLabel)
-      if (!Array.isArray(product.sizes)) product.sizes = []
-      if (!product.sizes.some((s) => normalizeSizeKey(s.label) === normalizeSizeKey(storageLabel))) {
-        product.sizes.push({ label: storageLabel })
+    // Ось варианта часов — мм (size). ГБ/ТБ из storage в размеры не пишем.
+    let sizeRaw = looksLikeWatchSize(sizeField) ? sizeField : ''
+    if (!sizeRaw && looksLikeWatchSize(storageField)) sizeRaw = storageField
+    if (sizeRaw) {
+      const sizeLabel = normalizeWatchSizeLabel(sizeRaw) || sizeRaw
+      storageLabel = resolveWatchStorageLabel(sizeLabel, product, meta) || sizeLabel
+      if (storageLabel && storageLabel !== 'Стандарт') {
+        ensureStorage(product, storageLabel)
+        if (!Array.isArray(product.sizes)) product.sizes = []
+        if (!product.sizes.some((s) => normalizeSizeKey(s.label) === normalizeSizeKey(storageLabel))) {
+          product.sizes.push({ label: storageLabel })
+        }
       }
+    } else {
+      storageLabel = 'Стандарт'
     }
   } else if (meta.type === 'airpods') {
+    const storageRaw = storageField || sizeField
     storageLabel = storageRaw
       ? (resolveStorageLabel(storageRaw, product, meta) || storageRaw)
       : 'Стандарт'
     if (storageLabel && storageLabel !== 'Стандарт') ensureStorage(product, storageLabel)
   } else if (meta.type === 'macbook') {
+    const storageRaw = storageField || sizeField
     const formatted = storageRaw ? formatMacbookStorage(storageRaw) : 'Стандарт'
     storageLabel = resolveStorageLabel(formatted, product, meta) || formatted
     if (storageLabel && storageLabel !== 'Стандарт' && storageLabel === formatted) {
@@ -939,17 +957,20 @@ export function variantFromStructuredFields(fields, product, meta) {
       if (byPrefix) storageLabel = byPrefix.label
     }
     if (storageLabel && storageLabel !== 'Стандарт') ensureStorage(product, storageLabel)
-  } else if (storageRaw) {
-    let formatted = storageRaw
-    if (/\d+\s*\/\s*\d+/.test(storageRaw)) {
-      formatted = normalizeSamsungPhoneStorage(storageRaw, product)
-    } else {
-      formatted = normalizeStorage(storageRaw) || storageRaw.replace(/\s*Gb/i, ' ГБ').trim()
-    }
-    storageLabel = resolveStorageLabel(formatted, product, meta) || formatted
-    if (storageLabel && storageLabel !== 'Стандарт') ensureStorage(product, storageLabel)
   } else {
-    storageLabel = 'Стандарт'
+    const storageRaw = storageField || sizeField
+    if (storageRaw) {
+      let formatted = storageRaw
+      if (/\d+\s*\/\s*\d+/.test(storageRaw)) {
+        formatted = normalizeSamsungPhoneStorage(storageRaw, product)
+      } else {
+        formatted = normalizeStorage(storageRaw) || storageRaw.replace(/\s*Gb/i, ' ГБ').trim()
+      }
+      storageLabel = resolveStorageLabel(formatted, product, meta) || formatted
+      if (storageLabel && storageLabel !== 'Стандарт') ensureStorage(product, storageLabel)
+    } else {
+      storageLabel = 'Стандарт'
+    }
   }
 
   let simType = ''

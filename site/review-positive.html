@@ -5,27 +5,31 @@
   <script src="/js/theme-init.js"></script>
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>Спасибо за отзыв — АирДроп</title>
-  <link rel="stylesheet" href="/css/style.css?v=20260714r" />
+  <link rel="stylesheet" href="/css/style.css?v=20260716j" />
   <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet" />
 </head>
 <body class="review-page">
   <header class="header" id="site-header"></header>
   <main class="review-main">
-    <div class="review-card review-card--wide">
-      <div class="review-card__icon review-card__icon--happy">🎉</div>
-      <div class="review-stars-display" id="stars-display"></div>
-      <h1 class="review-card__title">Спасибо!</h1>
-      <p class="review-card__text" id="review-text"></p>
-      <div class="review-card__bonus" id="bonus-text"></div>
-      <div class="review-actions">
-        <a class="review-action-btn review-action-btn--avito" id="link-avito-k" href="#" target="_blank" rel="noopener">🟢 Avito — Карпинск</a>
-        <a class="review-action-btn review-action-btn--avito" id="link-avito-kt" href="#" target="_blank" rel="noopener">🟢 Avito — Краснотурьинск</a>
-        <a class="review-action-btn review-action-btn--vk" id="link-vk" href="#" target="_blank" rel="noopener">💬 Отзыв во ВКонтакте</a>
-        <a class="review-action-btn review-action-btn--yandex" id="link-yandex-k" href="#" target="_blank" rel="noopener">📍 Яндекс.Карты — Карпинск</a>
-        <a class="review-action-btn review-action-btn--yandex" id="link-yandex-kt" href="#" target="_blank" rel="noopener">📍 Яндекс.Карты — Краснотурьинск</a>
+    <div class="review-glow review-glow--positive" aria-hidden="true"></div>
+    <section class="review-panel review-panel--wide liquid-glass">
+      <div class="review-panel__mark review-panel__mark--positive" aria-hidden="true">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round">
+          <path d="M12 3v3M12 18v3M3 12h3M18 12h3M5.6 5.6l2.1 2.1M16.3 16.3l2.1 2.1M18.4 5.6l-2.1 2.1M7.7 16.3l-2.1 2.1"/>
+          <circle cx="12" cy="12" r="3.2"/>
+        </svg>
       </div>
-      <a href="/catalog" class="review-back">← Вернуться в магазин</a>
-    </div>
+      <div class="review-stars-display" id="stars-display" aria-hidden="true"></div>
+      <p class="review-panel__eyebrow">Спасибо</p>
+      <h1 class="review-panel__title">Спасибо за высокую оценку</h1>
+      <p class="review-panel__lead" id="review-text"></p>
+      <div class="review-bonus" id="bonus-text"></div>
+      <div class="review-actions" id="review-actions"></div>
+      <a href="/catalog" class="review-back">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M19 12H5"/><path d="m11 6-6 6 6 6"/></svg>
+        Вернуться в магазин
+      </a>
+    </section>
   </main>
   <script type="module">
     import { renderHeader } from './js/layout.js'

@@ -2,7 +2,6 @@ const REVEAL_SELECTOR = [
   '.why-us li',
   '.info-card',
   '.used-card',
-  '.review-card',
   '.page-main .page-content',
   '.product-detail__gallery',
   '.product-detail__info',

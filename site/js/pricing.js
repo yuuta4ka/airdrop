@@ -26,7 +26,12 @@ export function getMarkupSettings(product, variant = null) {
 }
 
 function normalizeStorageKey(label) {
-  return String(label || '').replace(/\s/g, '').toLowerCase().replace(/mm/g, 'мм')
+  return String(label || '')
+    .replace(/\s/g, '')
+    .toLowerCase()
+    .replace(/mm/g, 'мм')
+    .replace(/gb/g, 'гб')
+    .replace(/tb/g, 'тб')
 }
 
 export function usesSupplierPricing(product) {
