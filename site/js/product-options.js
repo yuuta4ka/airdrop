@@ -1,5 +1,5 @@
 /** Категории, где «Стандарт» не показываем как объём памяти */
-const PHONE_CATEGORIES = new Set(['iphone', 'samsung', 'xiaomi', 'huawei'])
+const PHONE_CATEGORIES = new Set(['iphone', 'samsung', 'xiaomi', 'huawei', 'oneplus'])
 
 export function isPhoneCategory(category) {
   return PHONE_CATEGORIES.has(category)

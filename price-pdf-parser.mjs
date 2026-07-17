@@ -36,7 +36,7 @@ function normalizeLine(line) {
   return String(line ?? '').replace(/\u00a0/g, ' ').trim()
 }
 
-const SKIP_PRODUCT = /^(Чехол|Пылесос|Стайлер|Диск |Геймпад|Пакет|Коробк|Муляж|Gl-|USB-|Adapter|Наушники Apple|Lightning|Картхолдер|Зарядка|Сумка|Гравировка|Клавиатура|Magic Mouse|Apple Power Adapter|Apple Pencil|Apple AirTag|Mini Phone|Mini телефон|Iphone 16 Mini|Land Rover|Nokia|Vertu|Senior|F\+|Mobile |NoviSea|UNIWA|Кнопочный|Проектор|Power Bank|HDD |Sandisk|SanDisk|Benks|Momax|Планшет |OnePlus|Redmi A|Redmi Note|Honor |Poco |Яндекс |Playstation|Sony PS|JBL |Dyson|It Takes|Фитнес|Фотоаппарат|GoPro|DJI |Экшн|Стилус|SUPGLASS|OpenRun|Ухо |Кейс |Портативная|Вентилятор|Дисковод|PlayStation DualSens|DOBE|Hot Wheels|Камера |Doogee|DK10|Air pods Pro 2 Lux|Выпрямитель)/i
+const SKIP_PRODUCT = /^(Чехол|Пылесос|Стайлер|Диск |Геймпад|Пакет|Коробк|Муляж|Gl-|USB-|Adapter|Наушники Apple|Lightning|Картхолдер|Зарядка|Сумка|Гравировка|Клавиатура|Magic Mouse|Apple Power Adapter|Apple Pencil|Apple AirTag|Mini Phone|Mini телефон|Iphone 16 Mini|Land Rover|Nokia|Vertu|Senior|F\+|Mobile |NoviSea|UNIWA|Кнопочный|Проектор|Power Bank|HDD |Sandisk|SanDisk|Benks|Momax|Планшет |Redmi A|Redmi Note|Honor |Poco |Яндекс |Playstation|Sony PS|JBL |Dyson|It Takes|Фитнес|Фотоаппарат|GoPro|DJI |Экшн|Стилус|SUPGLASS|OpenRun|Ухо |Кейс |Портативная|Вентилятор|Дисковод|PlayStation DualSens|DOBE|Hot Wheels|Камера |Doogee|DK10|Air pods Pro 2 Lux|Выпрямитель)/i
 
 function shouldSkipProduct(name) {
   return SKIP_PRODUCT.test(String(name).trim())
@@ -124,6 +124,7 @@ export const CATALOG_SECTIONS = new Map([
   ['Samsung Серия S26', { category: 'samsung', brand: 'Samsung', type: 'samsung-phone' }],
   ['Samsung Серия S25', { category: 'samsung', brand: 'Samsung', type: 'samsung-phone' }],
   ['Xiaomi', { category: 'xiaomi', brand: 'Xiaomi', type: 'xiaomi' }],
+  ['OnePlus', { category: 'oneplus', brand: 'OnePlus', type: 'xiaomi' }],
   ['Huawei', { category: 'huawei', brand: 'Huawei', type: 'huawei' }],
   ['Умные устройства Huawei', { category: 'huawei', brand: 'Huawei', type: 'huawei' }],
   ['Samsung Buds', { category: 'samsung', brand: 'Samsung', type: 'airpods' }],

@@ -14,6 +14,7 @@ const DEFAULT_CATEGORY_LABELS = {
   airpods: 'AirPods',
   samsung: 'Samsung',
   xiaomi: 'Xiaomi',
+  oneplus: 'OnePlus',
   'galaxy-watch': 'Galaxy Watch',
   huawei: 'Huawei',
 }
@@ -29,8 +30,25 @@ function applyCategoryDefaults(store) {
 let storeCache = null
 let productsCache = null
 
-const SESSION_CACHE_KEY = 'airdrop:catalog-cache:v1'
+const SESSION_CACHE_KEY = 'airdrop:catalog-cache:v2'
+const DATA_REV_KEY = 'airdrop:data-rev'
 const SESSION_CACHE_TTL_MS = 300_000
+
+function currentDataRev() {
+  try {
+    return String(localStorage.getItem(DATA_REV_KEY) || '')
+  } catch {
+    return ''
+  }
+}
+
+function bumpDataRev() {
+  try {
+    localStorage.setItem(DATA_REV_KEY, String(Date.now()))
+  } catch {
+    /* ignore */
+  }
+}
 
 function readSessionCache() {
   try {
@@ -39,6 +57,8 @@ function readSessionCache() {
     const parsed = JSON.parse(raw)
     if (!parsed?.store || !parsed?.products || !parsed?.ts) return null
     if (Date.now() - parsed.ts > SESSION_CACHE_TTL_MS) return null
+    // Админка в другой вкладке сохранила данные — кэш витрины устарел
+    if (String(parsed.rev || '') !== currentDataRev()) return null
     return parsed
   } catch {
     return null
@@ -51,6 +71,7 @@ function writeSessionCache(store, products) {
       store,
       products,
       ts: Date.now(),
+      rev: currentDataRev(),
     }))
   } catch {
     /* quota / private mode — ignore */
@@ -63,6 +84,19 @@ function clearSessionCache() {
   } catch {
     /* ignore */
   }
+}
+
+try {
+  window.addEventListener('storage', (e) => {
+    if (e.key === DATA_REV_KEY) {
+      storeCache = null
+      productsCache = null
+      clearSessionCache()
+      window.dispatchEvent(new CustomEvent('airdrop:data-changed'))
+    }
+  })
+} catch {
+  /* ignore */
 }
 
 function showOfflineBanner() {
@@ -108,8 +142,8 @@ export async function loadStore() {
   let sRes, pRes
   try {
     ;[sRes, pRes] = await Promise.all([
-      fetch('/api/store'),
-      fetch('/api/products'),
+      fetch('/api/store', { cache: 'no-store' }),
+      fetch('/api/products', { cache: 'no-store' }),
     ])
   } catch {
     showOfflineBanner()
@@ -133,7 +167,7 @@ export async function loadProductsOnly() {
     if (cached.store) storeCache = cached.store
     return productsCache
   }
-  const res = await fetch('/api/products')
+  const res = await fetch('/api/products', { cache: 'no-store' })
   if (!res.ok) throw new Error('Не удалось загрузить товары')
   productsCache = await res.json()
   if (storeCache) writeSessionCache(storeCache, productsCache)
@@ -144,6 +178,7 @@ export function invalidateStore() {
   storeCache = null
   productsCache = null
   clearSessionCache()
+  bumpDataRev()
 }
 
 export function getProductById(store, id) {

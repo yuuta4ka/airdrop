@@ -21,6 +21,7 @@ const DEFAULT_CATEGORY_LABELS = {
   airpods: 'AirPods',
   samsung: 'Samsung',
   xiaomi: 'Xiaomi',
+  oneplus: 'OnePlus',
   'galaxy-watch': 'Galaxy Watch',
   huawei: 'Huawei',
 }
@@ -108,6 +109,8 @@ let productsData = null
 let activeTab = 'general'
 let editingProductIdx = null
 let adminProductView = 'active'
+let adminProductQuery = ''
+let adminProductCatFilter = ''
 let sortCategoryId = null
 let draftSaveTimer = null
 let isDirty = false
@@ -196,6 +199,11 @@ function confirmDiscardIfDirty(message) {
 
 function persistDraft() {
   if (!storeData || $('admin-app')?.hidden) return
+  // Чистый снимок не храним — иначе при reload он затирает свежий импорт с сервера
+  if (!isDirty) {
+    clearDraft()
+    return
+  }
   try {
     collectTab()
     sessionStorage.setItem(DRAFT_KEY, JSON.stringify({
@@ -204,7 +212,7 @@ function persistDraft() {
       activeTab,
       editingProductIdx,
       savedAt: Date.now(),
-      dirty: isDirty,
+      dirty: true,
     }))
   } catch { /* quota */ }
 }
@@ -247,12 +255,27 @@ function restoreDraft() {
     if (!raw) return false
     const draft = JSON.parse(raw)
     if (!draft.storeData || !draft.productsData) return false
+    // Не восстанавливаем «чистые» или устаревшие черновики поверх сервера
+    if (draft.dirty !== true) {
+      clearDraft()
+      return false
+    }
+    const serverImportAt = storeData?.priceImport?.lastTextImportAt
+      || storeData?.priceImport?.lastImportAt
+      || ''
+    const draftImportAt = draft.storeData?.priceImport?.lastTextImportAt
+      || draft.storeData?.priceImport?.lastImportAt
+      || ''
+    if (serverImportAt && (!draftImportAt || draftImportAt < serverImportAt)) {
+      clearDraft()
+      return false
+    }
     storeData = draft.storeData
     productsData = draft.productsData
     if (draft.activeTab) activeTab = draft.activeTab
     editingProductIdx = draft.editingProductIdx ?? null
     ensureStoreDefaults()
-    isDirty = draft.dirty !== false
+    isDirty = true
     if (editingProductIdx != null && productsData.products[editingProductIdx]) {
       productEditBaseline = cloneProduct(productsData.products[editingProductIdx])
       editingProductIsNew = false
@@ -444,13 +467,18 @@ function productCategories() {
 }
 
 function categoryLabel(id) {
+  if (!id) return 'Только в «Все»'
   return storeData.categories.find((c) => c.id === id)?.label || id
 }
 
 function categorySelect(id, selected) {
-  const opts = productCategories().map((c) =>
-    `<option value="${c.id}"${c.id === selected ? ' selected' : ''}>${c.label}</option>`
-  ).join('')
+  const noneSelected = !selected
+  const opts = [
+    `<option value=""${noneSelected ? ' selected' : ''}>Только в «Все»</option>`,
+    ...productCategories().map((c) =>
+      `<option value="${c.id}"${c.id === selected ? ' selected' : ''}>${escAttr(c.label)}</option>`
+    ),
+  ].join('')
   return `<label class="field"><span>Категория</span><select id="${id}">${opts}</select></label>`
 }
 
@@ -1236,14 +1264,19 @@ function renderNavigation(c) {
   `).join('')
   let dragIdx = null
   wrap.querySelectorAll('[data-nav]').forEach((card) => {
-    card.ondragstart = () => { dragIdx = Number(card.dataset.nav) }
-    card.ondragover = (e) => e.preventDefault()
-    card.ondrop = () => {
+    card.ondragstart = (e) => {
+      dragIdx = Number(card.dataset.nav)
+      e.dataTransfer.effectAllowed = 'move'
+    }
+    card.ondragover = (e) => { e.preventDefault(); e.dataTransfer.dropEffect = 'move' }
+    card.ondrop = (e) => {
+      e.preventDefault()
       const drop = Number(card.dataset.nav)
-      if (dragIdx === null || dragIdx === drop) return
+      if (dragIdx === null || Number.isNaN(drop) || dragIdx === drop) return
+      collectNavigation()
       const [item] = storeData.navigation.splice(dragIdx, 1)
       storeData.navigation.splice(drop, 0, item)
-      collectNavigation()
+      markDirty()
       renderNavigation(c)
     }
   })
@@ -1275,14 +1308,20 @@ function renderCategories(c) {
   let dragIdx = null
   wrap.querySelectorAll('[data-cat]').forEach((card) => {
     if (card.classList.contains('admin-card--fixed')) return
-    card.ondragstart = () => { dragIdx = Number(card.dataset.cat) }
-    card.ondragover = (e) => e.preventDefault()
-    card.ondrop = () => {
+    card.ondragstart = (e) => {
+      dragIdx = Number(card.dataset.cat)
+      e.dataTransfer.effectAllowed = 'move'
+    }
+    card.ondragover = (e) => { e.preventDefault(); e.dataTransfer.dropEffect = 'move' }
+    card.ondrop = (e) => {
+      e.preventDefault()
       const drop = Number(card.dataset.cat)
-      if (dragIdx === null || dragIdx === drop || drop === 0) return
+      if (dragIdx === null || Number.isNaN(drop) || dragIdx === drop || drop === 0) return
+      // Сначала забираем правки из полей (пока DOM совпадает с массивом), потом меняем порядок
+      collectCategories()
       const [item] = storeData.categories.splice(dragIdx, 1)
       storeData.categories.splice(drop, 0, item)
-      collectCategories()
+      markDirty()
       renderCategories(c)
     }
   })
@@ -1414,23 +1453,59 @@ function renderSortOrderList(categoryId) {
   })
 }
 
-function renderProducts(c) {
+
+function matchesAdminProductQuery(p, query) {
+  const q = String(query || '').trim().toLowerCase()
+  if (!q) return true
+  const hay = [
+    p.name, p.brand, p.category, categoryLabel(p.category), p.importNames, p.slug,
+  ].map((s) => String(s || '').toLowerCase()).join(' ')
+  return q.split(/\s+/).filter(Boolean).every((part) => hay.includes(part))
+}
+
+function compareAdminProducts(a, b) {
+  const brandCmp = String(a.brand || '').localeCompare(String(b.brand || ''), 'ru', { sensitivity: 'base' })
+  if (brandCmp) return brandCmp
+  const catOrder = (storeData?.categories || []).map((c) => c.id)
+  const ai = catOrder.indexOf(a.category)
+  const bi = catOrder.indexOf(b.category)
+  const aIdx = ai < 0 ? 999 : ai
+  const bIdx = bi < 0 ? 999 : bi
+  if (aIdx !== bIdx) return aIdx - bIdx
+  return String(a.name || '').localeCompare(String(b.name || ''), 'ru', { sensitivity: 'base' })
+}
+
+function renderProducts(c, opts = {}) {
   if (editingProductIdx !== null) { renderProductEditor(c); return }
-  scrollAdminToTop()
+  if (!opts.keepScroll) scrollAdminToTop()
   const all = productsData.products
   const hiddenCount = all.filter((p) => p.hidden).length
   const newCount = all.filter((p) => p.isNew).length
   const activeCount = all.length - hiddenCount
-  const products = all.filter((p) => {
-    if (adminProductView === 'hidden') return p.hidden
-    if (adminProductView === 'new') return p.isNew
-    return !p.hidden
-  })
+  const products = all
+    .filter((p) => {
+      if (adminProductView === 'hidden') return p.hidden
+      if (adminProductView === 'new') return p.isNew
+      return !p.hidden
+    })
+    .filter((p) => {
+      if (!adminProductCatFilter) return true
+      if (adminProductCatFilter === '__none__') return !p.category
+      return p.category === adminProductCatFilter
+    })
+    .filter((p) => matchesAdminProductQuery(p, adminProductQuery))
+    .slice()
+    .sort(compareAdminProducts)
   const sortCats = categoriesForSort()
   if (!sortCategoryId || !sortCats.some((cat) => cat.id === sortCategoryId)) {
     sortCategoryId = sortCats[0]?.id || null
   }
   const sortMode = sortCategoryId ? (storeData.categorySortModes?.[sortCategoryId] === 'manual' ? 'manual' : 'auto') : 'auto'
+  const catFilterOpts = [
+    `<option value="" ${!adminProductCatFilter ? 'selected' : ''}>Все категории</option>`,
+    `<option value="__none__" ${adminProductCatFilter === '__none__' ? 'selected' : ''}>Только в «Все»</option>`,
+    ...sortCats.map((cat) => `<option value="${cat.id}" ${cat.id === adminProductCatFilter ? 'selected' : ''}>${escAttr(cat.label)}</option>`),
+  ].join('')
   c.innerHTML = `
     <div class="admin-toolbar admin-toolbar--products">
       <div class="admin-product-tabs">
@@ -1440,20 +1515,56 @@ function renderProducts(c) {
       </div>
       <button type="button" class="btn btn--primary" id="add-product">+ Добавить товар</button>
     </div>
-    <div class="admin-sort-bar">
-      <label class="admin-sort-bar__cat">Порядок в категории
-        <select id="sort-cat-select">${sortCats.map((cat) => `<option value="${cat.id}" ${cat.id === sortCategoryId ? 'selected' : ''}>${escAttr(cat.label)}</option>`).join('')}</select>
+    <div class="admin-product-filters">
+      <label class="admin-product-filters__search">
+        <span class="admin-sr-only">Поиск</span>
+        <input type="search" id="admin-product-search" placeholder="Поиск: название, бренд, категория…" value="${escAttr(adminProductQuery)}" autocomplete="off" />
       </label>
-      <div class="admin-sort-bar__modes">
-        <button type="button" class="btn btn--sm ${sortMode === 'auto' ? 'btn--primary' : 'btn--ghost'}" id="sort-mode-auto">Авто · по цене</button>
-        <button type="button" class="btn btn--sm ${sortMode === 'manual' ? 'btn--primary' : 'btn--ghost'}" id="sort-mode-manual">Ручной порядок</button>
-      </div>
+      <label class="admin-product-filters__cat">Категория
+        <select id="admin-product-cat-filter">${catFilterOpts}</select>
+      </label>
+      <span class="admin-product-filters__count">${products.length} из ${all.filter((p) => adminProductView === 'hidden' ? p.hidden : adminProductView === 'new' ? p.isNew : !p.hidden).length}</span>
     </div>
-    ${sortMode === 'manual' ? '<div id="sort-order-list" class="admin-sort-order-list"></div>' : ''}
+    <details class="admin-sort-details">
+      <summary>Порядок товаров на сайте (в категории)</summary>
+      <div class="admin-sort-bar">
+        <label class="admin-sort-bar__cat">Категория
+          <select id="sort-cat-select">${sortCats.map((cat) => `<option value="${cat.id}" ${cat.id === sortCategoryId ? 'selected' : ''}>${escAttr(cat.label)}</option>`).join('')}</select>
+        </label>
+        <div class="admin-sort-bar__modes">
+          <button type="button" class="btn btn--sm ${sortMode === 'auto' ? 'btn--primary' : 'btn--ghost'}" id="sort-mode-auto">Авто · по цене</button>
+          <button type="button" class="btn btn--sm ${sortMode === 'manual' ? 'btn--primary' : 'btn--ghost'}" id="sort-mode-manual">Ручной порядок</button>
+        </div>
+      </div>
+      ${sortMode === 'manual' ? '<div id="sort-order-list" class="admin-sort-order-list"></div>' : ''}
+    </details>
     <div id="product-list"></div>`
   $('products-tab-active').onclick = () => { adminProductView = 'active'; renderProducts(c) }
   $('products-tab-hidden').onclick = () => { adminProductView = 'hidden'; renderProducts(c) }
   if ($('products-tab-new')) $('products-tab-new').onclick = () => { adminProductView = 'new'; renderProducts(c) }
+
+  const searchInput = $('admin-product-search')
+  if (searchInput) {
+    let searchTimer = null
+    searchInput.oninput = () => {
+      clearTimeout(searchTimer)
+      searchTimer = setTimeout(() => {
+        adminProductQuery = searchInput.value
+        renderProducts(c, { keepScroll: true })
+        const again = $('admin-product-search')
+        if (again) {
+          again.focus()
+          const len = again.value.length
+          again.setSelectionRange(len, len)
+        }
+      }, 160)
+    }
+  }
+  $('admin-product-cat-filter').onchange = (e) => {
+    adminProductCatFilter = e.target.value
+    renderProducts(c, { keepScroll: true })
+  }
+
   if (sortCats.length) {
     $('sort-cat-select').onchange = (e) => { sortCategoryId = e.target.value; renderProducts(c) }
     $('sort-mode-auto').onclick = async () => {
@@ -1470,25 +1581,47 @@ function renderProducts(c) {
     }
     if (sortMode === 'manual') renderSortOrderList(sortCategoryId)
   }
-  $('product-list').innerHTML = products.map((p) => {
-    const i = all.indexOf(p)
-    const markup = `${p.markupPercent ?? 15}%${p.markupFixed ? ` + ${p.markupFixed} ₽` : ''}`
-    const rowClass = p.hidden ? ' admin-product-row--hidden' : ''
-    const touchedIds = storeData.priceImport?.lastTouchedProductIds || []
-    const inLastImport = touchedIds.includes(p.id)
-    const importBadge = p.lastPriceImportAt
-      ? `<span class="admin-badge admin-badge--import" title="${escAttr(new Date(p.lastPriceImportAt).toLocaleString('ru-RU'))}">Импорт ${escAttr(formatRelativeAgo(p.lastPriceImportAt))}</span>`
-      : (inLastImport ? '<span class="admin-badge admin-badge--import">В последнем импорте</span>' : '')
-    return `
+
+  const emptyHint = adminProductView === 'hidden'
+    ? 'Скрытых товаров нет'
+    : adminProductView === 'new'
+      ? 'Новых товаров нет'
+      : (adminProductQuery || adminProductCatFilter)
+        ? 'Ничего не найдено — измените поиск или фильтр'
+        : 'Товаров нет'
+
+  if (!products.length) {
+    $('product-list').innerHTML = `<p class="admin-hint">${emptyHint}</p>`
+  } else {
+    let html = ''
+    let lastBrand = null
+    for (const p of products) {
+      const brand = String(p.brand || '').trim() || 'Без бренда'
+      if (brand !== lastBrand) {
+        lastBrand = brand
+        const count = products.filter((x) => (String(x.brand || '').trim() || 'Без бренда') === brand).length
+        html += `<div class="admin-product-brand-group"><span class="admin-product-brand-group__title">${escAttr(brand)}</span><span class="admin-product-brand-group__count">${count}</span></div>`
+      }
+      const i = all.indexOf(p)
+      const markup = `${p.markupPercent ?? 15}%${p.markupFixed ? ` + ${p.markupFixed} ₽` : ''}`
+      const rowClass = p.hidden ? ' admin-product-row--hidden' : ''
+      const touchedIds = storeData.priceImport?.lastTouchedProductIds || []
+      const inLastImport = touchedIds.includes(p.id)
+      const importBadge = p.lastPriceImportAt
+        ? `<span class="admin-badge admin-badge--import" title="${escAttr(new Date(p.lastPriceImportAt).toLocaleString('ru-RU'))}">Импорт ${escAttr(formatRelativeAgo(p.lastPriceImportAt))}</span>`
+        : (inLastImport ? '<span class="admin-badge admin-badge--import">В последнем импорте</span>' : '')
+      html += `
     <div class="admin-product-row${rowClass}">
       <label class="admin-product-check"><input type="checkbox" data-bulk-id="${p.id}" /></label>
       <img src="${assetUrl(p.image || 'assets/logo.png')}" alt="" />
-      <div><strong>${p.name}${p.isNew ? ' <span class="admin-badge admin-badge--new">Новое</span>' : ''}${importBadge ? ` ${importBadge}` : ''}</strong><span>${p.brand} · ${categoryLabel(p.category)} · наценка ${markup}${p.hidden ? ' · скрыт' : ''}</span></div>
+      <div><strong>${escAttr(p.name)}${p.isNew ? ' <span class="admin-badge admin-badge--new">Новое</span>' : ''}${importBadge ? ` ${importBadge}` : ''}</strong><span>${escAttr(p.brand || '—')} · ${escAttr(categoryLabel(p.category))} · наценка ${markup}${p.hidden ? ' · скрыт' : ''}</span></div>
       <button type="button" class="btn btn--secondary btn--sm" data-edit="${i}">Изменить</button>
       <button type="button" class="btn btn--ghost btn--sm" data-toggle-hidden="${i}">${p.hidden ? 'Вернуть' : 'Скрыть'}</button>
       <button type="button" class="btn btn--danger btn--sm" data-del="${i}">Удалить</button>
-    </div>
-  `}).join('') || `<p class="admin-hint">${adminProductView === 'hidden' ? 'Скрытых товаров нет' : adminProductView === 'new' ? 'Новых товаров нет' : 'Товаров нет'}</p>`
+    </div>`
+    }
+    $('product-list').innerHTML = html
+  }
 
   if (products.length) {
     const hideOrShowLabel = adminProductView === 'hidden' ? 'Вернуть выбранные' : 'Скрыть выбранные'
@@ -2479,17 +2612,18 @@ function renderPriceImport(c) {
       bindImportSkipHandlers(resultEl)
 
       if (!dryRun) {
-        storeData.priceImport = {
-          ...storeData.priceImport,
-          markupPercent: num('pi-markup'),
-          markupFixed: num('pi-markup-fixed'),
-          lastTextImportAt: new Date().toISOString(),
-          lastTextImport: text,
-          lastTextImportMode: replaceVariants ? 'replace' : 'keep',
-          lastTouchedProductIds: data.stats?.touchedProductIds || [],
-        }
         invalidateStore()
-        productsData = await (await fetch('/api/products')).json()
+        // Сервер уже записал store + products — подтягиваем оба, чтобы не затереть импорт черновиком
+        const [sRes, pRes] = await Promise.all([
+          fetch('/api/store', { cache: 'no-store' }),
+          fetch(`/api/products?_=${Date.now()}`, { cache: 'no-store' }),
+        ])
+        if (sRes.ok) storeData = await sRes.json()
+        if (pRes.ok) productsData = await pRes.json()
+        ensureStoreDefaults()
+        if (storeData.priceImport) storeData.priceImport.lastTextImport = text
+        clearDraft()
+        markClean()
         const removed = s.variantsRemoved || 0
         const kept = s.variantsRemovalSkipped || 0
         status(
@@ -2614,14 +2748,16 @@ function renderPriceImport(c) {
         if (s.errors?.length) {
           resultEl.innerHTML += '<br>' + s.errors.slice(0, 5).map((e) => `⚠ ${escAttr(e.name)}: ${escAttr(e.error)}`).join('<br>')
         }
-        storeData.priceImport = {
-          markupPercent: num('pi-markup'),
-          markupFixed: num('pi-markup-fixed'),
-          lastImportAt: new Date().toISOString(),
-          lastSections: selected,
-        }
         invalidateStore()
-        productsData = await (await fetch('/api/products')).json()
+        const [sRes, pRes] = await Promise.all([
+          fetch('/api/store', { cache: 'no-store' }),
+          fetch(`/api/products?_=${Date.now()}`, { cache: 'no-store' }),
+        ])
+        if (sRes.ok) storeData = await sRes.json()
+        if (pRes.ok) productsData = await pRes.json()
+        ensureStoreDefaults()
+        clearDraft()
+        markClean()
         status('Прайс PDF импортирован', 'success')
       } catch (err) {
         resultEl.textContent = err.message
@@ -3156,6 +3292,13 @@ function collectCategories() {
     const label = labelEl.value.trim()
     if (label) cat.label = label
     else if (!cat.label && DEFAULT_CATEGORY_LABELS[cat.id]) cat.label = DEFAULT_CATEGORY_LABELS[cat.id]
+    // Авто-id из названия, если ещё временный cat-<timestamp>
+    if (cat.id !== 'all' && /^cat-\d+$/.test(cat.id) && cat.label) {
+      const slug = String(cat.label).toLowerCase()
+        .replace(/[^a-z0-9а-яё]+/gi, '-')
+        .replace(/^-+|-+$/g, '')
+      if (slug && !storeData.categories.some((c) => c !== cat && c.id === slug)) cat.id = slug
+    }
   })
 }
 
@@ -3224,7 +3367,7 @@ function collectProductVariants(p) {
 
 function collectProduct() {
   const p = productsData.products[editingProductIdx]
-  p.name = val('p-name'); p.brand = val('p-brand'); p.category = val('p-category')
+  p.name = val('p-name'); p.brand = val('p-brand'); p.category = val('p-category') || ''
   p.badge = val('p-badge') || null
   p.description = val('p-desc')
   p.showCatalogSpec = !!$('p-showCatalogSpec')?.checked

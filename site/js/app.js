@@ -43,7 +43,7 @@ function isInCart(id) {
 function renderProducts() {
   const filtered = activeCategory === 'all'
     ? products
-    : products.filter((p) => p.category === activeCategory)
+    : products.filter((p) => p.category && p.category === activeCategory)
 
   els.productsCount.textContent = `${filtered.length} товаров`
 

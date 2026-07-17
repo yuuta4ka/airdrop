@@ -11,6 +11,22 @@ const NAV_ICONS = {
   about: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="12" cy="12" r="9"/><path d="M12 10v6"/><path d="M12 7h.01"/></svg>',
 }
 
+function logoHtml(settings, { ariaLabel = true } = {}) {
+  const name = settings.name || 'АирДроп'
+  const textSrc = assetUrl(settings.logo || 'assets/logo-text.png')
+  const iconSrc = assetUrl(settings.logoIcon || 'assets/logo-mark.png')
+  const labelAttr = ariaLabel ? ` aria-label="${name}"` : ''
+  const textAlt = ariaLabel ? '' : name
+  return `
+    <a href="/" class="logo"${labelAttr}>
+      <span class="logo__badge">
+        <img src="${textSrc}" alt="${textAlt}" class="logo__text-img" ${ariaLabel ? 'aria-hidden="true"' : ''} />
+        <img src="${iconSrc}" alt="" class="logo__icon-img" aria-hidden="true" />
+      </span>
+    </a>
+  `
+}
+
 export async function initSite() {
   const store = await loadStore()
   applyTheme(store.theme)
@@ -83,14 +99,7 @@ export async function renderHeader(activeId = '') {
           </div>
         </div>
         <div class="container header__inner header__inner--catalog">
-          <a href="/" class="logo" aria-label="${settings.name}">
-            <span class="logo__badge">
-              <span class="logo__faces">
-                <img src="${assetUrl(settings.logo)}" alt="" class="logo__img-text" aria-hidden="true" />
-                <img src="${assetUrl(settings.logoIcon || 'assets/logo.png')}" alt="" class="logo__img-icon" aria-hidden="true" />
-              </span>
-            </span>
-          </a>
+          ${logoHtml(settings)}
           ${catalogSearchHtml(q)}
           <div class="header__actions">
             <div class="header__actions-slot header__actions-slot--toggle">
@@ -106,14 +115,7 @@ export async function renderHeader(activeId = '') {
   } else {
     header.innerHTML = `
       <div class="container header__inner">
-        <a href="/" class="logo">
-          <span class="logo__badge">
-            <span class="logo__faces">
-              <img src="${assetUrl(settings.logo)}" alt="${settings.name}" class="logo__img-text" />
-              <img src="${assetUrl(settings.logoIcon || 'assets/logo.png')}" alt="" class="logo__img-icon" aria-hidden="true" />
-            </span>
-          </span>
-        </a>
+        ${logoHtml(settings, { ariaLabel: false })}
         <nav class="nav" id="main-nav">
           ${navigation.map((item) => `
             <a href="${item.href}" class="nav__link${activeId === item.id ? ' nav__link--active' : ''}">${item.label}</a>
@@ -196,11 +198,7 @@ export async function renderFooter() {
     <div class="container">
       <div class="footer__grid">
         <div class="footer__brand">
-          <a href="/" class="logo">
-            <span class="logo__badge">
-              <img src="${assetUrl(settings.logo)}" alt="${settings.name}" class="logo__img-text" />
-            </span>
-          </a>
+          ${logoHtml(settings, { ariaLabel: false })}
           <p>${settings.description}</p>
         </div>
         <div class="footer__col">

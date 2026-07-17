@@ -1,4 +1,4 @@
-import { loadStore, getMinPrice, formatPrice, badgeClass, getProductImage, hasAnyStock, isProductFullyUnavailable, getCatalogMode, buildProductHref } from './store.js'
+import { loadStore, invalidateStore, getMinPrice, formatPrice, badgeClass, getProductImage, hasAnyStock, isProductFullyUnavailable, getCatalogMode, buildProductHref } from './store.js'
 import { renderHeader, renderFooter } from './layout.js'
 import { initCartUI, resetCartOverlay, showToast } from './cart-ui.js'
 
@@ -159,6 +159,20 @@ async function init() {
     renderCatalogMode()
     syncUrlState()
 
+    window.addEventListener('airdrop:data-changed', async () => {
+      try {
+        invalidateStore()
+        store = await loadStore()
+        if (activeCategory !== 'all' && !(store.categories || []).some((c) => c.id === activeCategory)) {
+          activeCategory = 'all'
+        }
+        renderCategories()
+        renderCatalogMode()
+      } catch (err) {
+        console.error('Catalog refresh failed:', err)
+      }
+    })
+
     const params = new URLSearchParams(window.location.search)
     if (params.get('added')) {
       showToast('Товар добавлен в корзину')
@@ -235,18 +249,25 @@ function sortForAllCategories(products) {
   const catOrder = (store?.categories || []).filter((c) => c.id !== 'all').map((c) => c.id)
   const byCategory = new Map()
   for (const p of products) {
-    if (!byCategory.has(p.category)) byCategory.set(p.category, [])
-    byCategory.get(p.category).push(p)
+    const key = p.category || ''
+    if (!byCategory.has(key)) byCategory.set(key, [])
+    byCategory.get(key).push(p)
   }
   const result = []
+  // Без категории — только во «Все», показываем в начале общего списка
+  const uncategorized = byCategory.get('')
+  if (uncategorized) {
+    result.push(...sortWithinCategory(uncategorized, 'all'))
+    byCategory.delete('')
+  }
   for (const catId of catOrder) {
     const group = byCategory.get(catId)
     if (!group) continue
     result.push(...sortWithinCategory(group, catId))
     byCategory.delete(catId)
   }
-  for (const [catId, group] of byCategory) {
-    result.push(...sortWithinCategory(group, catId))
+  for (const [, group] of byCategory) {
+    result.push(...sortWithinCategory(group, 'all'))
   }
   return result
 }
@@ -263,7 +284,7 @@ function renderProducts() {
   const products = (Array.isArray(store?.products) ? store.products : []).filter((p) => !p.hidden)
   let filtered = activeCategory === 'all'
     ? products
-    : products.filter((p) => p.category === activeCategory)
+    : products.filter((p) => p.category && p.category === activeCategory)
   filtered = filtered.filter((p) => matchesSearch(p, searchQuery))
 
   els.productsCount.textContent = `${filtered.length} товаров`

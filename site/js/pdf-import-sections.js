@@ -14,6 +14,7 @@ export const PDF_IMPORT_SECTIONS = [
   { id: 'Samsung Серия S25', label: 'Samsung Серия S25', group: 'Samsung' },
   { id: 'Samsung Watch', label: 'Samsung Watch', group: 'Samsung' },
   { id: 'Xiaomi', label: 'Xiaomi', group: 'Xiaomi' },
+  { id: 'OnePlus', label: 'OnePlus', group: 'OnePlus' },
   { id: 'Huawei', label: 'Huawei', group: 'Huawei' },
   { id: 'Умные устройства Huawei', label: 'Huawei (умные устройства)', group: 'Huawei' },
 ]

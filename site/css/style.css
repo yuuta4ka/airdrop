@@ -1,5 +1,5 @@
-@import url('glass.css?v=20260716j');
-@import url('motion.css?v=20260716j');
+@import url('glass.css?v=20260717i');
+@import url('motion.css?v=20260717h');
 
 *,
 *::before,
@@ -137,50 +137,7 @@ img {
 }
 
 .logo {
-  display: flex;
-  align-items: center;
-  gap: 10px;
-  font-weight: 800;
-  font-size: 1.35rem;
-  letter-spacing: -0.02em;
   justify-self: start;
-}
-
-.logo__img-text {
-  height: 36px;
-  width: auto;
-  max-width: 160px;
-  object-fit: contain;
-}
-
-.logo__img {
-  display: none;
-}
-
-.logo__faces {
-  display: contents;
-}
-
-.logo__img-icon {
-  display: none;
-}
-
-.logo__icon {
-  width: 36px;
-  height: 36px;
-  background: var(--gradient);
-  border-radius: 10px;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  font-size: 1.1rem;
-}
-
-.logo__text {
-  background: var(--gradient);
-  -webkit-background-clip: text;
-  -webkit-text-fill-color: transparent;
-  background-clip: text;
 }
 
 .nav {
@@ -2302,93 +2259,15 @@ body[data-theme="dark-green"] .dolyami-widget {
     justify-self: center;
   }
 
-  .logo__img-text {
-    height: 26px;
-    max-width: 110px;
-  }
-
-  .logo__badge {
-    padding: 4px 8px;
-    border-radius: 10px;
-  }
-
   .header__actions {
     grid-column: 3;
     justify-self: end;
-  }
-
-  .logo__faces {
-    display: grid;
-    place-items: center;
-  }
-
-  .logo__img-icon {
-    display: block;
-    grid-area: 1 / 1;
-    width: 34px;
-    height: 34px;
-    object-fit: contain;
-    opacity: 0;
-    transform: scale(0.72);
-    transition:
-      opacity 0.45s cubic-bezier(0.22, 1, 0.36, 1),
-      transform 0.45s cubic-bezier(0.22, 1, 0.36, 1),
-      width 0.45s cubic-bezier(0.22, 1, 0.36, 1),
-      height 0.45s cubic-bezier(0.22, 1, 0.36, 1);
-  }
-
-  .logo__img-text {
-    grid-area: 1 / 1;
-    transition:
-      opacity 0.45s cubic-bezier(0.22, 1, 0.36, 1),
-      transform 0.45s cubic-bezier(0.22, 1, 0.36, 1),
-      max-width 0.45s cubic-bezier(0.22, 1, 0.36, 1),
-      max-height 0.45s cubic-bezier(0.22, 1, 0.36, 1);
-  }
-
-  .logo__badge {
-    transition:
-      padding 0.45s cubic-bezier(0.22, 1, 0.36, 1),
-      border-radius 0.45s ease,
-      box-shadow 0.45s ease,
-      background 0.45s ease;
-  }
-
-  .header--compact .logo__badge {
-    padding: 5px 6px;
-    border-radius: 11px;
-  }
-
-  .header--compact .logo__img-text {
-    opacity: 0;
-    transform: scale(0.9);
-    max-width: 0;
-    max-height: 0;
-    pointer-events: none;
-  }
-
-  .header--compact .logo__img-icon {
-    opacity: 1;
-    transform: scale(1);
   }
 
   .header--compact {
     box-shadow:
       0 4px 20px rgba(0, 0, 0, 0.12),
       inset 0 1px 0 rgba(255, 255, 255, 0.1);
-  }
-
-  .logo:hover .logo__badge {
-    transform: none;
-    box-shadow: var(--glass-shadow-sm);
-  }
-
-  @media (prefers-reduced-motion: reduce) {
-    .logo__badge,
-    .logo__img-text,
-    .logo__img-icon {
-      transition: none;
-    }
   }
 
   .nav {
@@ -4484,43 +4363,10 @@ body[data-theme="dark-green"] .header.header--catalog .header__nav-row {
   box-sizing: border-box !important;
 }
 
+/* Каталог: лого использует общие стили */
 .header.header--catalog .logo {
   justify-self: start !important;
   flex-shrink: 0 !important;
-}
-
-/* Логофон — высота как у поиска (44px); сам логотип — обычный размер */
-.header.header--catalog .logo__badge {
-  display: inline-flex !important;
-  align-items: center !important;
-  justify-content: center !important;
-  padding: 0 16px !important;
-  height: 44px !important;
-  min-height: 44px !important;
-  max-height: 44px !important;
-  box-sizing: border-box !important;
-  border-radius: 999px !important;
-  background: var(--accent) !important;
-  backdrop-filter: blur(20px) saturate(180%) !important;
-  -webkit-backdrop-filter: blur(20px) saturate(180%) !important;
-  border: 1px solid color-mix(in srgb, var(--accent) 80%, white) !important;
-  box-shadow:
-    0 2px 12px var(--accent-glow),
-    inset 0 1px 0 rgba(255, 255, 255, 0.28) !important;
-  isolation: isolate;
-  overflow: visible !important;
-}
-
-.header.header--catalog .logo__badge::before,
-.header.header--catalog .logo__badge::after {
-  display: none !important;
-  content: none !important;
-}
-
-html[data-theme="dark-green"] .header.header--catalog .logo__badge,
-body[data-theme="dark-green"] .header.header--catalog .logo__badge {
-  background: var(--accent) !important;
-  border-color: color-mix(in srgb, var(--accent) 70%, white) !important;
 }
 
 .header.header--catalog .header__actions {
@@ -4654,55 +4500,15 @@ body[data-theme="dark-green"] .header.header--catalog .cart-btn {
     max-height: 40px !important;
   }
 
-  /* Лого и корзина — одинаковые круги 40×40 */
-  .header.header--catalog .logo__badge,
   .header.header--catalog .cart-btn {
-    width: 40px !important;
-    height: 40px !important;
-    min-width: 40px !important;
-    min-height: 40px !important;
-    max-width: 40px !important;
-    max-height: 40px !important;
-    padding: 0 !important;
+    width: 44px !important;
+    height: 44px !important;
+    min-width: 44px !important;
+    min-height: 44px !important;
     border-radius: 50% !important;
+    flex-shrink: 0 !important;
+    padding: 0 !important;
     box-sizing: border-box !important;
   }
 
-  .header.header--catalog .logo__badge {
-    overflow: hidden !important;
-    display: inline-flex !important;
-    align-items: center !important;
-    justify-content: center !important;
-  }
-
-  .header.header--catalog .logo__faces {
-    display: grid !important;
-    place-items: center !important;
-    width: 100% !important;
-    height: 100% !important;
-  }
-
-  .header.header--catalog .logo__img-text {
-    display: none !important;
-    opacity: 0 !important;
-    pointer-events: none !important;
-  }
-
-  .header.header--catalog .logo__img-icon {
-    display: block !important;
-    grid-area: 1 / 1 !important;
-    width: 70% !important;
-    height: 70% !important;
-    max-width: none !important;
-    max-height: none !important;
-    object-fit: cover !important;
-    opacity: 1 !important;
-    transform: none !important;
-    justify-self: center !important;
-    align-self: center !important;
-  }
-
-  .header.header--catalog .cart-btn {
-    flex-shrink: 0 !important;
-  }
 }

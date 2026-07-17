@@ -81,7 +81,6 @@ body[data-theme="dark-green"] {
 .why-us li,
 .cart-panel,
 .cart,
-.logo__badge,
 .header-search {
   position: relative;
   isolation: isolate;
@@ -101,7 +100,6 @@ body[data-theme="dark-green"] {
 .why-us li::before,
 .cart-panel::before,
 .cart::before,
-.logo__badge::before,
 .header-search::before {
   content: '';
   position: absolute;
@@ -203,18 +201,23 @@ body[data-theme="dark-green"] {
   border: 1px solid rgba(255, 255, 255, 0.2);
 }
 
-/* ─── Logo — Liquid Glass accent (как в каталоге), весь сайт ─── */
+/* ─── Logo (простая стабильная схема) ─── */
+.logo {
+  display: inline-flex;
+  align-items: center;
+  text-decoration: none;
+  flex-shrink: 0;
+}
+
 .logo__badge {
   display: inline-flex;
   align-items: center;
   justify-content: center;
-  padding: 0 16px;
   height: 44px;
+  padding: 0 16px;
   box-sizing: border-box;
-  background: var(--accent);
-  backdrop-filter: blur(20px) saturate(180%);
-  -webkit-backdrop-filter: blur(20px) saturate(180%);
   border-radius: 999px;
+  background: var(--accent);
   border: 1px solid color-mix(in srgb, var(--accent) 80%, white);
   box-shadow:
     0 2px 12px var(--accent-glow),
@@ -222,42 +225,70 @@ body[data-theme="dark-green"] {
   overflow: hidden;
 }
 
-body[data-theme="light-gray"] .logo__badge {
-  padding: 0 16px;
-  background: var(--accent);
-  border: 1px solid color-mix(in srgb, var(--accent) 80%, white);
-  box-shadow:
-    0 2px 12px var(--accent-glow),
-    inset 0 1px 0 rgba(255, 255, 255, 0.28);
+.logo__text-img {
+  display: block;
+  height: 28px;
+  width: auto;
+  max-width: 150px;
+  object-fit: contain;
 }
 
-.footer__brand .logo__badge {
-  padding: 0 14px;
-  height: 40px;
-}
-
-body[data-theme="light-gray"] .footer__brand .logo__badge {
-  padding: 0 14px;
-}
-
-.logo__badge::before {
+.logo__icon-img {
   display: none;
+  width: 24px;
+  height: 24px;
+  object-fit: contain;
 }
 
 .logo:hover .logo__badge {
-  transform: translateY(-1px) scale(1.02);
   box-shadow:
     0 4px 18px var(--accent-glow),
     inset 0 1px 0 rgba(255, 255, 255, 0.35);
 }
 
-.logo__img-text {
-  height: 30px;
-  width: auto;
-  max-width: 160px;
-  object-fit: contain;
-  position: relative;
-  z-index: 4;
+.footer__brand .logo__badge {
+  height: 40px;
+  padding: 0 14px;
+}
+
+.footer__brand .logo__text-img {
+  height: 24px;
+}
+
+/* Мобилка: всегда круг с иконкой, без анимации при скролле */
+@media (max-width: 768px) {
+  .logo__badge {
+    width: 44px;
+    height: 44px;
+    min-width: 44px;
+    padding: 0;
+    border-radius: 50%;
+  }
+
+  .logo__text-img {
+    display: none;
+  }
+
+  .logo__icon-img {
+    display: block;
+  }
+
+  .footer__brand .logo__badge {
+    width: auto;
+    min-width: 0;
+    height: 40px;
+    padding: 0 14px;
+    border-radius: 999px;
+  }
+
+  .footer__brand .logo__text-img {
+    display: block;
+    height: 24px;
+  }
+
+  .footer__brand .logo__icon-img {
+    display: none;
+  }
 }
 
 /* ─── Header — floating dock ─── */

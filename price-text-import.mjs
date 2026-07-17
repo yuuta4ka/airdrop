@@ -34,7 +34,8 @@ function detectSection(name) {
   if (/^Samsung\s+Galaxy\s+S26|^Galaxy\s+S26/i.test(n)) return 'Samsung Серия S26'
   if (/^Samsung\s+Galaxy\s+S25|^Galaxy\s+S25/i.test(n)) return 'Samsung Серия S25'
   if (/^Samsung\s+(?:Galaxy\s+)?Watch|^Galaxy\s+Watch/i.test(n)) return 'Samsung Watch'
-  if (/^(Redmi|Poco|OnePlus|Xiaomi)\b/i.test(n)) return 'Xiaomi'
+  if (/^OnePlus\b/i.test(n)) return 'OnePlus'
+  if (/^(Redmi|Poco|Xiaomi)\b/i.test(n)) return 'Xiaomi'
   if (/^Huawei\s+Watch/i.test(n)) return 'Умные устройства Huawei'
   if (/^(HUAWEI|Huawei|Honor)\b/i.test(n)) return 'Huawei'
   return null
@@ -84,6 +85,7 @@ function detectSectionFromProducts(name, products) {
     if (/s25/i.test(hit.name)) return 'Samsung Серия S25'
     return 'Samsung Серия S25'
   }
+  if (hit.category === 'oneplus') return 'OnePlus'
   if (hit.category === 'xiaomi') return 'Xiaomi'
   if (hit.category === 'huawei') {
     return /watch/i.test(hit.name) ? 'Умные устройства Huawei' : 'Huawei'
@@ -362,7 +364,7 @@ export function parseTextPriceLines(text, options = {}) {
         continue
       }
       row = alignJsonFieldsToCatalog(row, products)
-      const section = detectSection(row.product) || detectSectionFromProducts(row.product, products)
+      const section = detectSectionFromProducts(row.product, products) || detectSection(row.product)
       if (!section) {
         skipped.push(row.product)
         continue
@@ -396,7 +398,7 @@ export function parseTextPriceLines(text, options = {}) {
       continue
     }
 
-    const section = detectSection(name) || detectSectionFromProducts(name, products)
+    const section = detectSectionFromProducts(name, products) || detectSection(name)
     if (!section) {
       skipped.push(name)
       continue
@@ -449,8 +451,8 @@ export function buildProductStubFromPriceName(name, existingProducts = []) {
   if (!raw) return { error: 'Пустое название' }
 
   const productName = normalizeProductKey(raw)
-  const section = detectSection(productName) || detectSectionFromProducts(productName, existingProducts)
-    || detectSection(raw) || detectSectionFromProducts(raw, existingProducts)
+  const section = detectSectionFromProducts(productName, existingProducts) || detectSection(productName)
+    || detectSectionFromProducts(raw, existingProducts) || detectSection(raw)
   if (!section) {
     return { error: `Не удалось определить категорию для «${raw}»` }
   }
@@ -501,7 +503,7 @@ export function promptCategoryProductCounts(products, categoryNames = []) {
 
     const matched = new Set()
     for (const alias of aliases) {
-      const section = detectSection(alias) || detectSectionFromProducts(alias, [product])
+      const section = detectSectionFromProducts(alias, [product]) || detectSection(alias)
       if (section && Object.prototype.hasOwnProperty.call(counts, section)) matched.add(section)
     }
     for (const section of matched) counts[section] += 1
