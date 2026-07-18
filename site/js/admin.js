@@ -112,6 +112,8 @@ let adminProductView = 'active'
 let adminProductQuery = ''
 let adminProductCatFilter = ''
 let sortCategoryId = null
+let productsListScrollY = 0
+const PRODUCTS_SCROLL_KEY = 'airdrop_admin_products_scroll'
 let draftSaveTimer = null
 let isDirty = false
 let savingInFlight = false
@@ -368,6 +370,38 @@ function scrollAdminToTop() {
   })
 }
 
+function getAdminScrollTop() {
+  return $('admin-content')?.scrollTop || 0
+}
+
+function saveProductsListScroll() {
+  // Не перезаписываем, если уже в редакторе — там список не виден
+  if (editingProductIdx != null) return
+  productsListScrollY = getAdminScrollTop()
+  try { sessionStorage.setItem(PRODUCTS_SCROLL_KEY, String(productsListScrollY)) } catch { /* ignore */ }
+}
+
+function restoreProductsListScroll(y = productsListScrollY) {
+  try {
+    const raw = sessionStorage.getItem(PRODUCTS_SCROLL_KEY)
+    if (raw != null && (y == null || y === productsListScrollY)) {
+      const stored = Number(raw)
+      if (Number.isFinite(stored)) y = stored
+    }
+  } catch { /* ignore */ }
+  const target = Math.max(0, Number(y) || 0)
+  productsListScrollY = target
+  const apply = () => {
+    const content = $('admin-content')
+    if (content) content.scrollTop = target
+  }
+  apply()
+  requestAnimationFrame(() => {
+    apply()
+    requestAnimationFrame(apply)
+  })
+}
+
 function showLoginScreen(clearSession = false) {
   if (clearSession) {
     flushDraft()
@@ -393,7 +427,8 @@ function showApp() {
   $('tab-title').textContent = TITLES[activeTab] || TITLES.general
   $('btn-save').style.display = (activeTab === 'config' || activeTab === 'orders') ? 'none' : ''
   renderTab()
-  scrollAdminToTop()
+  // Список товаров сам восстанавливает скролл; остальные вкладки — наверх
+  if (!(activeTab === 'products' && editingProductIdx == null)) scrollAdminToTop()
 }
 
 function field(label, id, value = '', type = 'text', hint = '') {
@@ -600,6 +635,7 @@ function cloneProduct(p) {
 }
 
 function beginProductEdit(idx, { isNew = false } = {}) {
+  saveProductsListScroll()
   editingProductIdx = idx
   editingProductIsNew = !!isNew
   const p = productsData.products[idx]
@@ -1052,6 +1088,8 @@ document.querySelectorAll('.admin-nav__btn').forEach((btn) => {
         collectProduct()
       }
     } else collectTab()
+    // Уходим со списка товаров — запомнить скролл (если не в редакторе)
+    if (activeTab === 'products' && editingProductIdx == null) saveProductsListScroll()
     activeTab = btn.dataset.tab
     editingProductIdx = null
     productEditBaseline = null
@@ -1477,7 +1515,11 @@ function compareAdminProducts(a, b) {
 
 function renderProducts(c, opts = {}) {
   if (editingProductIdx !== null) { renderProductEditor(c); return }
-  if (!opts.keepScroll) scrollAdminToTop()
+  const prevScroll = opts.keepScroll ? getAdminScrollTop() : null
+  if (opts.resetScroll) {
+    productsListScrollY = 0
+    try { sessionStorage.setItem(PRODUCTS_SCROLL_KEY, '0') } catch { /* ignore */ }
+  }
   const all = productsData.products
   const hiddenCount = all.filter((p) => p.hidden).length
   const newCount = all.filter((p) => p.isNew).length
@@ -1539,9 +1581,9 @@ function renderProducts(c, opts = {}) {
       ${sortMode === 'manual' ? '<div id="sort-order-list" class="admin-sort-order-list"></div>' : ''}
     </details>
     <div id="product-list"></div>`
-  $('products-tab-active').onclick = () => { adminProductView = 'active'; renderProducts(c) }
-  $('products-tab-hidden').onclick = () => { adminProductView = 'hidden'; renderProducts(c) }
-  if ($('products-tab-new')) $('products-tab-new').onclick = () => { adminProductView = 'new'; renderProducts(c) }
+  $('products-tab-active').onclick = () => { adminProductView = 'active'; renderProducts(c, { resetScroll: true }) }
+  $('products-tab-hidden').onclick = () => { adminProductView = 'hidden'; renderProducts(c, { resetScroll: true }) }
+  if ($('products-tab-new')) $('products-tab-new').onclick = () => { adminProductView = 'new'; renderProducts(c, { resetScroll: true }) }
 
   const searchInput = $('admin-product-search')
   if (searchInput) {
@@ -1562,7 +1604,7 @@ function renderProducts(c, opts = {}) {
   }
   $('admin-product-cat-filter').onchange = (e) => {
     adminProductCatFilter = e.target.value
-    renderProducts(c, { keepScroll: true })
+    renderProducts(c, { resetScroll: true })
   }
 
   if (sortCats.length) {
@@ -1757,6 +1799,11 @@ function renderProducts(c, opts = {}) {
     adminProductView = 'active'
     renderProducts(c)
   }
+
+  // Восстановить позицию списка (выход из редактора / вкладка «Товары»)
+  if (opts.resetScroll) scrollAdminToTop()
+  else if (opts.keepScroll) restoreProductsListScroll(prevScroll)
+  else restoreProductsListScroll()
 }
 
 function renderProductEditor(c) {
