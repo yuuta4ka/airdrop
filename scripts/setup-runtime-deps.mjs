@@ -1,6 +1,7 @@
 #!/usr/bin/env node
 /**
- * Link vendor/* into node_modules (no npm registry). Safe to run every start.
+ * Ensure runtime packages exist in node_modules.
+ * Prefers packages already installed by npm; falls back to vendor/* symlinks.
  */
 import fs from 'node:fs'
 import path from 'node:path'
@@ -25,6 +26,11 @@ function vendorOk(name) {
   return fs.existsSync(path.join(vendorPath(name), 'legacy', 'build', 'pdf.mjs'))
 }
 
+function npmPackageOk(name) {
+  const dest = linkPath(name)
+  return fs.existsSync(path.join(dest, 'package.json'))
+}
+
 function pointsToVendor(name) {
   const link = linkPath(name)
   if (!fs.existsSync(link)) return false
@@ -36,12 +42,16 @@ function pointsToVendor(name) {
 }
 
 for (const name of packages) {
-  if (!vendorOk(name)) {
-    console.error(`[ERROR] vendor/${name} is missing or incomplete. Run: git pull`)
-    process.exit(1)
+  if (npmPackageOk(name) || pointsToVendor(name)) {
+    console.log(`[ok] ${name}`)
+    continue
   }
 
-  if (pointsToVendor(name)) continue
+  if (!vendorOk(name)) {
+    console.error(`[ERROR] ${name} is missing. Run: npm install`)
+    console.error(`        (or ensure vendor/${name} is present)`)
+    process.exit(1)
+  }
 
   const dest = linkPath(name)
   if (fs.existsSync(dest)) {
@@ -51,4 +61,5 @@ for (const name of packages) {
   fs.mkdirSync(path.join(root, 'node_modules'), { recursive: true })
   const linkType = process.platform === 'win32' ? 'junction' : 'dir'
   fs.symlinkSync(vendorPath(name), dest, linkType)
+  console.log(`[ok] ${name} → vendor/${name}`)
 }

@@ -15,6 +15,9 @@
     "refresh-vendor": "node scripts/refresh-vendor-deps.mjs"
   },
   "dependencies": {
+    "adm-zip": "^0.5.18",
+    "pdf-parse": "^2.4.5",
+    "pdfjs-dist": "^5.7.284",
     "react": "^19.0.0",
     "react-dom": "^19.0.0"
   },

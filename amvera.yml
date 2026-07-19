@@ -5,15 +5,16 @@ meta:
     version: "20"
 
 build:
+  # Обязательно false — иначе Amvera пропустит npm install
   skip: false
-  # Подготовка vendor-зависимостей на этапе сборки (не в nodeArguments)
+  # После npm install проверяем/линкуем runtime-зависимости
   additionalCommands: node scripts/setup-runtime-deps.mjs
   artifacts:
     "*": /
 
 run:
-  # Amvera запускает: node ${nodeArguments} ${scriptName} ${scriptArguments}
-  # Сюда нельзя писать shell-операторы вроде &&
+  # Amvera: node ${nodeArguments} ${scriptName} ${scriptArguments}
+  # Нельзя писать сюда shell-операторы (&& и т.п.)
   scriptName: server.mjs
   persistenceMount: /data
   containerPort: "8080"
