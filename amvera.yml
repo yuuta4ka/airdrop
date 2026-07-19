@@ -1,0 +1,17 @@
+meta:
+  environment: nodejs
+  toolchain:
+    name: npm
+    version: "20"
+build:
+  skip: false
+  additionalCommands: null
+  artifacts:
+    "*": /
+run:
+  scriptName: scripts/setup-runtime-deps.mjs
+  scriptArguments: null
+  nodeArguments: "&& node server.mjs"
+  command: null
+  persistenceMount: /data
+  containerPort: "8080"
