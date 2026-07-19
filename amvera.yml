@@ -1,17 +1,19 @@
 meta:
-  environment: nodejs
+  environment: node
   toolchain:
     name: npm
     version: "20"
+
 build:
   skip: false
-  additionalCommands: null
+  # Подготовка vendor-зависимостей на этапе сборки (не в nodeArguments)
+  additionalCommands: node scripts/setup-runtime-deps.mjs
   artifacts:
     "*": /
+
 run:
-  scriptName: scripts/setup-runtime-deps.mjs
-  scriptArguments: null
-  nodeArguments: "&& node server.mjs"
-  command: null
+  # Amvera запускает: node ${nodeArguments} ${scriptName} ${scriptArguments}
+  # Сюда нельзя писать shell-операторы вроде &&
+  scriptName: server.mjs
   persistenceMount: /data
   containerPort: "8080"
