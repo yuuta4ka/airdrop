@@ -14,11 +14,25 @@ function normalizeZipPath(name) {
   return String(name || '').replace(/\\/g, '/').replace(/^\.\//, '').replace(/^\/+/, '')
 }
 
-/** Путь ассета внутри siteDir или null (защита от zip-slip: assets/../../etc/passwd). */
-export function resolveSafeAssetPath(siteDir, entryName) {
+/**
+ * Путь ассета на диске или null (защита от zip-slip).
+ * `assets/products/*` → uploadDir (persistent), остальные `assets/*` → siteDir/assets.
+ * @param {string} [uploadDir] каталог фото товаров; по умолчанию siteDir/assets/products
+ */
+export function resolveSafeAssetPath(siteDir, entryName, uploadDir) {
   const norm = normalizeZipPath(entryName)
   if (!norm.startsWith('assets/')) return null
   if (norm.includes('\0') || norm.split('/').some((part) => part === '..')) return null
+
+  if (norm.startsWith('assets/products/')) {
+    const productsRoot = path.resolve(uploadDir || path.join(siteDir, 'assets', 'products'))
+    const rest = norm.slice('assets/products/'.length)
+    if (!rest) return null
+    const out = path.resolve(productsRoot, ...rest.split('/'))
+    if (out !== productsRoot && !out.startsWith(productsRoot + path.sep)) return null
+    return out
+  }
+
   const assetsRoot = path.resolve(siteDir, 'assets')
   const out = path.resolve(siteDir, ...norm.split('/'))
   if (out !== assetsRoot && !out.startsWith(assetsRoot + path.sep)) return null
@@ -40,7 +54,7 @@ function parseZipJson(entry) {
   return normalizeImportPayload(data)
 }
 
-export function buildCatalogZip(siteDir, productsData) {
+export function buildCatalogZip(siteDir, productsData, uploadDir) {
   const validated = validateProductsData(structuredClone(productsData))
   const products = validated.products
   const assetPaths = collectProductAssetPaths(products)
@@ -55,8 +69,8 @@ export function buildCatalogZip(siteDir, productsData) {
   }
 
   for (const rel of assetPaths) {
-    const abs = path.join(siteDir, rel)
-    if (fs.existsSync(abs)) {
+    const abs = resolveSafeAssetPath(siteDir, rel, uploadDir)
+    if (abs && fs.existsSync(abs)) {
       // Всегда POSIX-пути в ZIP — иначе на Windows коллега получит кривую структуру
       const zipDir = path.posix.dirname(rel.replace(/\\/g, '/'))
       const zipName = path.posix.basename(rel.replace(/\\/g, '/'))
@@ -72,7 +86,7 @@ export function buildCatalogZip(siteDir, productsData) {
   return zip.toBuffer()
 }
 
-export function applyCatalogZip(siteDir, zipBuffer, existingProducts, mode = 'merge') {
+export function applyCatalogZip(siteDir, zipBuffer, existingProducts, mode = 'merge', uploadDir) {
   const zip = new AdmZip(zipBuffer)
   const productsEntry = findZipEntry(zip, 'products.json')
   if (!productsEntry) throw new Error('В архиве нет products.json')
@@ -84,7 +98,7 @@ export function applyCatalogZip(siteDir, zipBuffer, existingProducts, mode = 'me
   let assetsSkipped = 0
   for (const entry of zip.getEntries()) {
     if (entry.isDirectory) continue
-    const out = resolveSafeAssetPath(siteDir, entry.entryName)
+    const out = resolveSafeAssetPath(siteDir, entry.entryName, uploadDir)
     if (!out) {
       const name = normalizeZipPath(entry.entryName)
       if (name.startsWith('assets/')) assetsSkipped += 1

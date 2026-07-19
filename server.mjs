@@ -21,12 +21,9 @@ import { applyCatalogZip, buildCatalogZip } from './catalog-zip.mjs'
 const __dirname = path.dirname(fileURLToPath(import.meta.url))
 const SERVER_STARTED_AT = new Date().toISOString()
 const SITE_DIR = path.join(__dirname, 'site')
-const STORE_FILE = path.join(SITE_DIR, 'data', 'store.json')
-const PRODUCTS_FILE = path.join(SITE_DIR, 'data', 'products.json')
-const ORDERS_FILE = path.join(SITE_DIR, 'data', 'orders.json')
-const AUTH_STATE_FILE = path.join(SITE_DIR, 'data', 'auth-state.json')
+const SEED_DATA_DIR = path.join(SITE_DIR, 'data')
+const SEED_UPLOAD_DIR = path.join(SITE_DIR, 'assets', 'products')
 const ENV_FILE = path.join(__dirname, '.env')
-const PORT = process.env.PORT || 8080
 
 const AUTH_LIMITS = {
   resetRequestsPerHour: 3,
@@ -58,7 +55,88 @@ function loadEnvFile() {
 
 loadEnvFile()
 
+const PORT = process.env.PORT || 8080
+
+function canUseDir(dir) {
+  try {
+    fs.mkdirSync(dir, { recursive: true })
+    const probe = path.join(dir, `.write-probe-${process.pid}`)
+    fs.writeFileSync(probe, 'ok')
+    fs.unlinkSync(probe)
+    return true
+  } catch {
+    return false
+  }
+}
+
+/** Локально — site/data; на Amvera при наличии /data — persistent volume. */
+function resolveDataDir() {
+  if (process.env.DATA_DIR) return path.resolve(process.env.DATA_DIR)
+  if (canUseDir('/data')) return path.resolve('/data')
+  return SEED_DATA_DIR
+}
+
+/** Фото товаров: локально site/assets/products; на volume — /data/assets/products. */
+function resolveUploadDir(dataDir) {
+  if (process.env.UPLOAD_DIR) return path.resolve(process.env.UPLOAD_DIR)
+  if (dataDir === SEED_DATA_DIR) return SEED_UPLOAD_DIR
+  return path.join(dataDir, 'assets', 'products')
+}
+
+const DATA_DIR = resolveDataDir()
+const UPLOAD_DIR = resolveUploadDir(DATA_DIR)
+const STORE_FILE = path.join(DATA_DIR, 'store.json')
+const PRODUCTS_FILE = path.join(DATA_DIR, 'products.json')
+const ORDERS_FILE = path.join(DATA_DIR, 'orders.json')
+const AUTH_STATE_FILE = path.join(DATA_DIR, 'auth-state.json')
+
+function copyDirContents(srcDir, destDir) {
+  if (!fs.existsSync(srcDir)) return 0
+  fs.mkdirSync(destDir, { recursive: true })
+  let n = 0
+  for (const name of fs.readdirSync(srcDir)) {
+    const from = path.join(srcDir, name)
+    const to = path.join(destDir, name)
+    const st = fs.statSync(from)
+    if (st.isDirectory()) {
+      n += copyDirContents(from, to)
+    } else {
+      fs.copyFileSync(from, to)
+      n += 1
+    }
+  }
+  return n
+}
+
+/** Если persistent-хранилище пустое — копируем seed из репозитория (site/data, site/assets/products). */
+function seedPersistentStorage() {
+  fs.mkdirSync(DATA_DIR, { recursive: true })
+  fs.mkdirSync(UPLOAD_DIR, { recursive: true })
+
+  const seedFiles = ['store.json', 'products.json', 'orders.json', 'auth-state.json']
+  for (const name of seedFiles) {
+    const dest = path.join(DATA_DIR, name)
+    const src = path.join(SEED_DATA_DIR, name)
+    if (fs.existsSync(dest) || !fs.existsSync(src)) continue
+    fs.copyFileSync(src, dest)
+    console.log(`Seed: ${name} → ${DATA_DIR}`)
+  }
+
+  // Картинки: только если upload-каталог отделён от seed и пока пуст
+  if (path.resolve(UPLOAD_DIR) !== path.resolve(SEED_UPLOAD_DIR) && fs.existsSync(SEED_UPLOAD_DIR)) {
+    const existing = fs.readdirSync(UPLOAD_DIR).filter((n) => !n.startsWith('.'))
+    if (!existing.length) {
+      const n = copyDirContents(SEED_UPLOAD_DIR, UPLOAD_DIR)
+      console.log(`Seed: ${n} файл(ов) фото → ${UPLOAD_DIR}`)
+    }
+  }
+}
+
+seedPersistentStorage()
+
 console.log(`Starting Airdrop (Node ${process.version}), PORT=${PORT}`)
+console.log(`DATA_DIR=${DATA_DIR}`)
+console.log(`UPLOAD_DIR=${UPLOAD_DIR}`)
 
 const MIME = {
   '.html': 'text/html; charset=utf-8',
@@ -78,6 +156,7 @@ function readJson(file) {
 }
 
 function writeJson(file, data) {
+  fs.mkdirSync(path.dirname(file), { recursive: true })
   fs.writeFileSync(file, JSON.stringify(data, null, 2), 'utf8')
 }
 
@@ -798,7 +877,7 @@ const server = http.createServer(async (req, res) => {
   if (p === '/api/admin/export-catalog' && req.method === 'GET') {
     if (!checkAuth(req)) return sendJson(res, 401, { error: 'Неверный пароль' })
     try {
-      const zipBuffer = buildCatalogZip(SITE_DIR, readProducts())
+      const zipBuffer = buildCatalogZip(SITE_DIR, readProducts(), UPLOAD_DIR)
       const filename = `airdrop-catalog-${new Date().toISOString().slice(0, 10)}.zip`
       res.writeHead(200, {
         'Content-Type': 'application/zip',
@@ -872,7 +951,7 @@ const server = http.createServer(async (req, res) => {
       if (!Array.isArray(existing?.products)) existing.products = []
       let result
       try {
-        result = applyCatalogZip(SITE_DIR, zipBuffer, existing, mode)
+        result = applyCatalogZip(SITE_DIR, zipBuffer, existing, mode, UPLOAD_DIR)
       } catch (err) {
         if (String(err?.message || '').includes('No END header')) {
           throw new Error('Файл не является корректным ZIP-архивом')
@@ -903,9 +982,8 @@ const server = http.createServer(async (req, res) => {
       // Уникальное имя: старые файлы не трогаем, одинаковые исходные имена не перезаписывают друг друга
       const unique = `${stem}-${Date.now().toString(36)}-${Math.random().toString(36).slice(2, 8)}${ext}`
 
-      const dir = path.join(SITE_DIR, 'assets', 'products')
-      fs.mkdirSync(dir, { recursive: true })
-      const out = path.join(dir, unique)
+      fs.mkdirSync(UPLOAD_DIR, { recursive: true })
+      const out = path.join(UPLOAD_DIR, unique)
       fs.writeFileSync(out, Buffer.from(match[2], 'base64'))
       return sendJson(res, 200, { path: `assets/products/${unique}` })
     } catch {
@@ -978,6 +1056,26 @@ const server = http.createServer(async (req, res) => {
     }
   }
 
+  // Фото товаров — из persistent UPLOAD_DIR (на Amvera: /data/assets/products)
+  if (p.startsWith('/assets/products/')) {
+    const rel = decodeURIComponent(p.slice('/assets/products/'.length))
+    if (!rel || rel.includes('\0') || rel.split('/').some((part) => part === '..')) {
+      res.writeHead(403).end()
+      return
+    }
+    const uploadRoot = path.resolve(UPLOAD_DIR)
+    const filePath = path.resolve(uploadRoot, ...rel.split('/').filter(Boolean))
+    if (filePath !== uploadRoot && !filePath.startsWith(uploadRoot + path.sep)) {
+      res.writeHead(403).end()
+      return
+    }
+    if (!fs.existsSync(filePath) || !fs.statSync(filePath).isFile()) {
+      res.writeHead(404).end('Not found')
+      return
+    }
+    return serveFile(res, filePath)
+  }
+
   let filePath = path.join(SITE_DIR, p === '/' ? 'index.html' : p)
 
   if (!filePath.startsWith(SITE_DIR)) {
@@ -1016,6 +1114,7 @@ server.listen(PORT, '0.0.0.0', () => {
   console.log(`АирДроп: http://0.0.0.0:${PORT}`)
   console.log(`Админка: http://localhost:${PORT}/admin`)
   console.log(`Импорт PDF + ZIP каталога: /admin → Экспорт / импорт`)
+  console.log(`Хранение: JSON=${DATA_DIR}, фото=${UPLOAD_DIR}`)
   const tg = getTelegramStatus()
   if (tg.configured) {
     console.log(`Telegram-уведомления: включены (${tg.chatCount} получателей)`)

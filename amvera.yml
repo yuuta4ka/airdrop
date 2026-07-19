@@ -7,7 +7,7 @@ meta:
 build:
   # Обязательно false — иначе Amvera пропустит npm install
   skip: false
-  # После npm install проверяем/линкуем runtime-зависимости
+  # После npm install проверяем runtime-зависимости
   additionalCommands: node scripts/setup-runtime-deps.mjs
   artifacts:
     "*": /
@@ -16,5 +16,7 @@ run:
   # Amvera: node ${nodeArguments} ${scriptName} ${scriptArguments}
   # Нельзя писать сюда shell-операторы (&& и т.п.)
   scriptName: server.mjs
+  # Persistent volume: сервер пишет JSON и фото товаров сюда (/data),
+  # а не в эфемерный /app/site/... (см. DATA_DIR / UPLOAD_DIR в server.mjs)
   persistenceMount: /data
   containerPort: "8080"
