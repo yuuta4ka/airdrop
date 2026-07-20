@@ -1161,6 +1161,10 @@ function renderGeneral(c) {
     </div>
   `) + section('Магазин', `
     <div class="admin-grid">${field('Название', 'g-name', s.name)}${field('Слоган', 'g-tagline', s.tagline)}${field('Логотип (путь к файлу)', 'g-logo', s.logo)}${field('Бренд для отзывов', 'g-reviewBrand', s.reviewBrand)}</div>
+  `) + section('Telegram-уведомления', `
+    <p class="admin-hint">Получатели заказов и кодов входа. Напишите боту <code>/start</code> — он пришлёт ваш Chat ID. Токен бота задаётся только в .env на сервере (<code>TELEGRAM_BOT_TOKEN</code>).</p>
+    ${field('Chat ID (через запятую)', 'g-tg-chats', s.telegramAdminChatIds || '', 'text', '123456789, 987654321')}
+    <div class="admin-status-row"><span>Статус Telegram</span><strong id="g-tg-status">загрузка…</strong></div>
   `) + section('Безопасность', `
     ${passwordField('Текущий пароль', 'g-password-view', storeData.adminPassword, { hint: 'Нажмите 👁 чтобы показать или скрыть' })}
     <div class="admin-password-change">
@@ -1183,10 +1187,21 @@ function renderGeneral(c) {
     .then((data) => {
       const el = $('server-started-at')
       if (el && data?.startedAt) el.textContent = formatWhenWithAgo(data.startedAt)
+      const tgEl = $('g-tg-status')
+      if (tgEl && data?.telegram) {
+        const t = data.telegram
+        if (t.configured) tgEl.textContent = `включено · ${t.chatCount} получател${t.chatCount === 1 ? 'ь' : 'ей'}`
+        else if (t.hasToken) tgEl.textContent = 'токен есть, укажите Chat ID и сохраните'
+        else tgEl.textContent = 'нет TELEGRAM_BOT_TOKEN в .env на сервере'
+      } else if (tgEl) {
+        tgEl.textContent = 'нет данных'
+      }
     })
     .catch(() => {
       const el = $('server-started-at')
       if (el) el.textContent = 'не удалось получить'
+      const tgEl = $('g-tg-status')
+      if (tgEl) tgEl.textContent = 'не удалось получить'
     })
 
   $('btn-request-change-code').onclick = async () => {
@@ -3285,6 +3300,7 @@ function collectGeneral() {
   if (!$('g-name')) return
   const s = storeData.settings
   s.name = val('g-name'); s.tagline = val('g-tagline'); s.logo = val('g-logo'); s.reviewBrand = val('g-reviewBrand')
+  if ($('g-tg-chats')) s.telegramAdminChatIds = val('g-tg-chats').trim()
 }
 
 function collectContacts() {

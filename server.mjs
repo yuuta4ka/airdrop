@@ -208,9 +208,23 @@ function generateAuthCode() {
   return String(Math.floor(100000 + Math.random() * 900000))
 }
 
+function parseChatIds(raw) {
+  if (Array.isArray(raw)) {
+    return [...new Set(raw.map((id) => String(id).trim()).filter(Boolean))]
+  }
+  return [...new Set(String(raw || '').split(/[,\s]+/).map((id) => id.trim()).filter(Boolean))]
+}
+
+/** Chat ID из админки (store), иначе из .env */
 function getAdminChatIds() {
+  try {
+    const fromStore = parseChatIds(readStore().settings?.telegramAdminChatIds)
+    if (fromStore.length) return fromStore
+  } catch {
+    /* store ещё не готов */
+  }
   const rawIds = process.env.TELEGRAM_ADMIN_CHAT_IDS || process.env.TELEGRAM_ADMIN_CHAT_ID || ''
-  return [...new Set(rawIds.split(/[,\s]+/).map((id) => id.trim()).filter(Boolean))]
+  return parseChatIds(rawIds)
 }
 
 async function sendTelegramMessage(chatId, text) {
@@ -282,13 +296,26 @@ async function handleTelegramUpdate(update) {
   const msg = update.message
   if (!msg?.text) return
   const chatId = String(msg.chat.id)
-  const adminIds = getAdminChatIds()
-  if (!adminIds.includes(chatId)) return
-
   const text = msg.text.trim()
-  if (text === '/start' || text === '/code' || text === '/код') {
+  const adminIds = getAdminChatIds()
+
+  if (!adminIds.includes(chatId)) {
+    if (text === '/start' || text === '/id' || text === '/код') {
+      await sendTelegramMessage(chatId, [
+        `Ваш Chat ID: ${chatId}`,
+        '',
+        'Скопируйте его в админку: Общие → Telegram-уведомления.',
+        'После сохранения сюда будут приходить заказы и коды входа.',
+      ].join('\n'))
+    }
+    return
+  }
+
+  if (text === '/start' || text === '/code' || text === '/код' || text === '/id') {
     await sendTelegramMessage(chatId, [
       '🔐 Бот АирДроп Admin',
+      '',
+      `Ваш Chat ID: ${chatId}`,
       '',
       'Коды приходят автоматически при:',
       '• сбросе пароля (кнопка «Забыли пароль?»)',
@@ -354,21 +381,13 @@ function buildOrderMessage(order) {
 
 async function notifyTelegramOrder(order) {
   const token = process.env.TELEGRAM_BOT_TOKEN?.trim()
-  const rawIds = process.env.TELEGRAM_ADMIN_CHAT_IDS || process.env.TELEGRAM_ADMIN_CHAT_ID || ''
-  const chatIds = [...new Set(rawIds.split(/[,\s]+/).map((id) => id.trim()).filter(Boolean))]
+  const chatIds = getAdminChatIds()
   if (!token || !chatIds.length) return { ok: false, chats: [] }
 
   const text = buildOrderMessage(order)
   const results = await Promise.allSettled(
     chatIds.map(async (chatId) => {
-      const res = await fetch(`https://api.telegram.org/bot${token}/sendMessage`, {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ chat_id: chatId, text }),
-        signal: AbortSignal.timeout(10000),
-      })
-      const data = await res.json().catch(() => ({}))
-      if (!res.ok) throw new Error(data.description || `HTTP ${res.status}`)
+      await sendTelegramMessage(chatId, text)
       return chatId
     }),
   )
@@ -384,9 +403,12 @@ async function notifyTelegramOrder(order) {
 
 function getTelegramStatus() {
   const token = process.env.TELEGRAM_BOT_TOKEN?.trim()
-  const rawIds = process.env.TELEGRAM_ADMIN_CHAT_IDS || process.env.TELEGRAM_ADMIN_CHAT_ID || ''
-  const chatIds = rawIds.split(/[,\s]+/).map((id) => id.trim()).filter(Boolean)
-  return { configured: Boolean(token && chatIds.length), chatCount: chatIds.length }
+  const chatIds = getAdminChatIds()
+  return {
+    configured: Boolean(token && chatIds.length),
+    hasToken: Boolean(token),
+    chatCount: chatIds.length,
+  }
 }
 
 function checkAuth(req) {
@@ -504,6 +526,10 @@ const server = http.createServer(async (req, res) => {
       return sendJson(res, 200, store, { 'Cache-Control': 'no-store' })
     }
     const { adminPassword, ...publicStore } = store
+    if (publicStore.settings && 'telegramAdminChatIds' in publicStore.settings) {
+      const { telegramAdminChatIds: _ids, ...pubSettings } = publicStore.settings
+      publicStore.settings = pubSettings
+    }
     return sendJsonCached(req, res, STORE_FILE, publicStore, { publicCache: true })
   }
 
@@ -668,6 +694,7 @@ const server = http.createServer(async (req, res) => {
 
   if (p === '/api/ping' && req.method === 'GET') {
     const store = readStore()
+    const tg = getTelegramStatus()
     return sendJson(res, 200, {
       ok: true,
       importPdf: true,
@@ -677,6 +704,11 @@ const server = http.createServer(async (req, res) => {
       startedAt: SERVER_STARTED_AT,
       lastTextImportAt: store.priceImport?.lastTextImportAt || null,
       lastPdfImportAt: store.priceImport?.lastImportAt || null,
+      telegram: {
+        configured: tg.configured,
+        hasToken: tg.hasToken,
+        chatCount: tg.chatCount,
+      },
     })
   }
 
@@ -1116,10 +1148,14 @@ server.listen(PORT, '0.0.0.0', () => {
   console.log(`Импорт PDF + ZIP каталога: /admin → Экспорт / импорт`)
   console.log(`Хранение: JSON=${DATA_DIR}, фото=${UPLOAD_DIR}`)
   const tg = getTelegramStatus()
-  if (tg.configured) {
-    console.log(`Telegram-уведомления: включены (${tg.chatCount} получателей)`)
+  if (tg.hasToken) {
+    if (tg.configured) {
+      console.log(`Telegram-уведомления: включены (${tg.chatCount} получателей)`)
+    } else {
+      console.log('Telegram: токен есть, chat ID задайте в админке (Общие) или в .env')
+    }
     pollTelegram()
   } else {
-    console.log('Telegram-уведомления: выключены — создайте .env по образцу .env.example')
+    console.log('Telegram-уведомления: выключены — задайте TELEGRAM_BOT_TOKEN в .env')
   }
 })
