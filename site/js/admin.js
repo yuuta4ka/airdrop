@@ -1271,7 +1271,7 @@ function renderTelegram(c) {
     }
     storeData.settings.telegramRecipients.push({ id: '', label: '', enabled: true })
     markDirty()
-    renderTelegramList()
+    renderTelegramList(storeData.settings.telegramRecipients)
   }
 
   fetch('/api/ping')
@@ -1294,18 +1294,19 @@ function renderTelegram(c) {
     })
 }
 
-function renderTelegramList(preset) {
-  if ($('tg-recipients')?.querySelector('.admin-tg-card')) collectTelegram()
-  const list = preset || (Array.isArray(storeData.settings.telegramRecipients)
-    ? storeData.settings.telegramRecipients
-    : ensureTelegramRecipients())
+function renderTelegramList(list) {
+  const rows = Array.isArray(list)
+    ? list
+    : (Array.isArray(storeData.settings.telegramRecipients)
+      ? storeData.settings.telegramRecipients
+      : ensureTelegramRecipients())
   const wrap = $('tg-recipients')
   if (!wrap) return
-  if (!list.length) {
+  if (!rows.length) {
     wrap.innerHTML = '<p class="admin-hint">Пока никого нет. Добавьте Chat ID после /start у бота.</p>'
     return
   }
-  wrap.innerHTML = list.map((row, i) => `
+  wrap.innerHTML = rows.map((row, i) => `
     <div class="admin-card admin-tg-card${row.enabled ? '' : ' admin-tg-card--off'}">
       <div class="admin-card__head">
         <label class="admin-tg-enable">
@@ -1326,13 +1327,14 @@ function renderTelegramList(preset) {
       collectTelegram()
       storeData.settings.telegramRecipients.splice(Number(b.dataset.delTg), 1)
       markDirty()
-      renderTelegramList()
+      renderTelegramList(storeData.settings.telegramRecipients)
     }
   })
   wrap.querySelectorAll('input[type="checkbox"][id^="tg-on-"]').forEach((cb) => {
     cb.onchange = () => {
+      collectTelegram()
       const i = Number(cb.id.replace('tg-on-', ''))
-      const row = storeData.settings.telegramRecipients[i]
+      const row = storeData.settings.telegramRecipients?.[i]
       if (row) row.enabled = cb.checked
       markDirty()
       const label = cb.closest('.admin-tg-enable')?.querySelector('span')
