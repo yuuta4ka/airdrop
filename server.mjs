@@ -215,11 +215,43 @@ function parseChatIds(raw) {
   return [...new Set(String(raw || '').split(/[,\s]+/).map((id) => id.trim()).filter(Boolean))]
 }
 
-/** Chat ID из админки (store), иначе из .env */
-function getAdminChatIds() {
+/** Нормализованный список получателей из store (+ миграция со старого поля-строки). */
+function getTelegramRecipientsFromStore(store = null) {
   try {
-    const fromStore = parseChatIds(readStore().settings?.telegramAdminChatIds)
-    if (fromStore.length) return fromStore
+    const s = (store || readStore()).settings || {}
+    if (Array.isArray(s.telegramRecipients)) {
+      return s.telegramRecipients
+        .map((row) => ({
+          id: String(row?.id ?? row?.chatId ?? '').trim(),
+          label: String(row?.label ?? '').trim(),
+          enabled: row?.enabled !== false,
+        }))
+        .filter((row) => row.id)
+    }
+    // Старый формат: строка через запятую
+    return parseChatIds(s.telegramAdminChatIds).map((id) => ({ id, label: '', enabled: true }))
+  } catch {
+    return []
+  }
+}
+
+/**
+ * Chat ID для отправки.
+ * @param {{ enabledOnly?: boolean }} opts — по умолчанию только включённые
+ */
+function getAdminChatIds({ enabledOnly = true } = {}) {
+  try {
+    const store = readStore()
+    const s = store.settings || {}
+    if (Array.isArray(s.telegramRecipients)) {
+      return [...new Set(
+        getTelegramRecipientsFromStore(store)
+          .filter((r) => !enabledOnly || r.enabled)
+          .map((r) => r.id),
+      )]
+    }
+    const legacy = parseChatIds(s.telegramAdminChatIds)
+    if (legacy.length) return legacy
   } catch {
     /* store ещё не готов */
   }
@@ -297,15 +329,27 @@ async function handleTelegramUpdate(update) {
   if (!msg?.text) return
   const chatId = String(msg.chat.id)
   const text = msg.text.trim()
-  const adminIds = getAdminChatIds()
+  const knownIds = getAdminChatIds({ enabledOnly: false })
+  const enabledIds = getAdminChatIds({ enabledOnly: true })
 
-  if (!adminIds.includes(chatId)) {
+  if (!knownIds.includes(chatId)) {
     if (text === '/start' || text === '/id' || text === '/код') {
       await sendTelegramMessage(chatId, [
         `Ваш Chat ID: ${chatId}`,
         '',
-        'Скопируйте его в админку: Общие → Telegram-уведомления.',
-        'После сохранения сюда будут приходить заказы и коды входа.',
+        'Скопируйте его в админку: Прочее → Telegram.',
+        'Можно подписать, кто это, и включать/выключать без удаления.',
+      ].join('\n'))
+    }
+    return
+  }
+
+  if (!enabledIds.includes(chatId)) {
+    if (text === '/start' || text === '/code' || text === '/код' || text === '/id') {
+      await sendTelegramMessage(chatId, [
+        `Ваш Chat ID: ${chatId}`,
+        '',
+        'Вы есть в списке, но уведомления выключены в админке (Прочее → Telegram).',
       ].join('\n'))
     }
     return
@@ -526,8 +570,12 @@ const server = http.createServer(async (req, res) => {
       return sendJson(res, 200, store, { 'Cache-Control': 'no-store' })
     }
     const { adminPassword, ...publicStore } = store
-    if (publicStore.settings && 'telegramAdminChatIds' in publicStore.settings) {
-      const { telegramAdminChatIds: _ids, ...pubSettings } = publicStore.settings
+    if (publicStore.settings) {
+      const {
+        telegramAdminChatIds: _legacy,
+        telegramRecipients: _recipients,
+        ...pubSettings
+      } = publicStore.settings
       publicStore.settings = pubSettings
     }
     return sendJsonCached(req, res, STORE_FILE, publicStore, { publicCache: true })
@@ -1152,7 +1200,7 @@ server.listen(PORT, '0.0.0.0', () => {
     if (tg.configured) {
       console.log(`Telegram-уведомления: включены (${tg.chatCount} получателей)`)
     } else {
-      console.log('Telegram: токен есть, chat ID задайте в админке (Общие) или в .env')
+      console.log('Telegram: токен есть, chat ID задайте в админке (Прочее → Telegram) или в .env')
     }
     pollTelegram()
   } else {

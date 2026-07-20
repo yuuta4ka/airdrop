@@ -137,6 +137,7 @@ const TITLES = {
   theme: 'Темы и цвета',
   installment: 'Рассрочка',
   orders: 'Заказы',
+  telegram: 'Telegram',
   reviews: 'Отзывы',
   config: 'Экспорт / импорт',
 }
@@ -1145,6 +1146,7 @@ function renderTab() {
   else if (activeTab === 'theme') renderTheme(c)
   else if (activeTab === 'installment') renderInstallment(c)
   else if (activeTab === 'orders') renderOrders(c)
+  else if (activeTab === 'telegram') renderTelegram(c)
   else if (activeTab === 'reviews') renderReviews(c)
   else if (activeTab === 'config') renderConfig(c)
   scrollAdminToTop()
@@ -1161,14 +1163,10 @@ function renderGeneral(c) {
     </div>
   `) + section('Магазин', `
     <div class="admin-grid">${field('Название', 'g-name', s.name)}${field('Слоган', 'g-tagline', s.tagline)}${field('Логотип (путь к файлу)', 'g-logo', s.logo)}${field('Бренд для отзывов', 'g-reviewBrand', s.reviewBrand)}</div>
-  `) + section('Telegram-уведомления', `
-    <p class="admin-hint">Получатели заказов и кодов входа. Напишите боту <code>/start</code> — он пришлёт ваш Chat ID. Токен бота задаётся только в .env на сервере (<code>TELEGRAM_BOT_TOKEN</code>).</p>
-    ${field('Chat ID (через запятую)', 'g-tg-chats', s.telegramAdminChatIds || '', 'text', '123456789, 987654321')}
-    <div class="admin-status-row"><span>Статус Telegram</span><strong id="g-tg-status">загрузка…</strong></div>
   `) + section('Безопасность', `
     ${passwordField('Текущий пароль', 'g-password-view', storeData.adminPassword, { hint: 'Нажмите 👁 чтобы показать или скрыть' })}
     <div class="admin-password-change">
-      <p class="admin-hint">Смена пароля требует код из Telegram (защита от взлома).</p>
+      <p class="admin-hint">Смена пароля требует код из Telegram (защита от взлома). Получателей настройте во вкладке Telegram.</p>
       <div class="admin-grid">
         ${passwordField('Новый пароль', 'g-password-new', '', { hint: 'Минимум 6 символов' })}
         ${passwordField('Повторите пароль', 'g-password-confirm', '', { alwaysVisible: true, hint: 'Второй раз — открытым текстом' })}
@@ -1187,21 +1185,10 @@ function renderGeneral(c) {
     .then((data) => {
       const el = $('server-started-at')
       if (el && data?.startedAt) el.textContent = formatWhenWithAgo(data.startedAt)
-      const tgEl = $('g-tg-status')
-      if (tgEl && data?.telegram) {
-        const t = data.telegram
-        if (t.configured) tgEl.textContent = `включено · ${t.chatCount} получател${t.chatCount === 1 ? 'ь' : 'ей'}`
-        else if (t.hasToken) tgEl.textContent = 'токен есть, укажите Chat ID и сохраните'
-        else tgEl.textContent = 'нет TELEGRAM_BOT_TOKEN в .env на сервере'
-      } else if (tgEl) {
-        tgEl.textContent = 'нет данных'
-      }
     })
     .catch(() => {
       const el = $('server-started-at')
       if (el) el.textContent = 'не удалось получить'
-      const tgEl = $('g-tg-status')
-      if (tgEl) tgEl.textContent = 'не удалось получить'
     })
 
   $('btn-request-change-code').onclick = async () => {
@@ -1238,6 +1225,142 @@ function renderGeneral(c) {
       status('Пароль изменён', 'success')
     } catch (err) { status(err.message, 'error') }
   }
+}
+
+function ensureTelegramRecipients() {
+  const s = storeData.settings
+  if (Array.isArray(s.telegramRecipients)) {
+    s.telegramRecipients = s.telegramRecipients.map((row) => ({
+      id: String(row?.id ?? row?.chatId ?? '').trim(),
+      label: String(row?.label ?? '').trim(),
+      enabled: row?.enabled !== false,
+    }))
+    return s.telegramRecipients
+  }
+  // Миграция со старой строки — только если там что-то было
+  const legacy = String(s.telegramAdminChatIds || '')
+    .split(/[,\s]+/)
+    .map((id) => id.trim())
+    .filter(Boolean)
+  if (legacy.length) {
+    s.telegramRecipients = legacy.map((id) => ({ id, label: '', enabled: true }))
+    delete s.telegramAdminChatIds
+    return s.telegramRecipients
+  }
+  // Пустой список без записи в store — иначе сохранение отключит запасной .env
+  return []
+}
+
+function renderTelegram(c) {
+  const list = ensureTelegramRecipients()
+  c.innerHTML = section('Статус', `
+    <div class="admin-status-panel">
+      <div class="admin-status-row"><span>Telegram</span><strong id="tg-status">загрузка…</strong></div>
+    </div>
+    <p class="admin-hint">Токен бота задаётся только на сервере в <code>TELEGRAM_BOT_TOKEN</code>. Напишите боту <code>/start</code> — он пришлёт Chat ID.</p>
+  `) + section('Получатели уведомлений', `
+    <p class="admin-hint">Подпишите, кто это. Снимите «Включено», чтобы временно не слать уведомления — запись останется. Удалять нужно только совсем.</p>
+    <div id="tg-recipients"></div>
+    <button type="button" class="btn btn--secondary" id="tg-add">+ Добавить Chat ID</button>
+  `)
+  renderTelegramList(list)
+  $('tg-add').onclick = () => {
+    collectTelegram()
+    if (!Array.isArray(storeData.settings.telegramRecipients)) {
+      storeData.settings.telegramRecipients = []
+    }
+    storeData.settings.telegramRecipients.push({ id: '', label: '', enabled: true })
+    markDirty()
+    renderTelegramList()
+  }
+
+  fetch('/api/ping')
+    .then((r) => r.json())
+    .then((data) => {
+      const el = $('tg-status')
+      if (!el) return
+      const t = data?.telegram
+      if (!t) {
+        el.textContent = 'нет данных'
+        return
+      }
+      if (t.configured) el.textContent = `включено · ${t.chatCount} активн.`
+      else if (t.hasToken) el.textContent = 'токен есть — добавьте и включите Chat ID, затем сохраните'
+      else el.textContent = 'нет TELEGRAM_BOT_TOKEN в .env на сервере'
+    })
+    .catch(() => {
+      const el = $('tg-status')
+      if (el) el.textContent = 'не удалось получить'
+    })
+}
+
+function renderTelegramList(preset) {
+  if ($('tg-recipients')?.querySelector('.admin-tg-card')) collectTelegram()
+  const list = preset || (Array.isArray(storeData.settings.telegramRecipients)
+    ? storeData.settings.telegramRecipients
+    : ensureTelegramRecipients())
+  const wrap = $('tg-recipients')
+  if (!wrap) return
+  if (!list.length) {
+    wrap.innerHTML = '<p class="admin-hint">Пока никого нет. Добавьте Chat ID после /start у бота.</p>'
+    return
+  }
+  wrap.innerHTML = list.map((row, i) => `
+    <div class="admin-card admin-tg-card${row.enabled ? '' : ' admin-tg-card--off'}">
+      <div class="admin-card__head">
+        <label class="admin-tg-enable">
+          <input type="checkbox" id="tg-on-${i}" ${row.enabled ? 'checked' : ''} />
+          <span>${row.enabled ? 'Включено' : 'Выключено'}</span>
+        </label>
+        <button type="button" class="btn btn--danger btn--sm" data-del-tg="${i}">Удалить</button>
+      </div>
+      <div class="admin-grid">
+        ${field('Кто это', `tg-label-${i}`, row.label, 'text', 'Илья, менеджер…')}
+        ${field('Chat ID', `tg-id-${i}`, row.id, 'text', '123456789')}
+      </div>
+    </div>
+  `).join('')
+
+  wrap.querySelectorAll('[data-del-tg]').forEach((b) => {
+    b.onclick = () => {
+      collectTelegram()
+      storeData.settings.telegramRecipients.splice(Number(b.dataset.delTg), 1)
+      markDirty()
+      renderTelegramList()
+    }
+  })
+  wrap.querySelectorAll('input[type="checkbox"][id^="tg-on-"]').forEach((cb) => {
+    cb.onchange = () => {
+      const i = Number(cb.id.replace('tg-on-', ''))
+      const row = storeData.settings.telegramRecipients[i]
+      if (row) row.enabled = cb.checked
+      markDirty()
+      const label = cb.closest('.admin-tg-enable')?.querySelector('span')
+      if (label) label.textContent = cb.checked ? 'Включено' : 'Выключено'
+      cb.closest('.admin-tg-card')?.classList.toggle('admin-tg-card--off', !cb.checked)
+    }
+  })
+}
+
+function collectTelegram() {
+  const wrap = $('tg-recipients')
+  if (!wrap) return
+  const s = storeData.settings
+  const cards = wrap.querySelectorAll('.admin-tg-card')
+  if (!cards.length) {
+    // пустая подсказка — не трогаем store (может ещё работать .env)
+    return
+  }
+  const next = []
+  cards.forEach((_, i) => {
+    next.push({
+      id: val(`tg-id-${i}`),
+      label: val(`tg-label-${i}`),
+      enabled: $(`tg-on-${i}`)?.checked !== false,
+    })
+  })
+  s.telegramRecipients = next
+  delete s.telegramAdminChatIds
 }
 
 function renderContacts(c) {
@@ -2511,7 +2634,7 @@ async function renderOrders(c) {
 
     c.innerHTML = section('Заказы', `
       <div class="admin-orders-toolbar">
-        <p class="admin-hint">${orders.length} заказов · новые сверху. Уведомления в Telegram отправляются автоматически.</p>
+        <p class="admin-hint">${orders.length} заказов · новые сверху. Уведомления в Telegram — вкладка «Telegram».</p>
         <button type="button" class="btn btn--secondary btn--sm" id="orders-refresh">Обновить</button>
       </div>
       <div id="orders-list"></div>
@@ -3275,6 +3398,7 @@ function collectTab() {
   else if (activeTab === 'theme') collectTheme()
   else if (activeTab === 'installment') collectInstallment()
   else if (activeTab === 'reviews') collectReviews()
+  else if (activeTab === 'telegram') collectTelegram()
   else if (activeTab === 'price-import') collectPriceImport()
   else if (activeTab === 'price-prompt') collectPricePrompt()
 }
@@ -3300,7 +3424,6 @@ function collectGeneral() {
   if (!$('g-name')) return
   const s = storeData.settings
   s.name = val('g-name'); s.tagline = val('g-tagline'); s.logo = val('g-logo'); s.reviewBrand = val('g-reviewBrand')
-  if ($('g-tg-chats')) s.telegramAdminChatIds = val('g-tg-chats').trim()
 }
 
 function collectContacts() {
